@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,16 +78,27 @@ class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
 
   static const List<Widget> _pages = [
-    HomePage(),
-    SchedulePage(),
-    AssignmentsPage(),
-    SettingsPage(),
+    HomePage(key: ValueKey('home')),
+    SchedulePage(key: ValueKey('schedule')),
+    AssignmentsPage(key: ValueKey('assignments')),
+    SettingsPage(key: ValueKey('settings')),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          return FadeThroughTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            fillColor: Theme.of(context).colorScheme.surface,
+            child: child,
+          );
+        },
+        child: _pages[_selectedIndex],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
