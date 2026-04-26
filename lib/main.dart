@@ -9,6 +9,7 @@ import 'pages/settings_page.dart';
 import 'services/auth_service.dart';
 import 'services/debug_logger.dart';
 import 'services/http_client.dart';
+import 'services/schedule_service.dart';
 import 'services/service_provider.dart';
 import 'services/storage_service.dart';
 import 'services/theme_service.dart';
@@ -22,14 +23,22 @@ void main() async {
   final httpClient = LoggingHttpClient(debugLogger);
   final authService = AuthService(storageService, httpClient);
   final themeService = ThemeService(storageService);
+  final scheduleService =
+      ScheduleService(storageService, httpClient, authService);
 
   await authService.initialize();
+
+  // Fetch schedule data once on startup if logged in
+  if (authService.isLoggedIn) {
+    scheduleService.fetchAll(); // fire-and-forget, UI uses cache first
+  }
 
   runApp(TechPieApp(
     authService: authService,
     debugLogger: debugLogger,
     storageService: storageService,
     themeService: themeService,
+    scheduleService: scheduleService,
   ));
 }
 
@@ -38,6 +47,7 @@ class TechPieApp extends StatelessWidget {
   final DebugLogger debugLogger;
   final StorageService storageService;
   final ThemeService themeService;
+  final ScheduleService scheduleService;
 
   const TechPieApp({
     super.key,
@@ -45,6 +55,7 @@ class TechPieApp extends StatelessWidget {
     required this.debugLogger,
     required this.storageService,
     required this.themeService,
+    required this.scheduleService,
   });
 
   @override
@@ -56,6 +67,7 @@ class TechPieApp extends StatelessWidget {
         debugLogger: debugLogger,
         storageService: storageService,
         themeService: themeService,
+        scheduleService: scheduleService,
         child: MaterialApp(
           title: 'TechPie',
           theme: themeService.lightTheme,

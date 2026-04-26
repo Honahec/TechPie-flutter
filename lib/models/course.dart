@@ -7,6 +7,9 @@ class Course {
   final int startPeriod; // 1-based
   final int endPeriod; // inclusive
   final CourseColor color;
+  final String? teachers;
+  final String? weeksText;
+  final bool isGhost; // non-current-week course shown transparently
 
   const Course({
     required this.name,
@@ -15,7 +18,13 @@ class Course {
     required this.startPeriod,
     required this.endPeriod,
     this.color = CourseColor.primary,
+    this.teachers,
+    this.weeksText,
+    this.isGhost = false,
   });
+
+  static CourseColor colorFromIndex(int index) =>
+      CourseColor.values[index % CourseColor.values.length];
 }
 
 enum CourseColor {

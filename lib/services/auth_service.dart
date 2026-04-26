@@ -60,7 +60,11 @@ class AuthService extends ChangeNotifier {
       _session = _session!.copyWith(
         sessionToken: data['sessionToken'] as String? ?? _session!.sessionToken,
         tgc: data['tgc'] as String? ?? _session!.tgc,
+        userId: data['userId'] as String? ?? _session!.userId,
         userName: data['name'] as String? ?? _session!.userName,
+        tenantId: data['tenantId'] as String? ?? _session!.tenantId,
+        cookies: data['cookies'] as String? ?? _session!.cookies,
+        studentId: data['openId'] as String? ?? _session!.studentId,
       );
       await _storage.saveSession(_session!);
       notifyListeners();
@@ -124,6 +128,8 @@ class AuthService extends ChangeNotifier {
         schoolName: '上海科技大学',
         tenantId: data['tenantId'] as String? ?? '',
         phoneNumber: phone,
+        cookies: data['cookies'] as String? ?? '',
+        studentId: data['openId'] as String? ?? '',
         createdAt: DateTime.now(),
       );
 
@@ -167,7 +173,9 @@ class AuthService extends ChangeNotifier {
         schoolName: '上海科技大学',
         tenantId: data['tenantId'] as String? ?? '',
         phoneNumber: '',
+        cookies: data['cookies'] as String? ?? '',
         createdAt: DateTime.now(),
+        studentId: data['openId'] as String? ?? '',
       );
 
       await _storage.saveSession(_session!);
@@ -190,6 +198,6 @@ class AuthService extends ChangeNotifier {
   // -- Private helpers --
 
   Map<String, String> _jsonHeaders() => {
-        'Content-Type': 'application/json; charset=UTF-8',
-      };
+    'Content-Type': 'application/json; charset=UTF-8',
+  };
 }

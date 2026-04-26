@@ -6,6 +6,7 @@ import 'package:techpie/main.dart';
 import 'package:techpie/services/auth_service.dart';
 import 'package:techpie/services/debug_logger.dart';
 import 'package:techpie/services/http_client.dart';
+import 'package:techpie/services/schedule_service.dart';
 import 'package:techpie/services/storage_service.dart';
 import 'package:techpie/services/theme_service.dart';
 
@@ -20,6 +21,7 @@ void main() {
     final http = LoggingHttpClient(logger);
     final auth = AuthService(storage, http);
     final theme = ThemeService(storage);
+    final schedule = ScheduleService(storage, http, auth);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -27,6 +29,7 @@ void main() {
         debugLogger: logger,
         storageService: storage,
         themeService: theme,
+        scheduleService: schedule,
       ),
     );
 
@@ -44,6 +47,7 @@ void main() {
     final logger = DebugLogger();
     final http = LoggingHttpClient(logger);
     final auth = AuthService(storage, http);
+    final schedule = ScheduleService(storage, http, auth);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -51,6 +55,7 @@ void main() {
         debugLogger: logger,
         storageService: storage,
         themeService: ThemeService(storage),
+        scheduleService: schedule,
       ),
     );
 
@@ -61,7 +66,8 @@ void main() {
     await tester.tap(find.text('Schedule'));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.today), findsOneWidget);
-    expect(find.text('植物保护学通论(B)'), findsOneWidget);
+    // Not logged in, so shows login prompt
+    expect(find.text('登录以查看课表'), findsOneWidget);
 
     // Tap Assignments
     await tester.tap(find.text('Assignments'));
