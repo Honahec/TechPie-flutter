@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../services/auth_service.dart';
 import '../services/service_provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _sendingSms = false;
+  bool _obscurePassword = true;
   int _cooldown = 0;
   Timer? _cooldownTimer;
 
@@ -31,14 +31,14 @@ class _LoginPageState extends State<LoginPage> {
       await ServiceProvider.of(context).authService.sendSmsCode(phone);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verification code sent')),
+          const SnackBar(content: Text('验证码已发送')),
         );
       }
       _startCooldown();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Send SMS failed: $e')),
+          SnackBar(content: Text('发送失败: $e')),
         );
       }
     } finally {
@@ -72,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
+          SnackBar(content: Text('登录失败: $e')),
         );
       }
     }
@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
+          SnackBar(content: Text('登录失败: $e')),
         );
       }
     }
@@ -107,131 +107,278 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ServiceProvider.of(context).authService;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Login'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'SMS Login'),
-              Tab(text: 'eGate Login'),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Hero area with tonal surface
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.school_rounded,
+                      size: 64,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'TechPie',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '登录以访问校园服务',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Login form
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      // Segmented-style tab bar
+                      TabBar(
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: colorScheme.secondaryContainer,
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerHeight: 0,
+                        labelColor: colorScheme.onSecondaryContainer,
+                        unselectedLabelColor: colorScheme.onSurfaceVariant,
+                        labelStyle: theme.textTheme.labelLarge,
+                        tabs: const [
+                          Tab(text: '短信登录'),
+                          Tab(text: '统一身份认证'),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: 280,
+                        child: TabBarView(
+                          children: [
+                            _SmsLoginForm(
+                              phoneController: _phoneController,
+                              codeController: _codeController,
+                              cooldown: _cooldown,
+                              sendingSms: _sendingSms,
+                              onSendSms: _sendSms,
+                              onLogin: _smsLogin,
+                            ),
+                            _EgateLoginForm(
+                              usernameController: _usernameController,
+                              passwordController: _passwordController,
+                              obscurePassword: _obscurePassword,
+                              onToggleObscure: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                              onLogin: _egateLogin,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildSmsTab(auth),
-            _buildEgateTab(auth),
-          ],
-        ),
       ),
     );
   }
+}
 
-  Widget _buildSmsTab(AuthService auth) {
+class _SmsLoginForm extends StatelessWidget {
+  final TextEditingController phoneController;
+  final TextEditingController codeController;
+  final int cooldown;
+  final bool sendingSms;
+  final VoidCallback onSendSms;
+  final VoidCallback onLogin;
+
+  const _SmsLoginForm({
+    required this.phoneController,
+    required this.codeController,
+    required this.cooldown,
+    required this.sendingSms,
+    required this.onSendSms,
+    required this.onLogin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ServiceProvider.of(context).authService;
+
     return ListenableBuilder(
       listenable: auth,
-      builder: (context, _) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone number',
-                prefixIcon: Icon(Icons.phone),
-                border: OutlineInputBorder(),
+      builder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: phoneController,
+            decoration: const InputDecoration(
+              labelText: '手机号码',
+              prefixIcon: Icon(Icons.phone_outlined),
+              filled: true,
+              border: UnderlineInputBorder(),
+            ),
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: codeController,
+                  decoration: const InputDecoration(
+                    labelText: '验证码',
+                    prefixIcon: Icon(Icons.pin_outlined),
+                    filled: true,
+              border: UnderlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
               ),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _codeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Verification code',
-                      prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
+              const SizedBox(width: 12),
+              FilledButton.tonal(
+                onPressed:
+                    (cooldown > 0 || sendingSms) ? null : onSendSms,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(100, 56),
                 ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  height: 56,
-                  child: OutlinedButton(
-                    onPressed: (_cooldown > 0 || _sendingSms)
-                        ? null
-                        : _sendSms,
-                    child: Text(
-                      _cooldown > 0 ? '${_cooldown}s' : 'Send Code',
-                    ),
-                  ),
-                ),
-              ],
+                child: sendingSms
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child:
+                            CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(cooldown > 0 ? '${cooldown}s' : '发送验证码'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          FilledButton.icon(
+            onPressed: auth.loading ? null : onLogin,
+            icon: auth.loading
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.login),
+            label: const Text('登录'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: auth.loading ? null : _smsLogin,
-              child: auth.loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Login'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildEgateTab(AuthService auth) {
+class _EgateLoginForm extends StatelessWidget {
+  final TextEditingController usernameController;
+  final TextEditingController passwordController;
+  final bool obscurePassword;
+  final VoidCallback onToggleObscure;
+  final VoidCallback onLogin;
+
+  const _EgateLoginForm({
+    required this.usernameController,
+    required this.passwordController,
+    required this.obscurePassword,
+    required this.onToggleObscure,
+    required this.onLogin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ServiceProvider.of(context).authService;
+
     return ListenableBuilder(
       listenable: auth,
-      builder: (context, _) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Student ID',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
+      builder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: usernameController,
+            decoration: const InputDecoration(
+              labelText: '学号',
+              prefixIcon: Icon(Icons.badge_outlined),
+              filled: true,
+              border: UnderlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: passwordController,
+            decoration: InputDecoration(
+              labelText: '密码',
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              border: const UnderlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+                onPressed: onToggleObscure,
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock_outline),
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
+            obscureText: obscurePassword,
+          ),
+          const SizedBox(height: 32),
+          FilledButton.icon(
+            onPressed: auth.loading ? null : onLogin,
+            icon: auth.loading
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.login),
+            label: const Text('登录'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: auth.loading ? null : _egateLogin,
-              child: auth.loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Login'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
