@@ -818,37 +818,60 @@ class _CourseBlock extends StatelessWidget {
         child: InkWell(
           onTap: () => _showCourseDetail(context),
           borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  course.name,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 10,
-                    height: 1.2,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (course.location.isNotEmpty) ...[
-                  const Spacer(),
-                  Text(
-                    course.location,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: textColor,
-                      fontSize: 9,
-                      height: 1.2,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxH = constraints.maxHeight - 8; // account for padding
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Course name: up to 70% of block height
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: maxH * 0.7),
+                      child: Text(
+                        course.name,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          height: 1.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: (maxH * 0.7 / 14.4).floor().clamp(1, 20),
+                      ),
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
+                    if (course.teachers != null &&
+                        course.teachers!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        course.teachers!,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: textColor,
+                          fontSize: 12,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (course.location.isNotEmpty) ...[
+                      const Spacer(),
+                      Text(
+                        course.location,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: textColor,
+                          fontSize: 10,
+                          height: 1.2,
+                        ),
+                        maxLines: (maxH * 0.2 / 12).floor().clamp(1, 5),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
