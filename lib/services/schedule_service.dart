@@ -10,8 +10,6 @@ import 'storage_service.dart';
 const String _devBaseUrl = 'http://localhost:3000/api';
 const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
-String get _baseUrl => kDebugMode ? _devBaseUrl : _prodBaseUrl;
-
 class ScheduleService extends ChangeNotifier {
   final StorageService _storage;
   final LoggingHttpClient _http;
@@ -23,6 +21,8 @@ class ScheduleService extends ChangeNotifier {
   String? _selectedSemesterId;
   bool _loading = false;
   String? _error;
+
+  String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
 
   SemesterInfo? get semesterInfo => _semesterInfo;
   CourseTable? get courseTable => _courseTable;

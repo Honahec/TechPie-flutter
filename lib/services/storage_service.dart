@@ -12,14 +12,15 @@ class StorageService {
   static const _schoolNameKey = 'cached_school_name';
   static const _phoneKey = 'cached_phone';
   static const _themeModeKey = 'theme_mode';
+  static const _useLocalhostKey = 'use_localhost';
 
   final FlutterSecureStorage _secure;
   final SharedPreferences _prefs;
 
   StorageService(this._prefs)
-      : _secure = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        );
+    : _secure = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
 
   // Secure session storage
   Future<void> saveSession(UserSession session) async {
@@ -52,6 +53,10 @@ class StorageService {
   Future<void> setThemeMode(String mode) =>
       _prefs.setString(_themeModeKey, mode);
 
+  bool get useLocalhost => _prefs.getBool(_useLocalhostKey) ?? false;
+  Future<void> setUseLocalhost(bool value) =>
+      _prefs.setBool(_useLocalhostKey, value);
+
   // Schedule cache
   static const _semestersKey = 'schedule_semesters';
   static const _courseTablePrefix = 'schedule_course_table_';
@@ -67,9 +72,8 @@ class StorageService {
     return SemesterInfo.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  Future<void> saveCourseTable(String semesterId, CourseTable table) =>
-      _prefs.setString(
-          '$_courseTablePrefix$semesterId', jsonEncode(table.toJson()));
+  Future<void> saveCourseTable(String semesterId, CourseTable table) => _prefs
+      .setString('$_courseTablePrefix$semesterId', jsonEncode(table.toJson()));
 
   CourseTable? loadCourseTable(String semesterId) {
     final raw = _prefs.getString('$_courseTablePrefix$semesterId');

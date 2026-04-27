@@ -9,8 +9,6 @@ import 'storage_service.dart';
 const String _devBaseUrl = 'http://localhost:3000/api';
 const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
-String get _baseUrl => kDebugMode ? _devBaseUrl : _prodBaseUrl;
-
 class AuthService extends ChangeNotifier {
   final StorageService _storage;
   final LoggingHttpClient _http;
@@ -20,6 +18,8 @@ class AuthService extends ChangeNotifier {
 
   // Context returned by send-sms, needed for mobile/login
   Map<String, dynamic>? _smsContext;
+
+  String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
 
   UserSession? get session => _session;
   bool get isLoggedIn => _session != null;

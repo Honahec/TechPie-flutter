@@ -124,6 +124,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 storage.setDebugMode(value);
               },
             ),
+            SwitchListTile(
+              secondary: const Icon(Icons.dns_outlined),
+              title: const Text('Use localhost'),
+              subtitle: const Text('Connect to local development server'),
+              value: storage.useLocalhost,
+              onChanged: (value) {
+                storage.setUseLocalhost(value);
+                setState(() {});
+              },
+            ),
             if (logger.enabled)
               ListTile(
                 leading: const Icon(Icons.list_alt),
@@ -159,8 +169,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: Icon(mode.icon),
                 title: Text(mode.label),
                 trailing: themeService.mode == mode
-                    ? Icon(Icons.check,
-                        color: Theme.of(context).colorScheme.primary)
+                    ? Icon(
+                        Icons.check,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
                     : null,
                 onTap: () {
                   themeService.setMode(mode);
