@@ -129,7 +129,7 @@ class AuthService extends ChangeNotifier {
         tenantId: data['tenantId'] as String? ?? '',
         phoneNumber: phone,
         cookies: data['cookies'] as String? ?? '',
-        studentId: data['openId'] as String? ?? '',
+        studentId: loginResult['openId'] as String? ?? '',
         createdAt: DateTime.now(),
       );
 
@@ -175,7 +175,7 @@ class AuthService extends ChangeNotifier {
         phoneNumber: '',
         cookies: data['cookies'] as String? ?? '',
         createdAt: DateTime.now(),
-        studentId: data['openId'] as String? ?? '',
+        studentId: loginResult['openId'] as String? ?? '',
       );
 
       await _storage.saveSession(_session!);

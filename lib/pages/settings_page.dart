@@ -62,6 +62,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     auth.session!.schoolName,
                     if (auth.session!.phoneNumber.isNotEmpty)
                       auth.session!.phoneNumber,
+                    auth.session!.studentId.isNotEmpty
+                        ? auth.session!.studentId
+                        : '未知学号',
                   ].join(' | '),
                 ),
               ),
