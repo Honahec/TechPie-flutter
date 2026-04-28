@@ -13,6 +13,7 @@ import 'services/schedule_service.dart';
 import 'services/service_provider.dart';
 import 'services/storage_service.dart';
 import 'services/theme_service.dart';
+import 'widgets/native_glass_tab_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,37 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
 
+  static const List<NativeGlassTabBarItem> _navigationItems = [
+    NativeGlassTabBarItem(
+      label: 'Home',
+      icon: Icons.home_outlined,
+      selectedIcon: Icons.home,
+      sfSymbol: 'house',
+      selectedSfSymbol: 'house.fill',
+    ),
+    NativeGlassTabBarItem(
+      label: 'Schedule',
+      icon: Icons.calendar_month_outlined,
+      selectedIcon: Icons.calendar_month,
+      sfSymbol: 'calendar',
+      selectedSfSymbol: 'calendar.circle.fill',
+    ),
+    NativeGlassTabBarItem(
+      label: 'Assignments',
+      icon: Icons.assignment_outlined,
+      selectedIcon: Icons.assignment,
+      sfSymbol: 'checkmark.circle',
+      selectedSfSymbol: 'checkmark.circle.fill',
+    ),
+    NativeGlassTabBarItem(
+      label: 'Settings',
+      icon: Icons.settings_outlined,
+      selectedIcon: Icons.settings,
+      sfSymbol: 'gearshape',
+      selectedSfSymbol: 'gearshape.fill',
+    ),
+  ];
+
   static const List<Widget> _pages = [
     HomePage(key: ValueKey('home')),
     SchedulePage(key: ValueKey('schedule')),
@@ -115,35 +147,14 @@ class _AppShellState extends State<AppShell> {
         },
         child: _pages[_selectedIndex],
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: NativeGlassTabBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
+        items: _navigationItems,
+        onSelected: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Schedule',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
-            label: 'Assignments',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
       ),
     );
   }
