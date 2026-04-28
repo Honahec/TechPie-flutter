@@ -10,7 +10,7 @@ GeekPie 开发的 ShanghaiTech 非官方客户端。
 - [ ] Windows
 - [ ] MacOS
 - [ ] Android
-- [ ] iOS
+- [x] iOS
 - [ ] HarmonyOS NEXT
 
 ## Roadmap
@@ -21,7 +21,7 @@ GeekPie 开发的 ShanghaiTech 非官方客户端。
     - [ ] Assignment
     - [ ] Homepage
     - [ ] iOS
-        - [ ] Liquid Glass
+        - [x] Liquid Glass
         - [ ] Dynamic Island
     - [ ] HarmonyOS NEXT
         - [ ] Native Card
@@ -51,6 +51,13 @@ GeekPie 开发的 ShanghaiTech 非官方客户端。
 - JDK 17
 - Android NDK 28
 - Android SDK 35
+
+### iOS
+
+- macOS
+- Xcode
+- CocoaPods
+- iOS Deployment Target 13.0
 
 ## License
 
