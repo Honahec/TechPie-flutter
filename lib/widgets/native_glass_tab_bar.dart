@@ -79,28 +79,27 @@ class _NativeGlassTabBarState extends State<NativeGlassTabBar> {
       );
     }
 
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-      child: SizedBox(
-        height: 78,
-        child: UiKitView(
-          viewType: _viewType,
-          layoutDirection: Directionality.of(context),
-          creationParams: <String, Object?>{
-            'selectedIndex': _safeSelectedIndex,
-            'items': [
-              for (final item in widget.items)
-                <String, Object?>{
-                  'label': item.label,
-                  'sfSymbol': item.sfSymbol,
-                  'selectedSfSymbol': item.selectedSfSymbol,
-                },
-            ],
-          },
-          creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: _onPlatformViewCreated,
-        ),
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final tabBarHeight = 49.0 + bottomInset;
+
+    return SizedBox(
+      height: tabBarHeight,
+      child: UiKitView(
+        viewType: _viewType,
+        layoutDirection: Directionality.of(context),
+        creationParams: <String, Object?>{
+          'selectedIndex': _safeSelectedIndex,
+          'items': [
+            for (final item in widget.items)
+              <String, Object?>{
+                'label': item.label,
+                'sfSymbol': item.sfSymbol,
+                'selectedSfSymbol': item.selectedSfSymbol,
+              },
+          ],
+        },
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: _onPlatformViewCreated,
       ),
     );
   }
