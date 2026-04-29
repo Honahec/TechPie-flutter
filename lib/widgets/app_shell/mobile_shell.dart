@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../native_glass_floating_button.dart';
-import '../native_glass_tab_bar.dart';
+import '../ios_liquid/ios_glass_floating_button.dart';
+import '../ios_liquid/ios_glass_tab_bar.dart';
 import 'app_destination.dart';
 
 class MobileShell extends StatelessWidget {
@@ -22,22 +23,45 @@ class MobileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final usesIosLiquidGlass =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
     return Scaffold(
       extendBody: true,
       body: child,
       floatingActionButton: selectedIndex == assignmentsIndex
-          ? NativeGlassFloatingButton(
-              onPressed: () {},
-              icon: Icons.add,
-              sfSymbol: 'plus',
-            )
+          ? usesIosLiquidGlass
+                ? IosGlassFloatingButton(
+                    onPressed: () {},
+                    icon: Icons.add,
+                    sfSymbol: 'plus',
+                  )
+                : FloatingActionButton(
+                    onPressed: () {},
+                    child: const Icon(Icons.add),
+                  )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: NativeGlassTabBar(
-        selectedIndex: selectedIndex,
-        items: destinations.map((item) => item.toNativeTabBarItem()).toList(),
-        onSelected: onDestinationSelected,
-      ),
+      bottomNavigationBar: usesIosLiquidGlass
+          ? IosGlassTabBar(
+              selectedIndex: selectedIndex,
+              items: destinations
+                  .map((item) => item.toIosGlassTabBarItem())
+                  .toList(),
+              onSelected: onDestinationSelected,
+            )
+          : NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: onDestinationSelected,
+              destinations: [
+                for (final destination in destinations)
+                  NavigationDestination(
+                    icon: Icon(destination.icon),
+                    selectedIcon: Icon(destination.selectedIcon),
+                    label: destination.label,
+                  ),
+              ],
+            ),
     );
   }
 }

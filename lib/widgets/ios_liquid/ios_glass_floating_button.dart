@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class NativeGlassFloatingButton extends StatefulWidget {
-  const NativeGlassFloatingButton({
+class IosGlassFloatingButton extends StatefulWidget {
+  const IosGlassFloatingButton({
     super.key,
     required this.onPressed,
     required this.icon,
@@ -15,23 +14,17 @@ class NativeGlassFloatingButton extends StatefulWidget {
   final String sfSymbol;
 
   @override
-  State<NativeGlassFloatingButton> createState() =>
-      _NativeGlassFloatingButtonState();
+  State<IosGlassFloatingButton> createState() => _IosGlassFloatingButtonState();
 }
 
-class _NativeGlassFloatingButtonState extends State<NativeGlassFloatingButton> {
+class _IosGlassFloatingButtonState extends State<IosGlassFloatingButton> {
   MethodChannel? _channel;
 
-  bool get _usesNativeButton =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-
   @override
-  void didUpdateWidget(covariant NativeGlassFloatingButton oldWidget) {
+  void didUpdateWidget(covariant IosGlassFloatingButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (!_usesNativeButton) return;
     if (oldWidget.sfSymbol == widget.sfSymbol) return;
-
     _sendSymbolUpdate(widget.sfSymbol);
   }
 
@@ -44,13 +37,6 @@ class _NativeGlassFloatingButtonState extends State<NativeGlassFloatingButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_usesNativeButton) {
-      return FloatingActionButton(
-        onPressed: widget.onPressed,
-        child: Icon(widget.icon),
-      );
-    }
-
     return SizedBox.square(
       dimension: 64,
       child: UiKitView(

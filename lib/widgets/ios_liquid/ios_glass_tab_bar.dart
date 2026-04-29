@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class NativeGlassTabBarItem {
-  const NativeGlassTabBarItem({
+class IosGlassTabBarItem {
+  const IosGlassTabBarItem({
     required this.label,
     required this.icon,
     required this.selectedIcon,
@@ -18,8 +17,8 @@ class NativeGlassTabBarItem {
   final String selectedSfSymbol;
 }
 
-class NativeGlassTabBar extends StatefulWidget {
-  const NativeGlassTabBar({
+class IosGlassTabBar extends StatefulWidget {
+  const IosGlassTabBar({
     super.key,
     required this.selectedIndex,
     required this.onSelected,
@@ -28,17 +27,14 @@ class NativeGlassTabBar extends StatefulWidget {
 
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-  final List<NativeGlassTabBarItem> items;
+  final List<IosGlassTabBarItem> items;
 
   @override
-  State<NativeGlassTabBar> createState() => _NativeGlassTabBarState();
+  State<IosGlassTabBar> createState() => _IosGlassTabBarState();
 }
 
-class _NativeGlassTabBarState extends State<NativeGlassTabBar> {
+class _IosGlassTabBarState extends State<IosGlassTabBar> {
   MethodChannel? _channel;
-
-  bool get _usesNativeBar =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   int get _safeSelectedIndex {
     if (widget.items.isEmpty) return 0;
@@ -46,12 +42,10 @@ class _NativeGlassTabBarState extends State<NativeGlassTabBar> {
   }
 
   @override
-  void didUpdateWidget(covariant NativeGlassTabBar oldWidget) {
+  void didUpdateWidget(covariant IosGlassTabBar oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (!_usesNativeBar) return;
     if (oldWidget.selectedIndex == widget.selectedIndex) return;
-
     _sendSelectionUpdate(_safeSelectedIndex);
   }
 
@@ -64,43 +58,53 @@ class _NativeGlassTabBarState extends State<NativeGlassTabBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_usesNativeBar) {
-      return NavigationBar(
-        selectedIndex: _safeSelectedIndex,
-        onDestinationSelected: widget.onSelected,
-        destinations: [
-          for (final item in widget.items)
-            NavigationDestination(
-              icon: Icon(item.icon),
-              selectedIcon: Icon(item.selectedIcon),
-              label: item.label,
-            ),
-        ],
-      );
-    }
-
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final tabBarHeight = 49.0 + bottomInset;
+    final tabBarHeight = 52.0 + bottomInset;
 
-    return SizedBox(
-      height: tabBarHeight,
-      child: UiKitView(
-        viewType: _viewType,
-        layoutDirection: Directionality.of(context),
-        creationParams: <String, Object?>{
-          'selectedIndex': _safeSelectedIndex,
-          'items': [
-            for (final item in widget.items)
-              <String, Object?>{
-                'label': item.label,
-                'sfSymbol': item.sfSymbol,
-                'selectedSfSymbol': item.selectedSfSymbol,
-              },
-          ],
-        },
-        creationParamsCodec: const StandardMessageCodec(),
-        onPlatformViewCreated: _onPlatformViewCreated,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mediaWidth = MediaQuery.sizeOf(context).width;
+        final constrainedWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : mediaWidth;
+        final width = constrainedWidth.isFinite ? constrainedWidth : mediaWidth;
+
+        if (width <= 40 || tabBarHeight <= 20) {
+          return SizedBox(height: tabBarHeight);
+        }
+
+        final itemSignature = widget.items
+            .map(
+              (item) =>
+                  '${item.label}|${item.sfSymbol}|${item.selectedSfSymbol}',
+            )
+            .join(';');
+
+        return SizedBox(
+          width: width,
+          height: tabBarHeight,
+          child: UiKitView(
+            key: ValueKey(
+              'ios-glass-tabbar-${width.round()}-${tabBarHeight.round()}-$itemSignature',
+            ),
+            viewType: _viewType,
+            layoutDirection: Directionality.of(context),
+            creationParams: <String, Object?>{
+              'selectedIndex': _safeSelectedIndex,
+              'items': [
+                for (final item in widget.items)
+                  <String, Object?>{
+                    'label': item.label,
+                    'sfSymbol': item.sfSymbol,
+                    'selectedSfSymbol': item.selectedSfSymbol,
+                  },
+              ],
+            },
+            creationParamsCodec: const StandardMessageCodec(),
+            onPlatformViewCreated: _onPlatformViewCreated,
+          ),
+        );
+      },
     );
   }
 

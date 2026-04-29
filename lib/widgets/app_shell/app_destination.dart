@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../native_glass_tab_bar.dart';
+import '../ios_liquid/ios_glass_tab_bar.dart';
 
 class AppDestination {
   final String label;
@@ -19,8 +19,8 @@ class AppDestination {
     required this.page,
   });
 
-  NativeGlassTabBarItem toNativeTabBarItem() {
-    return NativeGlassTabBarItem(
+  IosGlassTabBarItem toIosGlassTabBarItem() {
+    return IosGlassTabBarItem(
       label: label,
       icon: icon,
       selectedIcon: selectedIcon,
