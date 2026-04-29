@@ -4,6 +4,7 @@ import '../models/course.dart';
 import '../models/course_table.dart';
 import '../services/schedule_service.dart';
 import '../services/service_provider.dart';
+import '../widgets/course_detail_panel.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/desktop_select_popover.dart';
 
@@ -548,12 +549,12 @@ class _SchedulePageState extends State<SchedulePage> {
                     child: Text('视图设置', style: theme.textTheme.titleSmall),
                   ),
                   const Divider(height: 1),
-                  DesktopMenuRow(
-                    leading: const Icon(Icons.swap_horiz, size: 20),
-                    title: Text('切换学期', style: theme.textTheme.bodyMedium),
-                    onTap: () {
+                  _DesktopSemesterSelectButton(
+                    semesters: _schedule.semesterInfo?.allSemesters ?? const [],
+                    selectedSemesterId: _schedule.selectedSemesterId,
+                    onChanged: (semesterId) {
                       close();
-                      _showSemesterPicker();
+                      _schedule.selectSemester(semesterId);
                     },
                   ),
                   const Divider(height: 1),
@@ -589,6 +590,64 @@ class _SchedulePageState extends State<SchedulePage> {
               );
             },
           ),
+        );
+      },
+    );
+  }
+}
+
+class _DesktopSemesterSelectButton extends StatelessWidget {
+  final List<MapEntry<String, String>> semesters;
+  final String? selectedSemesterId;
+  final ValueChanged<String> onChanged;
+
+  const _DesktopSemesterSelectButton({
+    required this.semesters,
+    required this.selectedSemesterId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedId = selectedSemesterId;
+    final currentValue =
+        selectedId != null && semesters.any((entry) => entry.key == selectedId)
+        ? selectedId
+        : (semesters.isNotEmpty ? semesters.first.key : '');
+
+    if (semesters.isEmpty || currentValue.isEmpty) {
+      return DesktopMenuRow(
+        leading: const Icon(Icons.swap_horiz, size: 20),
+        title: Text('切换学期', style: Theme.of(context).textTheme.bodyMedium),
+      );
+    }
+
+    return DesktopSelectPopover<String>(
+      items: semesters.map((entry) => entry.key).toList(growable: false),
+      value: currentValue,
+      onChanged: onChanged,
+      labelBuilder: (semesterId) {
+        return semesters.firstWhere((entry) => entry.key == semesterId).value;
+      },
+      leadingBuilder: (context, item, selected) {
+        return Icon(
+          selected
+              ? Icons.radio_button_checked_rounded
+              : Icons.radio_button_unchecked_rounded,
+          size: 22,
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+        );
+      },
+      width: 280,
+      itemHeight: 56,
+      visibleItemCount: 5,
+      anchorBuilder: (context, isOpen, toggle) {
+        return DesktopMenuRow(
+          leading: const Icon(Icons.swap_horiz, size: 20),
+          title: Text('切换学期', style: Theme.of(context).textTheme.bodyMedium),
+          onTap: toggle,
         );
       },
     );
@@ -1072,104 +1131,36 @@ class _CourseBlock extends StatelessWidget {
   }
 
   void _showCourseDetail(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    if (isDesktopLayout(context)) {
+      showDesktopPopover(
+        anchorContext: context,
+        width: 360,
+        placement: DesktopPopoverPlacement.rightTop,
+        offset: const Offset(12, 0),
+        builder: (context, close) {
+          return DesktopPopoverSurface(
+            padding: EdgeInsets.zero,
+            child: CourseDetailContent(
+              course: course,
+              periods: periods,
+              compact: true,
+            ),
+          );
+        },
+      );
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
       builder: (context) {
-        return Padding(
+        return CourseDetailContent(
+          course: course,
+          periods: periods,
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(course.name, style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 16),
-              if (course.location.isNotEmpty)
-                _DetailRow(
-                  icon: Icons.location_on_outlined,
-                  text: course.location,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              _DetailRow(
-                icon: Icons.schedule_outlined,
-                text: _timeRange(),
-                color: colorScheme.onSurfaceVariant,
-              ),
-              _DetailRow(
-                icon: Icons.calendar_today_outlined,
-                text: _dayName(),
-                color: colorScheme.onSurfaceVariant,
-              ),
-              if (course.teachers != null && course.teachers!.isNotEmpty)
-                _DetailRow(
-                  icon: Icons.person_outlined,
-                  text: course.teachers!,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              if (course.weeksText != null && course.weeksText!.isNotEmpty)
-                _DetailRow(
-                  icon: Icons.date_range_outlined,
-                  text: course.weeksText!,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-            ],
-          ),
         );
       },
-    );
-  }
-
-  String _timeRange() {
-    if (course.startPeriod - 1 < periods.length &&
-        course.endPeriod - 1 < periods.length) {
-      final start = periods[course.startPeriod - 1];
-      final end = periods[course.endPeriod - 1];
-      return '${start.startTime} – ${end.endTime}  (第${course.startPeriod}-${course.endPeriod}节)';
-    }
-    return '第${course.startPeriod}-${course.endPeriod}节';
-  }
-
-  String _dayName() {
-    const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-    if (course.dayOfWeek >= 1 && course.dayOfWeek <= 7) {
-      return days[course.dayOfWeek - 1];
-    }
-    return '';
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color color;
-
-  const _DetailRow({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: color),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'desktop_popup.dart';
@@ -8,6 +9,8 @@ typedef DesktopSelectAnchorBuilder =
     Widget Function(BuildContext context, bool isOpen, VoidCallback toggle);
 
 typedef DesktopSelectLabelBuilder<T> = String Function(T item);
+typedef DesktopSelectLeadingBuilder<T> =
+    Widget Function(BuildContext context, T item, bool selected);
 
 class DesktopSelectPopover<T> extends StatefulWidget {
   final List<T> items;
@@ -19,6 +22,7 @@ class DesktopSelectPopover<T> extends StatefulWidget {
   final double itemHeight;
   final int visibleItemCount;
   final Offset offset;
+  final DesktopSelectLeadingBuilder<T>? leadingBuilder;
 
   const DesktopSelectPopover({
     super.key,
@@ -31,6 +35,7 @@ class DesktopSelectPopover<T> extends StatefulWidget {
     this.itemHeight = 56,
     this.visibleItemCount = 5,
     this.offset = const Offset(12, 0),
+    this.leadingBuilder,
   });
 
   @override
@@ -49,7 +54,8 @@ class _DesktopSelectPopoverState<T> extends State<DesktopSelectPopover<T>> {
   void didUpdateWidget(covariant DesktopSelectPopover<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_isOpen &&
-        (oldWidget.value != widget.value || oldWidget.items != widget.items)) {
+        (oldWidget.value != widget.value ||
+            !listEquals(oldWidget.items, widget.items))) {
       _close(notify: false);
     }
   }
@@ -109,9 +115,10 @@ class _DesktopSelectPopoverState<T> extends State<DesktopSelectPopover<T>> {
             math.max(0, widget.items.length - widget.visibleItemCount),
           );
 
-    _scrollController = ScrollController(
+    final scrollController = ScrollController(
       initialScrollOffset: initialIndex * widget.itemHeight,
     );
+    _scrollController = scrollController;
 
     _entry = OverlayEntry(
       builder: (context) {
@@ -133,10 +140,11 @@ class _DesktopSelectPopoverState<T> extends State<DesktopSelectPopover<T>> {
                 child: _DesktopSelectMenu<T>(
                   items: widget.items,
                   value: widget.value,
-                  controller: _scrollController!,
+                  controller: scrollController,
                   itemHeight: widget.itemHeight,
                   visibleItemCount: widget.visibleItemCount,
                   labelBuilder: widget.labelBuilder,
+                  leadingBuilder: widget.leadingBuilder,
                   onSelected: (item) {
                     _close();
                     widget.onChanged(item);
@@ -177,6 +185,7 @@ class _DesktopSelectMenu<T> extends StatelessWidget {
   final double itemHeight;
   final int visibleItemCount;
   final DesktopSelectLabelBuilder<T> labelBuilder;
+  final DesktopSelectLeadingBuilder<T>? leadingBuilder;
   final ValueChanged<T> onSelected;
 
   const _DesktopSelectMenu({
@@ -186,6 +195,7 @@ class _DesktopSelectMenu<T> extends StatelessWidget {
     required this.itemHeight,
     required this.visibleItemCount,
     required this.labelBuilder,
+    required this.leadingBuilder,
     required this.onSelected,
   });
 
@@ -210,6 +220,10 @@ class _DesktopSelectMenu<T> extends StatelessWidget {
               return _DesktopSelectMenuRow(
                 label: labelBuilder(item),
                 selected: item == value,
+                leadingBuilder: leadingBuilder == null
+                    ? null
+                    : (context, selected) =>
+                          leadingBuilder!(context, item, selected),
                 onTap: () => onSelected(item),
               );
             },
@@ -223,11 +237,13 @@ class _DesktopSelectMenu<T> extends StatelessWidget {
 class _DesktopSelectMenuRow extends StatelessWidget {
   final String label;
   final bool selected;
+  final Widget Function(BuildContext context, bool selected)? leadingBuilder;
   final VoidCallback onTap;
 
   const _DesktopSelectMenuRow({
     required this.label,
     required this.selected,
+    required this.leadingBuilder,
     required this.onTap,
   });
 
@@ -247,13 +263,15 @@ class _DesktopSelectMenuRow extends StatelessWidget {
             SizedBox(
               width: 48,
               child: Center(
-                child: selected
-                    ? Icon(
-                        Icons.check_rounded,
-                        size: 24,
-                        color: colorScheme.primary,
-                      )
-                    : const SizedBox.shrink(),
+                child:
+                    leadingBuilder?.call(context, selected) ??
+                    (selected
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 24,
+                            color: colorScheme.primary,
+                          )
+                        : const SizedBox.shrink()),
               ),
             ),
             Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
