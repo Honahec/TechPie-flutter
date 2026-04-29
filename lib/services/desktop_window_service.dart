@@ -12,7 +12,6 @@ class DesktopWindowService with WindowListener {
   static const String _heightKey = 'desktop_window_height';
 
   static const Size _defaultSize = Size(1280, 720);
-  static const Size _minimumSize = Size(900, 506.25);
 
   final SharedPreferences _prefs;
   Timer? _saveDebounce;
@@ -35,7 +34,6 @@ class DesktopWindowService with WindowListener {
 
     final windowOptions = WindowOptions(
       size: _initialSize,
-      minimumSize: _minimumSize,
       center: true,
       title: 'TechPie',
       titleBarStyle: TitleBarStyle.hidden,
@@ -58,10 +56,7 @@ class DesktopWindowService with WindowListener {
       return _defaultSize;
     }
 
-    return Size(
-      savedWidth.clamp(_minimumSize.width, double.infinity).toDouble(),
-      savedHeight.clamp(_minimumSize.height, double.infinity).toDouble(),
-    );
+    return Size(savedWidth, savedHeight);
   }
 
   bool _isUsableDimension(double value) {
@@ -82,7 +77,7 @@ class DesktopWindowService with WindowListener {
 
   Future<void> _saveSize() async {
     final size = await windowManager.getSize();
-    if (size.width < _minimumSize.width || size.height < _minimumSize.height) {
+    if (!_isUsableDimension(size.width) || !_isUsableDimension(size.height)) {
       return;
     }
 

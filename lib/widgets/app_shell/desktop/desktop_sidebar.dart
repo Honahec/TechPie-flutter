@@ -9,6 +9,7 @@ class DesktopSidebar extends StatelessWidget {
   final List<AppDestination> destinations;
   final int selectedIndex;
   final bool collapsed;
+  final bool showToggleButton;
   final ValueChanged<int> onSelected;
   final VoidCallback onToggleCollapsed;
 
@@ -17,6 +18,7 @@ class DesktopSidebar extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.collapsed,
+    this.showToggleButton = true,
     required this.onSelected,
     required this.onToggleCollapsed,
   });
@@ -27,6 +29,7 @@ class DesktopSidebar extends StatelessWidget {
     final horizontalPadding = collapsed
         ? DesktopSidebarTokens.collapsedHorizontalPadding
         : DesktopSidebarTokens.expandedHorizontalPadding;
+    final itemSpacing = DesktopSidebarTokens.navItemSpacing;
 
     return ColoredBox(
       color: colorScheme.surfaceContainerLow,
@@ -63,18 +66,17 @@ class DesktopSidebar extends StatelessWidget {
                         onTap: () => onSelected(index),
                       ),
                       if (index < destinations.length - 1)
-                        const SizedBox(
-                          height: DesktopSidebarTokens.navItemSpacing,
-                        ),
+                        SizedBox(height: itemSpacing),
                     ],
                     const Spacer(),
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: _SidebarToggleButton(
-                        collapsed: collapsed,
-                        onPressed: onToggleCollapsed,
+                    if (showToggleButton)
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: _SidebarToggleButton(
+                          collapsed: collapsed,
+                          onPressed: onToggleCollapsed,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

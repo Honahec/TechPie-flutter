@@ -61,7 +61,9 @@ class DesktopSidebarItem extends StatelessWidget {
                     ),
                   ),
                   if (canShowLabel) ...[
-                    const SizedBox(width: DesktopSidebarTokens.navItemTextGap),
+                    const SizedBox(
+                      width: DesktopSidebarTokens.navItemTextGap,
+                    ),
                     Expanded(
                       child: Text(
                         destination.label,
@@ -69,9 +71,8 @@ class DesktopSidebarItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: foreground,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
                     ),

@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 
 abstract final class DesktopSidebarTokens {
   static const double collapsedWidth = 88;
+  static const double mediumExpandedWidth = 120;
   static const double expandedWidthFactor = 0.2;
-  static const double maxExpandedWidth = 360;
+  static const double maxExpandedWidth = 240;
 
   static const Duration widthAnimationDuration = Duration(milliseconds: 180);
   static const Curve widthAnimationCurve = Curves.easeOutCubic;
 
   static const double headerHeight = 104;
   static const double collapsedHorizontalPadding = 20;
+  static const double mediumHorizontalPadding = 12;
   static const double expandedHorizontalPadding = 20;
   static const double headerTopPadding = 40;
   static const double headerBottomPadding = 16;
@@ -26,6 +28,8 @@ abstract final class DesktopSidebarTokens {
   static const double navBottomPadding = 16;
   static const double navItemSpacing = 4;
   static const double navItemHeight = 48;
+  static const double mediumNavItemSpacing = 8;
+  static const double mediumNavItemHeight = 76;
   static const double navItemRadius = 8;
   static const double navItemIconSize = 22;
   static const double navItemTextGap = 12;

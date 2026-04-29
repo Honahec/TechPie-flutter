@@ -21,7 +21,6 @@ class _AppShellState extends State<AppShell> {
 
   int _selectedIndex = 0;
   bool _sidebarCollapsed = false;
-
   static const List<AppDestination> _destinations = [
     AppDestination(
       label: 'Home',
@@ -86,13 +85,25 @@ class _AppShellState extends State<AppShell> {
     final width = MediaQuery.sizeOf(context).width;
     final pageView = _buildPageView();
 
-    if (width >= 600) {
+    if (width >= 960) {
       return DesktopShell(
         destinations: _destinations,
         selectedIndex: _selectedIndex,
         sidebarCollapsed: _sidebarCollapsed,
         onDestinationSelected: _onDestinationSelected,
         onToggleSidebarCollapsed: _onSidebarToggleCollapsed,
+        child: pageView,
+      );
+    }
+
+    if (width >= 600) {
+      return DesktopShell(
+        destinations: _destinations,
+        selectedIndex: _selectedIndex,
+        sidebarCollapsed: true,
+        showToggleButton: false,
+        onDestinationSelected: _onDestinationSelected,
+        onToggleSidebarCollapsed: () {},
         child: pageView,
       );
     }

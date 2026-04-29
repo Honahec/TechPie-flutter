@@ -10,6 +10,7 @@ class DesktopShell extends StatelessWidget {
   final List<AppDestination> destinations;
   final int selectedIndex;
   final bool sidebarCollapsed;
+  final bool showToggleButton;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onToggleSidebarCollapsed;
   final Widget child;
@@ -19,6 +20,7 @@ class DesktopShell extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.sidebarCollapsed,
+    this.showToggleButton = true,
     required this.onDestinationSelected,
     required this.onToggleSidebarCollapsed,
     required this.child,
@@ -43,12 +45,13 @@ class DesktopShell extends StatelessWidget {
                 curve: DesktopSidebarTokens.widthAnimationCurve,
                 width: sidebarWidth,
                 child: DesktopSidebar(
-                  destinations: destinations,
-                  selectedIndex: selectedIndex,
-                  collapsed: sidebarCollapsed,
-                  onSelected: onDestinationSelected,
-                  onToggleCollapsed: onToggleSidebarCollapsed,
-                ),
+                    destinations: destinations,
+                    selectedIndex: selectedIndex,
+                    collapsed: sidebarCollapsed,
+                    showToggleButton: showToggleButton,
+                    onSelected: onDestinationSelected,
+                    onToggleCollapsed: onToggleSidebarCollapsed,
+                  ),
               ),
               Expanded(child: SizedBox.expand(child: child)),
             ],
