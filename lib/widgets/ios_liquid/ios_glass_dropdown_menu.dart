@@ -8,12 +8,14 @@ class IosGlassDropdownMenuItem {
     required this.label,
     this.checked = false,
     this.destructive = false,
+    this.children,
   });
 
   final String value;
   final String label;
   final bool checked;
   final bool destructive;
+  final List<IosGlassDropdownMenuItem>? children;
 }
 
 class IosGlassDropdownMenu extends StatefulWidget {
@@ -61,12 +63,7 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
       return _buildFallback();
     }
 
-    final signature = widget.items
-        .map(
-          (item) =>
-              '${item.value}|${item.label}|${item.checked}|${item.destructive}',
-        )
-        .join(';');
+    final signature = widget.items.map(_itemSignature).join(';');
 
     return SizedBox(
       width: widget.width,
@@ -80,15 +77,7 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
         creationParams: <String, Object?>{
           'sfSymbol': widget.sfSymbol,
           'label': widget.label,
-          'items': [
-            for (final item in widget.items)
-              <String, Object?>{
-                'value': item.value,
-                'title': item.label,
-                'checked': item.checked,
-                'destructive': item.destructive,
-              },
-          ],
+          'items': [for (final item in widget.items) _encodeItem(item)],
         },
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
@@ -143,6 +132,24 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
 
       return null;
     });
+  }
+
+  Map<String, Object?> _encodeItem(IosGlassDropdownMenuItem item) {
+    return <String, Object?>{
+      'value': item.value,
+      'title': item.label,
+      'checked': item.checked,
+      'destructive': item.destructive,
+      if (item.children != null)
+        'children': [for (final child in item.children!) _encodeItem(child)],
+    };
+  }
+
+  String _itemSignature(IosGlassDropdownMenuItem item) {
+    final childrenSignature = item.children == null
+        ? ''
+        : item.children!.map(_itemSignature).join(',');
+    return '${item.value}|${item.label}|${item.checked}|${item.destructive}|$childrenSignature';
   }
 }
 

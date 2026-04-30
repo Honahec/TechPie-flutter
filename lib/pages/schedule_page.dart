@@ -426,9 +426,18 @@ class _SchedulePageState extends State<SchedulePage> {
                   sfSymbol: 'ellipsis',
                   tooltip: '视图设置',
                   items: [
-                    const IosGlassDropdownMenuItem(
+                    IosGlassDropdownMenuItem(
                       value: 'semester',
                       label: '切换学期',
+                      children: [
+                        for (final entry
+                            in _schedule.semesterInfo?.allSemesters ?? const [])
+                          IosGlassDropdownMenuItem(
+                            value: 'semester:${entry.key}',
+                            label: entry.value,
+                            checked: _schedule.selectedSemesterId == entry.key,
+                          ),
+                      ],
                     ),
                     IosGlassDropdownMenuItem(
                       value: 'saturday',
@@ -580,6 +589,14 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   void _onMenuSelected(String value) {
+    if (value.startsWith('semester:')) {
+      final semesterId = value.substring('semester:'.length);
+      if (semesterId.isNotEmpty) {
+        _schedule.selectSemester(semesterId);
+      }
+      return;
+    }
+
     switch (value) {
       case 'semester':
         _showSemesterPicker();

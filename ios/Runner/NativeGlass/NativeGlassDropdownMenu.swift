@@ -163,11 +163,24 @@ final class NativeGlassDropdownMenuPlatformView: NSObject, FlutterPlatformView {
     button.removeTarget(self, action: #selector(handleLegacyTap), for: .touchUpInside)
 
     if #available(iOS 14.0, *) {
-      button.menu = UIMenu(children: items.map(makeAction))
+      button.menu = UIMenu(children: items.compactMap(makeElement))
       button.showsMenuAsPrimaryAction = true
     } else {
       button.addTarget(self, action: #selector(handleLegacyTap), for: .touchUpInside)
     }
+  }
+
+  @available(iOS 14.0, *)
+  private func makeElement(for item: NativeGlassDropdownMenuItem) -> UIMenuElement {
+    if let children = item.children, !children.isEmpty {
+      return UIMenu(
+        title: item.title,
+        options: [],
+        children: children.compactMap(makeElement)
+      )
+    }
+
+    return makeAction(for: item)
   }
 
   @available(iOS 14.0, *)
@@ -260,12 +273,20 @@ private struct NativeGlassDropdownMenuItem {
   let title: String
   let checked: Bool
   let destructive: Bool
+  let children: [NativeGlassDropdownMenuItem]?
 
-  init(value: String, title: String, checked: Bool, destructive: Bool) {
+  init(
+    value: String,
+    title: String,
+    checked: Bool,
+    destructive: Bool,
+    children: [NativeGlassDropdownMenuItem]?
+  ) {
     self.value = value
     self.title = title
     self.checked = checked
     self.destructive = destructive
+    self.children = children
   }
 
   init?(_ dictionary: [String: Any]) {
@@ -282,7 +303,8 @@ private struct NativeGlassDropdownMenuItem {
       value: value,
       title: title,
       checked: dictionary["checked"] as? Bool ?? false,
-      destructive: dictionary["destructive"] as? Bool ?? false
+      destructive: dictionary["destructive"] as? Bool ?? false,
+      children: (dictionary["children"] as? [[String: Any]])?.compactMap(Self.init)
     )
   }
 }
