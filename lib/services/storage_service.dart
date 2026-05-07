@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/course_table.dart';
+import '../models/third_party_account.dart';
 import '../models/user_session.dart';
 
 class StorageService {
@@ -35,6 +36,46 @@ class StorageService {
 
   Future<void> clearSession() async {
     await _secure.delete(key: _sessionKey);
+  }
+
+  // Secure third-party account storage (one secure key per platform)
+  static const _thirdPartyKeyPrefix = 'third_party_';
+  String _thirdPartyKey(ThirdPartyPlatform p) => '$_thirdPartyKeyPrefix${p.id}';
+
+  Future<void> saveThirdPartyAccount(ThirdPartyAccount acc) async {
+    await _secure.write(
+      key: _thirdPartyKey(acc.platform),
+      value: jsonEncode(acc.toJson()),
+    );
+  }
+
+  Future<ThirdPartyAccount?> loadThirdPartyAccount(ThirdPartyPlatform p) async {
+    final raw = await _secure.read(key: _thirdPartyKey(p));
+    if (raw == null) return null;
+    try {
+      return ThirdPartyAccount.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<ThirdPartyAccount>> loadAllThirdPartyAccounts() async {
+    final result = <ThirdPartyAccount>[];
+    for (final p in ThirdPartyPlatform.values) {
+      final acc = await loadThirdPartyAccount(p);
+      if (acc != null) result.add(acc);
+    }
+    return result;
+  }
+
+  Future<void> clearThirdPartyAccount(ThirdPartyPlatform p) async {
+    await _secure.delete(key: _thirdPartyKey(p));
+  }
+
+  Future<void> clearAllThirdPartyAccounts() async {
+    for (final p in ThirdPartyPlatform.values) {
+      await _secure.delete(key: _thirdPartyKey(p));
+    }
   }
 
   // SharedPreferences for non-sensitive data
@@ -93,4 +134,23 @@ class StorageService {
   String? get selectedSemester => _prefs.getString(_selectedSemesterKey);
   Future<void> setSelectedSemester(String id) =>
       _prefs.setString(_selectedSemesterKey, id);
+
+  // Assignments cache (non-sensitive — stored as JSON in SharedPreferences)
+  static const _assignmentsKey = 'cached_assignments';
+
+  Future<void> saveCachedAssignments(List<Map<String, dynamic>> items) =>
+      _prefs.setString(_assignmentsKey, jsonEncode(items));
+
+  List<Map<String, dynamic>> loadCachedAssignments() {
+    final raw = _prefs.getString(_assignmentsKey);
+    if (raw == null) return const [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list.map((e) => (e as Map).cast<String, dynamic>()).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> clearCachedAssignments() => _prefs.remove(_assignmentsKey);
 }

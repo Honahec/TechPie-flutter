@@ -39,7 +39,7 @@ class _AppShellState extends State<AppShell> {
       page: SchedulePage(key: ValueKey('schedule')),
     ),
     AppDestination(
-      label: 'Assignments',
+      label: 'Deadlines',
       icon: Icons.assignment_outlined,
       selectedIcon: Icons.assignment,
       sfSymbol: 'checkmark.circle',

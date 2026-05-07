@@ -10,6 +10,7 @@ import 'package:techpie/services/http_client.dart';
 import 'package:techpie/services/schedule_service.dart';
 import 'package:techpie/services/storage_service.dart';
 import 'package:techpie/services/theme_service.dart';
+import 'package:techpie/services/third_party_auth_service.dart';
 
 void main() {
   testWidgets('App shell renders with desktop sidebar', (
@@ -28,7 +29,8 @@ void main() {
     final auth = AuthService(storage, http);
     final theme = ThemeService(storage);
     final schedule = ScheduleService(storage, http, auth);
-    final assignments = AssignmentService(storage, http, auth);
+    final tpAuth = ThirdPartyAuthService(storage, http);
+    final assignments = AssignmentService(storage, http, auth, tpAuth);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -38,13 +40,14 @@ void main() {
         themeService: theme,
         scheduleService: schedule,
         assignmentService: assignments,
+        thirdPartyAuthService: tpAuth,
       ),
     );
 
     expect(find.byType(NavigationRail), findsNothing);
     expect(find.text('Home'), findsWidgets);
     expect(find.text('Schedule'), findsWidgets);
-    expect(find.text('Assignments'), findsWidgets);
+    expect(find.text('Deadlines'), findsWidgets);
     expect(find.text('Settings'), findsWidgets);
   });
 
@@ -61,7 +64,8 @@ void main() {
     final http = LoggingHttpClient(logger);
     final auth = AuthService(storage, http);
     final schedule = ScheduleService(storage, http, auth);
-    final assignments = AssignmentService(storage, http, auth);
+    final tpAuth = ThirdPartyAuthService(storage, http);
+    final assignments = AssignmentService(storage, http, auth, tpAuth);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -71,6 +75,7 @@ void main() {
         themeService: ThemeService(storage),
         scheduleService: schedule,
         assignmentService: assignments,
+        thirdPartyAuthService: tpAuth,
       ),
     );
 
@@ -83,8 +88,8 @@ void main() {
     // Not logged in, so shows login prompt
     expect(find.text('登录以查看课表'), findsOneWidget);
 
-    // Tap Assignments
-    await tester.tap(find.text('Assignments'));
+    // Tap Deadlines
+    await tester.tap(find.text('Deadlines'));
     await tester.pumpAndSettle();
     expect(find.text('No upcoming assignments'), findsOneWidget);
 

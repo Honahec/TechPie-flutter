@@ -9,6 +9,7 @@ import 'services/schedule_service.dart';
 import 'services/service_provider.dart';
 import 'services/storage_service.dart';
 import 'services/theme_service.dart';
+import 'services/third_party_auth_service.dart';
 import 'widgets/app_shell/app_shell.dart';
 
 void main() async {
@@ -26,22 +27,37 @@ void main() async {
     httpClient,
     authService,
   );
+  final thirdPartyAuthService = ThirdPartyAuthService(storageService, httpClient);
   final assignmentService = AssignmentService(
     storageService,
     httpClient,
     authService,
+    thirdPartyAuthService,
   );
 
+  authService.onLogout = () async {
+    await thirdPartyAuthService.clearAll();
+    await assignmentService.clearCache();
+  };
+
   await authService.initialize();
+  await thirdPartyAuthService.initialize();
+  // Hydrate from cache before runApp so the Deadlines tab paints with data.
+  assignmentService.loadCached();
 
   // Load cached schedule data so widgets (e.g. home page) render immediately
   await scheduleService.loadCachedData();
 
-  // Fetch fresh schedule data in the background if logged in
+  // Fetch fresh data in the background.
   if (authService.isLoggedIn) {
     scheduleService.fetchAll(); // fire-and-forget, UI uses cache first
-    assignmentService.fetchAssignments();
   }
+  if (authService.isLoggedIn || thirdPartyAuthService.boundPlatforms.isNotEmpty) {
+    assignmentService.fetchAssignments(); // fire-and-forget, UI uses cache first
+  }
+  // After the explicit boot fetch, allow auto-refetch on auth/binding changes
+  // (login, bind, unbind, logout).
+  assignmentService.enableAutoRefetch();
 
   runApp(
     TechPieApp(
@@ -51,6 +67,7 @@ void main() async {
       themeService: themeService,
       scheduleService: scheduleService,
       assignmentService: assignmentService,
+      thirdPartyAuthService: thirdPartyAuthService,
     ),
   );
 }
@@ -62,6 +79,7 @@ class TechPieApp extends StatefulWidget {
   final ThemeService themeService;
   final ScheduleService scheduleService;
   final AssignmentService assignmentService;
+  final ThirdPartyAuthService thirdPartyAuthService;
 
   const TechPieApp({
     super.key,
@@ -71,6 +89,7 @@ class TechPieApp extends StatefulWidget {
     required this.themeService,
     required this.scheduleService,
     required this.assignmentService,
+    required this.thirdPartyAuthService,
   });
 
   @override
@@ -89,6 +108,7 @@ class _TechPieAppState extends State<TechPieApp> {
         themeService: widget.themeService,
         scheduleService: widget.scheduleService,
         assignmentService: widget.assignmentService,
+        thirdPartyAuthService: widget.thirdPartyAuthService,
         child: MaterialApp(
           title: 'TechPie',
           theme: widget.themeService.lightTheme,

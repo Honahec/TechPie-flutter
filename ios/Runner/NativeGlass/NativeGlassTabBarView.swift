@@ -121,7 +121,7 @@ final class NativeGlassTabBarPlatformView: NSObject, FlutterPlatformView, UITabB
           selectedSfSymbol: "calendar.circle.fill"
         ),
         NativeGlassTabBarItem(
-          label: "Assignments",
+          label: "Deadlines",
           sfSymbol: "checkmark.circle",
           selectedSfSymbol: "checkmark.circle.fill"
         ),

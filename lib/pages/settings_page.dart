@@ -9,6 +9,7 @@ import '../widgets/ios_liquid/ios_glass_select.dart';
 import '../widgets/ios_liquid/ios_glass_switch.dart';
 import 'debug_log_page.dart';
 import 'login_page.dart';
+import 'third_party_accounts_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -44,13 +45,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final logger = sp.debugLogger;
     final storage = sp.storageService;
     final themeService = sp.themeService;
+    final tpAuth = sp.thirdPartyAuthService;
     final usesIosLiquidGlass =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListenableBuilder(
-        listenable: Listenable.merge([auth, logger, themeService]),
+        listenable: Listenable.merge([auth, logger, themeService, tpAuth]),
         builder: (context, _) => ListView(
           padding: const EdgeInsets.only(bottom: 120),
           children: [
@@ -73,6 +75,20 @@ class _SettingsPageState extends State<SettingsPage> {
                         ? auth.session!.studentId
                         : '未知学号',
                   ].join(' | '),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_tree_outlined),
+                title: const Text('Linked accounts'),
+                subtitle: Text(
+                  '${tpAuth.boundPlatforms.length} bound · Gradescope / Hydro / Blackboard',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ThirdPartyAccountsPage(),
+                  ),
                 ),
               ),
               ListTile(

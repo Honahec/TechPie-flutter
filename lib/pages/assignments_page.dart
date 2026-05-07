@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/assignment.dart';
+import '../services/assignment_service.dart';
 import '../services/service_provider.dart';
+import 'third_party_accounts_page.dart';
 
 class AssignmentsPage extends StatefulWidget {
   const AssignmentsPage({super.key});
@@ -13,95 +15,157 @@ class AssignmentsPage extends StatefulWidget {
 
 class _AssignmentsPageState extends State<AssignmentsPage> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ServiceProvider.of(context).assignmentService.fetchAssignments();
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final assignmentService = ServiceProvider.of(context).assignmentService;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Assignments'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => assignmentService.fetchAssignments(),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Deadlines')),
       body: ListenableBuilder(
         listenable: assignmentService,
         builder: (context, _) {
-          if (assignmentService.loading && assignmentService.assignments.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (assignmentService.assignments.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.assignment_turned_in_outlined,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No upcoming assignments',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  if (assignmentService.error != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      assignmentService.error!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ]
-                ],
-              ),
+          final banner = _PlatformErrorsBanner(
+            errors: assignmentService.platformErrors,
+          );
+          if (assignmentService.loading &&
+              assignmentService.assignments.isEmpty) {
+            return Column(
+              children: [
+                banner,
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
             );
           }
 
-          final assignments = assignmentService.assignments.toList()
-            ..sort((a, b) => a.due.compareTo(b.due));
-
-          return RefreshIndicator(
-            onRefresh: () => assignmentService.fetchAssignments(),
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-              itemCount: assignments.length + (assignmentService.error != null ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == 0 && assignmentService.error != null) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      'Error syncing: ${assignmentService.error}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
+          if (assignmentService.assignments.isEmpty) {
+            return Column(
+              children: [
+                banner,
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => assignmentService.fetchAssignments(),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: _emptyState(context, assignmentService),
+                        ),
+                      ],
                     ),
-                  );
-                }
+                  ),
+                ),
+              ],
+            );
+          }
 
-                final itemIndex = assignmentService.error != null ? index - 1 : index;
-                final assignment = assignments[itemIndex];
-                return _AssignmentCard(assignment: assignment);
-              },
-            ),
+          return Column(
+            children: [
+              banner,
+              Expanded(child: _buildList(context, assignmentService)),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context, AssignmentService service) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.assignment_turned_in_outlined,
+            size: 64,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text('No upcoming assignments', style: theme.textTheme.titleMedium),
+          if (service.error != null) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                service.error!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList(BuildContext context, AssignmentService service) {
+    final assignments = service.assignments.toList()
+      ..sort((a, b) => a.due.compareTo(b.due));
+    return RefreshIndicator(
+      onRefresh: () => service.fetchAssignments(),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+        itemCount: assignments.length,
+        itemBuilder: (context, index) =>
+            _AssignmentCard(assignment: assignments[index]),
+      ),
+    );
+  }
+}
+
+class _PlatformErrorsBanner extends StatelessWidget {
+  final Map<String, String> errors;
+  const _PlatformErrorsBanner({required this.errors});
+
+  @override
+  Widget build(BuildContext context) {
+    if (errors.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 20,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final entry in errors.entries)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        '${entry.key}: ${entry.value}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ThirdPartyAccountsPage(),
+                ),
+              ),
+              child: const Text('Manage'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -117,8 +181,7 @@ class _AssignmentCard extends StatelessWidget {
     final theme = Theme.of(context);
     final now = DateTime.now();
     final isPast = assignment.due.isBefore(now);
-    
-    // Formatting the date nicely
+
     final DateFormat formatter = DateFormat('MM/dd HH:mm');
     final dueString = formatter.format(assignment.due);
 
@@ -134,7 +197,7 @@ class _AssignmentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: assignment.url != null ? () {} : null, // Future: open URL
+        onTap: assignment.url != null ? () {} : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -143,7 +206,10 @@ class _AssignmentCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(4),
@@ -187,19 +253,19 @@ class _AssignmentCard extends StatelessWidget {
                   Icon(
                     Icons.access_time,
                     size: 16,
-                    color: isPast && !assignment.submitted 
-                        ? Colors.red 
+                    color: isPast && !assignment.submitted
+                        ? Colors.red
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Due: $dueString',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: isPast && !assignment.submitted 
-                          ? Colors.red 
+                      color: isPast && !assignment.submitted
+                          ? Colors.red
                           : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: isPast && !assignment.submitted 
-                          ? FontWeight.bold 
+                      fontWeight: isPast && !assignment.submitted
+                          ? FontWeight.bold
                           : FontWeight.normal,
                     ),
                   ),
@@ -207,7 +273,11 @@ class _AssignmentCard extends StatelessWidget {
                   if (assignment.submitted)
                     Row(
                       children: [
-                        const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                        const Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: Colors.green,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Submitted',

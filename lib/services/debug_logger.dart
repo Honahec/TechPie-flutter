@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 class LogEntry {
@@ -54,12 +56,58 @@ class DebugLogger extends ChangeNotifier {
       method: method,
       url: url,
       statusCode: statusCode,
-      requestBody: requestBody,
-      responseBody: responseBody,
+      requestBody: redactSensitive(requestBody),
+      responseBody: redactSensitive(responseBody),
       error: error,
       tag: tag,
     ));
     notifyListeners();
+  }
+
+  static const _sensitiveKeys = {
+    'password',
+    'token',
+    'tgc',
+    'sessionToken',
+    'api_token',
+    'sid',
+    'sid.sig',
+    'CASTGC',
+    'castgc',
+    'cookies',
+    'cookie',
+  };
+
+  // Best-effort redaction: parse as JSON and walk the tree replacing
+  // sensitive values with "***". Falls back to regex on the raw string.
+  static String? redactSensitive(String? body) {
+    if (body == null || body.isEmpty) return body;
+    try {
+      final decoded = jsonDecode(body);
+      return jsonEncode(_redactNode(decoded));
+    } catch (_) {
+      var out = body;
+      for (final key in _sensitiveKeys) {
+        final pattern = RegExp(
+          '"${RegExp.escape(key)}"\\s*:\\s*"([^"\\\\]|\\\\.)*"',
+        );
+        out = out.replaceAll(pattern, '"$key":"***"');
+      }
+      return out;
+    }
+  }
+
+  static dynamic _redactNode(dynamic node) {
+    if (node is Map) {
+      return {
+        for (final entry in node.entries)
+          entry.key: _sensitiveKeys.contains(entry.key)
+              ? (entry.value == null ? null : '***')
+              : _redactNode(entry.value),
+      };
+    }
+    if (node is List) return node.map(_redactNode).toList();
+    return node;
   }
 
   void clear() {

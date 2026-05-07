@@ -4,9 +4,9 @@ class Assignment {
   final String title;
   final String course;
   final DateTime due;
+  final DateTime? lateDue;
   final String? status;
   final String? url;
-  final bool submitted;
 
   const Assignment({
     required this.id,
@@ -14,23 +14,30 @@ class Assignment {
     required this.title,
     required this.course,
     required this.due,
+    this.lateDue,
     this.status,
     this.url,
-    required this.submitted,
   });
 
+  bool get submitted => status == 'Submitted' || status == 'Graded';
+
   factory Assignment.fromJson(Map<String, dynamic> json) {
+    DateTime parseEpoch(dynamic v) {
+      if (v is num) {
+        return DateTime.fromMillisecondsSinceEpoch(v.toInt() * 1000);
+      }
+      return DateTime.now();
+    }
+
     return Assignment(
       id: json['id'] as String? ?? '',
       platform: json['platform'] as String? ?? 'unknown',
       title: json['title'] as String? ?? '',
       course: json['course'] as String? ?? '',
-      due: json['due'] != null 
-          ? DateTime.fromMillisecondsSinceEpoch((json['due'] as int) * 1000) 
-          : DateTime.now(),
+      due: json['due'] != null ? parseEpoch(json['due']) : DateTime.now(),
+      lateDue: json['lateDue'] != null ? parseEpoch(json['lateDue']) : null,
       status: json['status'] as String?,
       url: json['url'] as String?,
-      submitted: json['submitted'] as bool? ?? false,
     );
   }
 
@@ -40,8 +47,8 @@ class Assignment {
     'title': title,
     'course': course,
     'due': due.millisecondsSinceEpoch ~/ 1000,
+    if (lateDue != null) 'lateDue': lateDue!.millisecondsSinceEpoch ~/ 1000,
     'status': status,
     'url': url,
-    'submitted': submitted,
   };
 }

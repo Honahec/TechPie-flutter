@@ -25,6 +25,11 @@ class AuthService extends ChangeNotifier {
   bool get isLoggedIn => _session != null;
   bool get loading => _loading;
 
+  // Optional callback fired after primary-account logout so dependent
+  // services (e.g. third-party bindings) can clear themselves. Injected
+  // post-construction from main.dart to avoid circular construction.
+  Future<void> Function()? onLogout;
+
   AuthService(this._storage, this._http);
 
   // -- Initialization & token renewal --
@@ -192,6 +197,11 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     await _storage.clearSession();
     _session = null;
+    if (onLogout != null) {
+      try {
+        await onLogout!();
+      } catch (_) {}
+    }
     notifyListeners();
   }
 
