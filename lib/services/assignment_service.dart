@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/assignment.dart';
+import '../models/assignment_overrides.dart';
 import '../models/third_party_account.dart';
 import 'auth_service.dart';
 import 'http_client.dart';
@@ -20,6 +21,7 @@ class AssignmentService extends ChangeNotifier {
   final ThirdPartyAuthService _tpAuth;
 
   List<Assignment> _assignments = [];
+  AssignmentOverrides _overrides = AssignmentOverrides();
   bool _loading = false;
   String? _error;
   // Per-platform error messages (keyed by lowercase platform id).
@@ -28,9 +30,23 @@ class AssignmentService extends ChangeNotifier {
   String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
 
   List<Assignment> get assignments => _assignments;
+
+  /// Same list as [assignments] but with locally hidden ids filtered out.
+  /// Use this in UI; use [assignments] only for places that need the raw
+  /// (e.g. the hidden-list screen).
+  List<Assignment> get visibleAssignments =>
+      _assignments.where((a) => !_overrides.isHidden(a)).toList();
+
+  AssignmentOverrides get overrides => _overrides;
+
   bool get loading => _loading;
   String? get error => _error;
   Map<String, String> get platformErrors => Map.unmodifiable(_platformErrors);
+
+  bool isCompleted(Assignment a) => _overrides.effectiveCompleted(a);
+  bool hasCompletionOverride(Assignment a) =>
+      _overrides.hasCompletionOverride(a);
+  bool isHidden(Assignment a) => _overrides.isHidden(a);
 
   AssignmentService(this._storage, this._http, this._auth, this._tpAuth) {
     // Refetch when bindings or auth change *after* initial app boot.
@@ -68,12 +84,74 @@ class AssignmentService extends ChangeNotifier {
   }
 
   /// Hydrate from local cache so the UI doesn't flash empty on app start
-  /// or tab switch. Safe to call before login.
+  /// or tab switch. Safe to call before login. Also loads overrides.
   void loadCached() {
+    _overrides = _storage.loadAssignmentOverrides();
     final raw = _storage.loadCachedAssignments();
-    if (raw.isEmpty) return;
+    if (raw.isEmpty) {
+      notifyListeners();
+      return;
+    }
     _assignments = raw.map((e) => Assignment.fromJson(e)).toList()
       ..sort((a, b) => a.due.compareTo(b.due));
+    notifyListeners();
+  }
+
+  // -- Override mutators --
+
+  Future<void> _persistOverrides() =>
+      _storage.saveAssignmentOverrides(_overrides);
+
+  Future<void> setCompleted(Assignment a, bool completed) async {
+    _overrides.completed[AssignmentOverrides.keyFor(a)] = completed;
+    await _persistOverrides();
+    notifyListeners();
+  }
+
+  Future<void> toggleCompleted(Assignment a) async {
+    final cur = _overrides.effectiveCompleted(a);
+    return setCompleted(a, !cur);
+  }
+
+  Future<void> clearCompletionOverride(Assignment a) async {
+    _overrides.completed.remove(AssignmentOverrides.keyFor(a));
+    await _persistOverrides();
+    notifyListeners();
+  }
+
+  Future<void> resetOverrides(Iterable<String> keys) async {
+    var changed = false;
+    for (final k in keys) {
+      if (_overrides.completed.remove(k) != null) changed = true;
+    }
+    if (!changed) return;
+    await _persistOverrides();
+    notifyListeners();
+  }
+
+  Future<void> hide(Assignment a) async {
+    _overrides.hidden.add(AssignmentOverrides.keyFor(a));
+    await _persistOverrides();
+    notifyListeners();
+  }
+
+  Future<void> unhide(String key) async {
+    if (_overrides.hidden.remove(key)) {
+      await _persistOverrides();
+      notifyListeners();
+    }
+  }
+
+  Future<void> unhideAll() async {
+    if (_overrides.hidden.isEmpty) return;
+    _overrides.hidden.clear();
+    await _persistOverrides();
+    notifyListeners();
+  }
+
+  Future<void> clearAllOverrides() async {
+    _overrides = AssignmentOverrides();
+    await _storage.clearAssignmentOverrides();
     notifyListeners();
   }
 

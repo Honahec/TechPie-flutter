@@ -40,6 +40,7 @@ void main() async {
   authService.onLogout = () async {
     await thirdPartyAuthService.clearAll();
     await assignmentService.clearCache();
+    await assignmentService.clearAllOverrides();
   };
 
   await authService.initialize();

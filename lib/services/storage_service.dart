@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/assignment_overrides.dart';
 import '../models/course_table.dart';
 import '../models/third_party_account.dart';
 import '../models/user_session.dart';
@@ -153,4 +154,25 @@ class StorageService {
   }
 
   Future<void> clearCachedAssignments() => _prefs.remove(_assignmentsKey);
+
+  // Local user overrides on assignments (completion flips + hidden ids).
+  static const _assignmentOverridesKey = 'assignment_overrides';
+
+  Future<void> saveAssignmentOverrides(AssignmentOverrides ov) =>
+      _prefs.setString(_assignmentOverridesKey, jsonEncode(ov.toJson()));
+
+  AssignmentOverrides loadAssignmentOverrides() {
+    final raw = _prefs.getString(_assignmentOverridesKey);
+    if (raw == null) return AssignmentOverrides();
+    try {
+      return AssignmentOverrides.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return AssignmentOverrides();
+    }
+  }
+
+  Future<void> clearAssignmentOverrides() =>
+      _prefs.remove(_assignmentOverridesKey);
 }
