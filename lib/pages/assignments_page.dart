@@ -80,6 +80,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   @override
   Widget build(BuildContext context) {
     final assignmentService = ServiceProvider.of(context).assignmentService;
+    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return ListenableBuilder(
       listenable: assignmentService,
@@ -95,7 +96,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
             onPopInvokedWithResult: (didPop, _) {
               if (!didPop && _selectionMode) _exitSelection();
             },
-            child: _buildBody(context, assignmentService, visible),
+            child: _buildBody(context, assignmentService, visible, topInset),
           ),
         );
       },
@@ -180,9 +181,9 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     BuildContext context,
     AssignmentService service,
     List<Assignment> visible,
+    double topInset,
   ) {
     final banner = _PlatformErrorsBanner(errors: service.platformErrors);
-    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     if (service.loading && visible.isEmpty) {
       return Column(

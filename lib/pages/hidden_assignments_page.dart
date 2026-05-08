@@ -12,6 +12,7 @@ class HiddenAssignmentsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).assignmentService;
     final theme = Theme.of(context);
+    final topPad = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -34,8 +35,6 @@ class HiddenAssignmentsPage extends StatelessWidget {
         listenable: service,
         builder: (context, _) {
           final hiddenKeys = service.overrides.hidden;
-          final topPad =
-              kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
           if (hiddenKeys.isEmpty) {
             return Padding(
               padding: EdgeInsets.only(top: topPad),

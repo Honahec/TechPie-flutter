@@ -10,6 +10,7 @@ class DebugLogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logger = ServiceProvider.of(context).debugLogger;
+    final topPad = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -26,8 +27,6 @@ class DebugLogPage extends StatelessWidget {
       body: ListenableBuilder(
         listenable: logger,
         builder: (context, _) {
-          final topPad =
-              kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
           final entries = logger.entries.reversed.toList();
           if (entries.isEmpty) {
             return Padding(

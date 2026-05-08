@@ -49,6 +49,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final tpAuth = sp.thirdPartyAuthService;
     final usesIosLiquidGlass =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -56,10 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListenableBuilder(
         listenable: Listenable.merge([auth, logger, themeService, tpAuth]),
         builder: (context, _) => ListView(
-          padding: EdgeInsets.only(
-            top: kToolbarHeight + MediaQuery.viewPaddingOf(context).top,
-            bottom: 120,
-          ),
+          padding: EdgeInsets.only(top: topInset, bottom: 120),
           children: [
             // Account section
             _sectionHeader(theme, 'Account'),

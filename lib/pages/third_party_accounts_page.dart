@@ -16,6 +16,7 @@ class ThirdPartyAccountsPage extends StatelessWidget {
     final tpAuth = sp.thirdPartyAuthService;
     final auth = sp.authService;
     final theme = Theme.of(context);
+    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -24,10 +25,7 @@ class ThirdPartyAccountsPage extends StatelessWidget {
         listenable: Listenable.merge([tpAuth, auth]),
         builder: (context, _) {
           return ListView(
-            padding: EdgeInsets.only(
-              top: kToolbarHeight + MediaQuery.viewPaddingOf(context).top,
-              bottom: 120,
-            ),
+            padding: EdgeInsets.only(top: topInset, bottom: 120),
             children: [
               // Blackboard read-only entry
               _BlackboardTile(),
