@@ -17,6 +17,7 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.centerTitle,
     this.titleSpacing,
+    this.leadingWidth,
     this.elevation = 0,
     this.blurSigma = 24,
     this.backgroundOpacity = 0.50,
@@ -30,6 +31,7 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
   final PreferredSizeWidget? bottom;
   final bool? centerTitle;
   final double? titleSpacing;
+  final double? leadingWidth;
   final double elevation;
   final double blurSigma;
   final double backgroundOpacity;
@@ -56,6 +58,7 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
           bottom: bottom,
           centerTitle: centerTitle,
           titleSpacing: titleSpacing,
+          leadingWidth: leadingWidth,
           backgroundColor: baseColor.withValues(alpha: backgroundOpacity),
           foregroundColor: foregroundColor,
           surfaceTintColor: Colors.transparent,

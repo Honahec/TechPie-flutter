@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/third_party_account.dart';
 import '../services/service_provider.dart';
 import '../services/third_party_auth_service.dart';
+import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/blurred_app_bar.dart';
 
 class ThirdPartyBindPage extends StatefulWidget {
@@ -18,8 +21,9 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
   final _formKey = GlobalKey<FormState>();
   final _accountCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  final _hydroOriginCtrl =
-      TextEditingController(text: 'https://acm.shanghaitech.edu.cn');
+  final _hydroOriginCtrl = TextEditingController(
+    text: 'https://acm.shanghaitech.edu.cn',
+  );
   final _hydroDomainsCtrl = TextEditingController();
   bool _busy = false;
   bool _obscure = true;
@@ -42,27 +46,22 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
       setState(() => _autoRenew = false);
       return;
     }
-    final ok = await showDialog<bool>(
+    final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('开启自动更新 Token'),
-        content: const Text(
+      title: '开启自动更新 Token',
+      message:
           '自动更新 Token 已打开,APP 将于本地加密存储你的账号和密码信息,'
           '用于在过期前 48 小时内自动触发 Token 更新。\n\n'
           '凭据仅存放在本设备的 Keychain / EncryptedSharedPreferences 中,'
           '不会上传到服务器。',
+      actions: const [
+        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(
+          label: '我知道了,开启',
+          value: true,
+          isDefault: true,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('我知道了,开启'),
-          ),
-        ],
-      ),
+      ],
     );
     if (!mounted) return;
     setState(() => _autoRenew = ok == true);
@@ -109,6 +108,9 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
   @override
   Widget build(BuildContext context) {
+    final usesIosControls =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: BlurredAppBar(title: Text('Bind ${widget.platform.label}')),
@@ -132,8 +134,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                 labelText: _isGradescope ? '邮箱' : '用户名',
                 border: const OutlineInputBorder(),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? '必填' : null,
+              validator: (v) => (v == null || v.trim().isEmpty) ? '必填' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -144,7 +145,9 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                 labelText: '密码',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                  ),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
@@ -159,8 +162,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                   helperText: '默认 https://acm.shanghaitech.edu.cn',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '必填' : null,
+                validator: (v) => (v == null || v.trim().isEmpty) ? '必填' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -182,14 +184,28 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               ),
             ],
             const SizedBox(height: 8),
-            CheckboxListTile(
-              value: _autoRenew,
-              onChanged: (v) => _onAutoRenewChanged(v ?? false),
-              title: const Text('自动更新 Token'),
-              subtitle: const Text('过期前 48 小时内自动重登,免去手动重绑'),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
+            if (usesIosControls)
+              MergeSemantics(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('自动更新 Token'),
+                  subtitle: const Text('过期前 48 小时内自动重登,免去手动重绑'),
+                  trailing: CupertinoSwitch(
+                    value: _autoRenew,
+                    onChanged: _onAutoRenewChanged,
+                  ),
+                  onTap: () => _onAutoRenewChanged(!_autoRenew),
+                ),
+              )
+            else
+              CheckboxListTile(
+                value: _autoRenew,
+                onChanged: (v) => _onAutoRenewChanged(v ?? false),
+                title: const Text('自动更新 Token'),
+                subtitle: const Text('过期前 48 小时内自动重登,免去手动重绑'),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _busy ? null : _submit,

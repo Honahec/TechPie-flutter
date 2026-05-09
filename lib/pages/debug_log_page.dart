@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../services/debug_logger.dart';
 import '../services/service_provider.dart';
 import '../widgets/blurred_app_bar.dart';
+import '../widgets/ios_liquid/ios_glass_confirmation_button.dart';
 
 class DebugLogPage extends StatelessWidget {
   const DebugLogPage({super.key});
@@ -11,17 +13,34 @@ class DebugLogPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logger = ServiceProvider.of(context).debugLogger;
     final topPad = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final usesIosLiquidGlass =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: BlurredAppBar(
         title: const Text('Debug Logs'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: logger.clear,
-            tooltip: 'Clear logs',
-          ),
+          if (usesIosLiquidGlass)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: Center(
+                child: IosGlassConfirmationButton(
+                  confirmTitle: '清空所有日志？',
+                  confirmLabel: '清空',
+                  icon: Icons.delete_outline,
+                  sfSymbol: 'trash',
+                  destructive: true,
+                  onConfirmed: logger.clear,
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: logger.clear,
+              tooltip: 'Clear logs',
+            ),
         ],
       ),
       body: ListenableBuilder(
@@ -55,9 +74,11 @@ class _LogTile extends StatelessWidget {
     final hasError = entry.error != null;
     final statusColor = hasError
         ? theme.colorScheme.error
-        : (entry.statusCode != null && entry.statusCode! >= 200 && entry.statusCode! < 300)
-            ? Colors.green
-            : theme.colorScheme.onSurface;
+        : (entry.statusCode != null &&
+              entry.statusCode! >= 200 &&
+              entry.statusCode! < 300)
+        ? Colors.green
+        : theme.colorScheme.onSurface;
 
     return ExpansionTile(
       leading: Text(
@@ -123,9 +144,12 @@ class _DetailSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title,
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(color: theme.colorScheme.primary)),
+          Text(
+            title,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.all(8),

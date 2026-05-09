@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/third_party_account.dart';
 import '../services/service_provider.dart';
+import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/blurred_app_bar.dart';
+import '../widgets/ios_liquid/ios_glass_confirmation_button.dart';
 import 'login_page.dart';
 import 'third_party_bind_page.dart';
 
@@ -80,9 +83,9 @@ class _BlackboardTile extends StatelessWidget {
       onTap: loggedIn
           ? null
           : () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              ),
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            ),
     );
   }
 }
@@ -102,6 +105,8 @@ class _ThirdPartyTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final acc = account;
+    final usesIosLiquidGlass =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
     if (acc == null) {
       return ListTile(
@@ -134,11 +139,19 @@ class _ThirdPartyTile extends StatelessWidget {
       title: Text(platform.label),
       subtitle: Text(subtitleParts.join('\n')),
       isThreeLine: subtitleParts.length > 1,
-      trailing: TextButton.icon(
-        icon: const Icon(Icons.link_off, size: 18),
-        label: const Text('Unbind'),
-        onPressed: () => _confirmUnbind(context, platform),
-      ),
+      trailing: usesIosLiquidGlass
+          ? IosGlassConfirmationButton(
+              label: 'Unbind',
+              confirmTitle: '解绑 ${platform.label}?',
+              confirmLabel: '解绑',
+              destructive: true,
+              onConfirmed: () => _unbind(context, platform),
+            )
+          : TextButton.icon(
+              icon: const Icon(Icons.link_off, size: 18),
+              label: const Text('Unbind'),
+              onPressed: () => _confirmUnbind(context, platform),
+            ),
     );
   }
 
@@ -156,25 +169,29 @@ class _ThirdPartyTile extends StatelessWidget {
     ThirdPartyPlatform platform,
   ) async {
     final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
-    final ok = await showDialog<bool>(
+    final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text('解绑 ${platform.label}?'),
-        content: const Text('将清除本地保存的 token 与账号信息,不会注销远端账号。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('解绑'),
-          ),
-        ],
-      ),
+      title: '解绑 ${platform.label}?',
+      message: '将清除本地保存的 token 与账号信息,不会注销远端账号。',
+      actions: const [
+        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(
+          label: '解绑',
+          value: true,
+          isDestructive: true,
+        ),
+      ],
     );
     if (ok == true) {
       await tpAuth.unbind(platform);
     }
+  }
+
+  Future<void> _unbind(
+    BuildContext context,
+    ThirdPartyPlatform platform,
+  ) async {
+    final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
+    await tpAuth.unbind(platform);
   }
 }

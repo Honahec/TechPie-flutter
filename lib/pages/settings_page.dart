@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../services/service_provider.dart';
 import '../services/theme_service.dart';
+import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/blurred_app_bar.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/ios_liquid/ios_glass_select.dart';
@@ -97,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: const Text('Logout'),
-                onTap: () => auth.logout(),
+                onTap: () => _confirmLogout(auth),
               ),
             ] else
               ListTile(
@@ -238,6 +239,26 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmLogout(dynamic auth) async {
+    final ok = await showAdaptiveAlertDialog<bool>(
+      context: context,
+      title: '退出登录',
+      message: '将清除当前设备上的登录状态和相关缓存数据。',
+      actions: const [
+        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(
+          label: '退出登录',
+          value: true,
+          isDestructive: true,
+        ),
+      ],
+    );
+
+    if (ok == true) {
+      auth.logout();
+    }
   }
 
   void _showThemePicker(BuildContext context, ThemeService themeService) {
