@@ -97,6 +97,23 @@ final class NativeGlassDropdownMenuPlatformView: NSObject, FlutterPlatformView {
     rootView.backgroundColor = .clear
     rootView.clipsToBounds = false
 
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.tintColor = NativeGlassColors.floatingButtonForeground
+    button.accessibilityTraits.insert(.button)
+    button.clipsToBounds = false
+
+    if #available(iOS 26.0, *) {
+      rootView.addSubview(button)
+
+      NSLayoutConstraint.activate([
+        button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+        button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+        button.topAnchor.constraint(equalTo: rootView.topAnchor),
+        button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      ])
+      return
+    }
+
     backgroundView.translatesAutoresizingMaskIntoConstraints = false
     backgroundView.clipsToBounds = true
     backgroundView.layer.cornerRadius = 18
@@ -110,10 +127,6 @@ final class NativeGlassDropdownMenuPlatformView: NSObject, FlutterPlatformView {
     if #available(iOS 13.0, *) {
       backgroundView.layer.cornerCurve = .continuous
     }
-
-    button.translatesAutoresizingMaskIntoConstraints = false
-    button.tintColor = NativeGlassColors.floatingButtonForeground
-    button.accessibilityTraits.insert(.button)
 
     rootView.addSubview(backgroundView)
     backgroundView.contentView.addSubview(button)
@@ -132,6 +145,27 @@ final class NativeGlassDropdownMenuPlatformView: NSObject, FlutterPlatformView {
 
   private func applyButtonAppearance() {
     let image = symbolImage(named: sfSymbol)
+
+    if #available(iOS 26.0, *) {
+      var configuration = UIButton.Configuration.glass()
+      configuration.image = image
+      configuration.title = label
+      configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
+      configuration.contentInsets = NSDirectionalEdgeInsets(
+        top: 10,
+        leading: 14,
+        bottom: 10,
+        trailing: 14
+      )
+      configuration.imagePadding = label == nil ? 0 : 8
+      configuration.cornerStyle = .capsule
+      button.configuration = configuration
+      button.backgroundColor = .clear
+      button.layer.shadowOpacity = 0
+      button.layer.borderWidth = 0
+      button.setNeedsUpdateConfiguration()
+      return
+    }
 
     if #available(iOS 15.0, *) {
       var configuration = UIButton.Configuration.plain()

@@ -35,6 +35,7 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
   private let backgroundView = UIVisualEffectView(
     effect: UIBlurEffect(style: .systemChromeMaterial)
   )
+  private var glassView: UIVisualEffectView?
   private let stackView = UIStackView()
 
   private var items: [NativeGlassButtonGroupItem] = []
@@ -100,6 +101,42 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
     rootView.backgroundColor = .clear
     rootView.clipsToBounds = false
 
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.axis = .horizontal
+    stackView.spacing = 0
+    stackView.distribution = .fillEqually
+    stackView.alignment = .fill
+
+    if #available(iOS 26.0, *) {
+      let effect = UIGlassEffect(style: .regular)
+      effect.isInteractive = true
+
+      let effectView = UIVisualEffectView(effect: effect)
+      effectView.translatesAutoresizingMaskIntoConstraints = false
+      effectView.clipsToBounds = true
+      effectView.layer.cornerRadius = 20
+
+      if #available(iOS 13.0, *) {
+        effectView.layer.cornerCurve = .continuous
+      }
+
+      glassView = effectView
+      rootView.addSubview(effectView)
+      effectView.contentView.addSubview(stackView)
+
+      NSLayoutConstraint.activate([
+        effectView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+        effectView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+        effectView.topAnchor.constraint(equalTo: rootView.topAnchor),
+        effectView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+        stackView.leadingAnchor.constraint(equalTo: effectView.contentView.leadingAnchor),
+        stackView.trailingAnchor.constraint(equalTo: effectView.contentView.trailingAnchor),
+        stackView.topAnchor.constraint(equalTo: effectView.contentView.topAnchor),
+        stackView.bottomAnchor.constraint(equalTo: effectView.contentView.bottomAnchor)
+      ])
+      return
+    }
+
     backgroundView.translatesAutoresizingMaskIntoConstraints = false
     backgroundView.clipsToBounds = true
     backgroundView.layer.cornerRadius = 20
@@ -113,12 +150,6 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
     if #available(iOS 13.0, *) {
       backgroundView.layer.cornerCurve = .continuous
     }
-
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    stackView.axis = .horizontal
-    stackView.spacing = 0
-    stackView.distribution = .fillEqually
-    stackView.alignment = .fill
 
     rootView.addSubview(backgroundView)
     backgroundView.contentView.addSubview(stackView)
@@ -154,17 +185,24 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
       return
     }
 
+    let hostView: UIView
+    if #available(iOS 26.0, *), let glassView {
+      hostView = glassView.contentView
+    } else {
+      hostView = backgroundView.contentView
+    }
+
     for index in 1..<buttons.count {
       let separator = UIView()
       separator.translatesAutoresizingMaskIntoConstraints = false
       separator.backgroundColor = NativeGlassColors.controlSeparator
-      backgroundView.contentView.addSubview(separator)
+      hostView.addSubview(separator)
       separators.append(separator)
 
       NSLayoutConstraint.activate([
         separator.widthAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
-        separator.topAnchor.constraint(equalTo: backgroundView.contentView.topAnchor, constant: 8),
-        separator.bottomAnchor.constraint(equalTo: backgroundView.contentView.bottomAnchor, constant: -8),
+        separator.topAnchor.constraint(equalTo: hostView.topAnchor, constant: 8),
+        separator.bottomAnchor.constraint(equalTo: hostView.bottomAnchor, constant: -8),
         separator.leadingAnchor.constraint(equalTo: buttons[index].leadingAnchor)
       ])
     }
@@ -175,6 +213,7 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
     button.translatesAutoresizingMaskIntoConstraints = false
     button.tag = index
     button.tintColor = NativeGlassColors.floatingButtonForeground
+    button.backgroundColor = .clear
     button.accessibilityLabel = item.accessibilityLabel ?? item.id
     button.accessibilityTraits.insert(.button)
     button.addTarget(self, action: #selector(handleButtonTap(_:)), for: .touchUpInside)
@@ -186,15 +225,15 @@ final class NativeGlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
       configuration.image = image
       configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
       configuration.contentInsets = NSDirectionalEdgeInsets(
-        top: 10,
-        leading: 14,
-        bottom: 10,
-        trailing: 14
+        top: 8,
+        leading: 12,
+        bottom: 8,
+        trailing: 12
       )
       button.configuration = configuration
     } else {
       button.setImage(image, for: .normal)
-      button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+      button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
     }
 
     return button

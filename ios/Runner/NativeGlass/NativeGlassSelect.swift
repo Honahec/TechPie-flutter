@@ -55,7 +55,6 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
     )
 
     super.init()
-
     parseArguments(args)
     buildViewHierarchy()
     applyButtonAppearance()
@@ -101,6 +100,24 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
   private func buildViewHierarchy() {
     rootView.backgroundColor = .clear
 
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.tintColor = NativeGlassColors.floatingButtonForeground
+    button.semanticContentAttribute = .forceRightToLeft
+    button.contentHorizontalAlignment = .fill
+    button.accessibilityTraits.insert(.button)
+
+    if #available(iOS 26.0, *) {
+      rootView.addSubview(button)
+
+      NSLayoutConstraint.activate([
+        button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+        button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+        button.topAnchor.constraint(equalTo: rootView.topAnchor),
+        button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      ])
+      return
+    }
+
     backgroundView.translatesAutoresizingMaskIntoConstraints = false
     backgroundView.clipsToBounds = true
     backgroundView.layer.cornerRadius = 16
@@ -114,12 +131,6 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
     if #available(iOS 13.0, *) {
       backgroundView.layer.cornerCurve = .continuous
     }
-
-    button.translatesAutoresizingMaskIntoConstraints = false
-    button.tintColor = NativeGlassColors.floatingButtonForeground
-    button.semanticContentAttribute = .forceRightToLeft
-    button.contentHorizontalAlignment = .fill
-    button.accessibilityTraits.insert(.button)
 
     rootView.addSubview(backgroundView)
     backgroundView.contentView.addSubview(button)
@@ -146,6 +157,25 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
 
   private func applyButtonAppearance() {
     let image = symbolImage(named: sfSymbol)
+
+    if #available(iOS 26.0, *) {
+      var configuration = UIButton.Configuration.glass()
+      configuration.image = image
+      configuration.title = selectedLabel
+      configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
+      configuration.contentInsets = NSDirectionalEdgeInsets(
+        top: 10,
+        leading: 14,
+        bottom: 10,
+        trailing: 14
+      )
+      configuration.imagePadding = 8
+      configuration.cornerStyle = .capsule
+      button.configuration = configuration
+      button.backgroundColor = .clear
+      button.setNeedsUpdateConfiguration()
+      return
+    }
 
     if #available(iOS 15.0, *) {
       var configuration = UIButton.Configuration.plain()
@@ -267,8 +297,12 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
     sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
     if let popover = sheet.popoverPresentationController {
-      popover.sourceView = rootView
-      popover.sourceRect = rootView.bounds
+      if #available(iOS 26.0, *) {
+        popover.sourceItem = button
+      } else {
+        popover.sourceView = rootView
+        popover.sourceRect = rootView.bounds
+      }
     }
 
     controller.present(sheet, animated: true)
