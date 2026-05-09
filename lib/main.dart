@@ -28,8 +28,27 @@ void _toast(String msg) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await SharedPreferences.getInstance();
+  // OHOS white-screen probe: render a placeholder first so we know the
+  // engine is alive, then try the real init. Any exception is shown on
+  // screen instead of silently aborting main().
+  runApp(const _BootProbe(message: '启动中…'));
 
+  final SharedPreferences prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } catch (e, st) {
+    runApp(_BootProbe(message: 'SharedPreferences 失败:\n$e\n\n$st'));
+    return;
+  }
+
+  try {
+    await _realMain(prefs);
+  } catch (e, st) {
+    runApp(_BootProbe(message: '初始化失败:\n$e\n\n$st'));
+  }
+}
+
+Future<void> _realMain(SharedPreferences prefs) async {
   final storageService = StorageService(prefs);
   final debugLogger = DebugLogger()..enabled = storageService.debugMode;
   final httpClient = LoggingHttpClient(debugLogger);
@@ -103,6 +122,30 @@ void main() async {
   // Allow auto-refetch on subsequent auth / binding changes
   // (login, bind, unbind, logout).
   assignmentService.enableAutoRefetch();
+}
+
+class _BootProbe extends StatelessWidget {
+  final String message;
+  const _BootProbe({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: SelectableText(
+                message,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class TechPieApp extends StatefulWidget {

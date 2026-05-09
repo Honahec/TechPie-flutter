@@ -1,0 +1,53 @@
+
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "./signature/ohos-debug.cer",
+          "storePassword": "0000001b2d34127e09e5ee23b146a956bf88a8c47386ae94ccc0c47e64ce53a941fe7b5d5a077dda08e716",
+          "keyAlias": "techpie_debug",
+          "keyPassword": "0000001b2d34127e09e5ee23b146a956bf88a8c47386ae94ccc0c47e64ce53a941fe7b5d5a077dda08e716",
+          "profile": "./signature/ohos-debug-profileDebug.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "./signature/techpie.p12"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

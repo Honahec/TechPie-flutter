@@ -59,7 +59,7 @@ class HiddenAssignmentsPage extends StatelessWidget {
           return ListView.separated(
             padding: EdgeInsets.only(top: topPad),
             itemCount: entries.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
+            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, i) {
               final key = entries[i];
               final a = lookup[key];

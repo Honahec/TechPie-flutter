@@ -148,34 +148,34 @@ class _SchedulePageState extends State<SchedulePage> {
       context: context,
       showDragHandle: true,
       builder: (context) {
-        return RadioGroup<String>(
-          groupValue: _schedule.selectedSemesterId,
-          onChanged: (value) {
-            Navigator.pop(context);
-            if (value != null) _schedule.selectSemester(value);
-          },
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.only(bottom: 16),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                child: Text(
-                  '选择学期',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+        return ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: 16),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(
+                '选择学期',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              for (final entry in allSemesters)
-                ListTile(
-                  leading: Radio<String>(value: entry.key),
-                  title: Text(entry.value),
-                  onTap: () {
+            ),
+            for (final entry in allSemesters)
+              ListTile(
+                leading: Radio<String>(
+                  value: entry.key,
+                  groupValue: _schedule.selectedSemesterId,
+                  onChanged: (value) {
                     Navigator.pop(context);
-                    _schedule.selectSemester(entry.key);
+                    if (value != null) _schedule.selectSemester(value);
                   },
                 ),
-            ],
-          ),
+                title: Text(entry.value),
+                onTap: () {
+                  Navigator.pop(context);
+                  _schedule.selectSemester(entry.key);
+                },
+              ),
+          ],
         );
       },
     );

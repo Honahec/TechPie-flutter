@@ -53,3 +53,18 @@ app.*.map.json
 .envrc
 # Local Xcode overrides
 macos/Runner/Configs/Local.xcconfig
+
+# OHOS signing artifacts
+ohos/signature/*.p12
+ohos/signature/*.csr
+ohos/signature/*.pem
+ohos/signature/*.p7b
+
+# Generated files
+.flutter-plugins
+
+# Android: Groovy build scripts re-generated alongside the Kotlin DSL
+# (.kts) versions we actually use. Keep only the .kts variants.
+/android/build.gradle
+/android/settings.gradle
+/android/app/build.gradle
