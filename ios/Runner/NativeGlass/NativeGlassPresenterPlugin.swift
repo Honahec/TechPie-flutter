@@ -52,6 +52,13 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
 
     let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
     var preferredAction: UIAlertAction?
+    var didComplete = false
+
+    func complete(_ value: Any?) {
+      guard !didComplete else { return }
+      didComplete = true
+      result(value)
+    }
 
     for actionData in rawActions {
       guard let label = actionData["label"] as? String, !label.isEmpty else {
@@ -64,7 +71,7 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
       let style: UIAlertAction.Style = isDestructive ? .destructive : .default
 
       let action = UIAlertAction(title: label, style: style) { _ in
-        result(value)
+        complete(value)
       }
 
       if isDefault {
@@ -72,6 +79,12 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
       }
 
       alert.addAction(action)
+    }
+
+    if alert.actions.isEmpty {
+      alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+        complete(nil)
+      })
     }
 
     if let preferredAction {

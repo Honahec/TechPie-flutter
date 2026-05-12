@@ -25,12 +25,13 @@ Future<T?> showAdaptiveAlertDialog<T>({
   required List<AdaptiveAlertAction<T>> actions,
 }) {
   final usesIosDialog = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  final normalizedActions = _normalizeActions(actions);
 
   if (usesIosDialog) {
     return _showNativeIosAlert<T>(
       title: title,
       message: message,
-      actions: actions,
+      actions: normalizedActions,
       fallbackContext: context,
     );
   }
@@ -39,8 +40,27 @@ Future<T?> showAdaptiveAlertDialog<T>({
     context: context,
     title: title,
     message: message,
-    actions: actions,
+    actions: normalizedActions,
   );
+}
+
+List<AdaptiveAlertAction<T>> _normalizeActions<T>(
+  List<AdaptiveAlertAction<T>> actions,
+) {
+  final normalized = [
+    for (final action in actions)
+      if (action.label.trim().isNotEmpty)
+        AdaptiveAlertAction<T>(
+          label: action.label.trim(),
+          value: action.value,
+          isDestructive: action.isDestructive,
+          isDefault: action.isDefault,
+        ),
+  ];
+
+  if (normalized.isNotEmpty) return normalized;
+
+  return [AdaptiveAlertAction<T>(label: 'OK', isDefault: true)];
 }
 
 Future<T?> _showNativeIosAlert<T>({
