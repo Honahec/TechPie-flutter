@@ -523,59 +523,42 @@ class _PlatformErrorsBanner extends StatelessWidget {
     final errors = service.platformErrors;
     if (errors.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.errorContainer,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 20,
-              color: theme.colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final entry in errors.entries)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${entry.key}: ${entry.value}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onErrorContainer,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: IconButton(
-                              icon: const Icon(Icons.refresh, size: 16),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => service.fetchPlatform(entry.key),
-                              color: theme.colorScheme.onErrorContainer,
-                              tooltip: '重试 ${entry.key}',
-                            ),
-                          ),
-                        ],
-                      ),
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: errors.entries.map((entry) {
+        return Material(
+          color: theme.colorScheme.errorContainer,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 20,
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${entry.key}: ${entry.value}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onErrorContainer,
                     ),
-                ],
-              ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 20),
+                  onPressed: () => service.fetchPlatform(entry.key),
+                  color: theme.colorScheme.onErrorContainer,
+                  tooltip: '重试 ${entry.key}',
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
