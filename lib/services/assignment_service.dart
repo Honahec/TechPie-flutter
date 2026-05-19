@@ -165,13 +165,11 @@ class AssignmentService extends ChangeNotifier {
     _platformErrors.clear();
     notifyListeners();
 
-    final attemptedPlatforms = <String>{};
     final successfulResults = <String, List<Assignment>>{};
 
     final futures = <Future<void>>[];
 
     if (_auth.isLoggedIn) {
-      attemptedPlatforms.add('blackboard');
       futures.add(
         _fetchBlackboard().then((items) {
           if (items != null) successfulResults['blackboard'] = items;
@@ -182,7 +180,6 @@ class AssignmentService extends ChangeNotifier {
     for (final acc in _tpAuth.accounts) {
       switch (acc.platform) {
         case ThirdPartyPlatform.gradescope:
-          attemptedPlatforms.add(acc.platform.id);
           futures.add(
             _fetchGradescope(acc).then((items) {
               if (items != null) successfulResults[acc.platform.id] = items;
@@ -190,7 +187,6 @@ class AssignmentService extends ChangeNotifier {
           );
           break;
         case ThirdPartyPlatform.hydro:
-          attemptedPlatforms.add(acc.platform.id);
           futures.add(
             _fetchHydro(acc).then((items) {
               if (items != null) successfulResults[acc.platform.id] = items;
@@ -203,7 +199,6 @@ class AssignmentService extends ChangeNotifier {
     try {
       await Future.wait(futures);
       final merged = _mergeAssignments(
-        attemptedPlatforms: attemptedPlatforms,
         successfulResults: successfulResults,
       );
 
@@ -212,7 +207,7 @@ class AssignmentService extends ChangeNotifier {
         merged.map((a) => a.toJson()).toList(),
       );
     } catch (e) {
-      _error = e.toString();
+      _error = '同步失败，请检查网络或稍后重试';
     } finally {
       _loading = false;
       notifyListeners();
@@ -220,24 +215,69 @@ class AssignmentService extends ChangeNotifier {
   }
 
   List<Assignment> _mergeAssignments({
-    required Set<String> attemptedPlatforms,
     required Map<String, List<Assignment>> successfulResults,
   }) {
     final successfulPlatforms = successfulResults.keys
         .map((p) => p.toLowerCase())
         .toSet();
-    final failedPlatforms = attemptedPlatforms
-        .map((p) => p.toLowerCase())
-        .where((p) => !successfulPlatforms.contains(p))
-        .toSet();
 
     final merged = <Assignment>[
       for (final a in _assignments)
-        if (failedPlatforms.contains(a.platform.toLowerCase())) a,
+        if (!successfulPlatforms.contains(a.platform.toLowerCase())) a,
       ...successfulResults.values.expand((items) => items),
     ]..sort((a, b) => a.due.compareTo(b.due));
 
     return merged;
+  }
+
+  Future<void> fetchPlatform(String platformId) async {
+    _loading = true;
+    _error = null;
+    _platformErrors.remove(platformId);
+    notifyListeners();
+
+    final successfulResults = <String, List<Assignment>>{};
+    Future<void>? future;
+
+    if (platformId == 'blackboard' && _auth.isLoggedIn) {
+      future = _fetchBlackboard().then((items) {
+        if (items != null) successfulResults['blackboard'] = items;
+      });
+    } else {
+      for (final acc in _tpAuth.accounts) {
+        if (acc.platform.id == platformId) {
+          if (acc.platform == ThirdPartyPlatform.gradescope) {
+            future = _fetchGradescope(acc).then((items) {
+              if (items != null) successfulResults[platformId] = items;
+            });
+          } else if (acc.platform == ThirdPartyPlatform.hydro) {
+            future = _fetchHydro(acc).then((items) {
+              if (items != null) successfulResults[platformId] = items;
+            });
+          }
+          break;
+        }
+      }
+    }
+
+    if (future != null) {
+      try {
+        await future;
+        final merged = _mergeAssignments(
+          successfulResults: successfulResults,
+        );
+
+        _assignments = merged;
+        await _storage.saveCachedAssignments(
+          merged.map((a) => a.toJson()).toList(),
+        );
+      } catch (e) {
+        _error = e.toString();
+      }
+    }
+    
+    _loading = false;
+    notifyListeners();
   }
 
   // -- Per-platform fetchers --
@@ -267,7 +307,7 @@ class AssignmentService extends ChangeNotifier {
       }
       return _parseDeadlinesResponse(resp, 'blackboard');
     } catch (e) {
-      _platformErrors['blackboard'] = e.toString();
+      _platformErrors['blackboard'] = '同步失败，请检查网络或稍后重试';
       return null;
     }
   }
@@ -287,7 +327,7 @@ class AssignmentService extends ChangeNotifier {
       }
       return _parseDeadlinesResponse(resp, 'gradescope');
     } catch (e) {
-      _platformErrors['gradescope'] = e.toString();
+      _platformErrors['gradescope'] = '同步失败，请检查网络或稍后重试';
       return null;
     }
   }
@@ -326,7 +366,7 @@ class AssignmentService extends ChangeNotifier {
           hadError = true;
         }
       } catch (e) {
-        _platformErrors['hydro'] = e.toString();
+        _platformErrors['hydro'] = '同步失败，请检查网络或稍后重试';
         hadError = true;
       }
     }
@@ -342,14 +382,13 @@ class AssignmentService extends ChangeNotifier {
     try {
       data = jsonDecode(resp.body) as Map<String, dynamic>;
     } catch (_) {
-      _platformErrors[platformKey] =
-          'Invalid response (status ${resp.statusCode})';
+      _platformErrors[platformKey] = '同步失败，服务器返回异常数据';
       return null;
     }
 
     if (resp.statusCode != 200 || data['success'] != true) {
       _platformErrors[platformKey] =
-          (data['error'] as String?) ?? 'failed (status ${resp.statusCode})';
+          (data['error'] as String?) ?? '同步失败 (HTTP ${resp.statusCode})';
       return null;
     }
 

@@ -13,7 +13,6 @@ import '../widgets/blurred_app_bar.dart';
 import '../widgets/ios_liquid/ios_glass_dropdown_menu.dart';
 import '../widgets/swipeable_card.dart';
 import 'hidden_assignments_page.dart';
-import 'third_party_accounts_page.dart';
 
 class AssignmentsPage extends StatefulWidget {
   const AssignmentsPage({super.key});
@@ -211,7 +210,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     List<Assignment> visible,
     double topInset,
   ) {
-    final banner = _PlatformErrorsBanner(errors: service.platformErrors);
+    final banner = _PlatformErrorsBanner(service: service);
 
     if (service.loading && visible.isEmpty) {
       return Column(
@@ -516,55 +515,50 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
 }
 
 class _PlatformErrorsBanner extends StatelessWidget {
-  final Map<String, String> errors;
-  const _PlatformErrorsBanner({required this.errors});
+  final AssignmentService service;
+  const _PlatformErrorsBanner({required this.service});
 
   @override
   Widget build(BuildContext context) {
+    final errors = service.platformErrors;
     if (errors.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.errorContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 20,
-              color: theme.colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final entry in errors.entries)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Text(
-                        '${entry.key}: ${entry.value}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ThirdPartyAccountsPage(),
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: errors.entries.map((entry) {
+        return Material(
+          color: theme.colorScheme.errorContainer,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 20,
+                  color: theme.colorScheme.onErrorContainer,
                 ),
-              ),
-              child: const Text('Manage'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${entry.key}: ${entry.value}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 20),
+                  onPressed: () => service.fetchPlatform(entry.key),
+                  color: theme.colorScheme.onErrorContainer,
+                  tooltip: '重试 ${entry.key}',
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
