@@ -1,2 +1,13 @@
 export PATH="$HOME/dev/flutter/bin:$PATH"
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+
+# OHOS signing material — consumed by ohos/scripts/generate-build-profile.mjs.
+# Paths are relative to ohos/. Replace dummy values with your own; do NOT commit .envrc.
+export OHOS_CERT_PATH="./signature/your-debug.cer"
+export OHOS_PROFILE_PATH="./signature/your-debug-profile.p7b"
+export OHOS_STORE_FILE="./signature/your.p12"
+export OHOS_KEY_ALIAS="your_key_alias"
+export OHOS_SIGN_ALG="SHA256withECDSA"
+# DevEco-encrypted store/key passwords (produced by Project Structure > Signing Configs).
+export OHOS_STORE_PASSWORD="REPLACE_WITH_DEVECO_ENCRYPTED_PASSWORD"
+export OHOS_KEY_PASSWORD="REPLACE_WITH_DEVECO_ENCRYPTED_PASSWORD"

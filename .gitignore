@@ -59,6 +59,11 @@ ohos/signature/*.p12
 ohos/signature/*.csr
 ohos/signature/*.pem
 ohos/signature/*.p7b
+ohos/signature/*.cer
+
+# OHOS build profile is generated from build-profile.template.json5 + OHOS_* env
+# vars on every hvigor run; never commit the rendered file (it contains secrets).
+ohos/build-profile.json5
 
 # Generated files
 .flutter-plugins
