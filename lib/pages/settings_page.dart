@@ -42,6 +42,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isDesktopLayout(context)) {
+      return Navigator(
+        onGenerateRoute: (settings) => MaterialPageRoute<void>(
+          settings: settings,
+          builder: (context) => _buildSettingsScaffold(context),
+        ),
+      );
+    }
+
+    return _buildSettingsScaffold(context);
+  }
+
+  Widget _buildSettingsScaffold(BuildContext context) {
     final theme = Theme.of(context);
     final sp = ServiceProvider.of(context);
     final auth = sp.authService;

@@ -47,6 +47,8 @@ dependencies:
   dynamic_color: '>=1.7.0 <1.8.0'
   intl: ^0.20.2
   url_launcher: ^6.3.0
+  webview_flutter: 4.13.0
+  webview_win_floating: ^3.0.3
 
 dependency_overrides:
   # OpenHarmony-SIG forks add OHOS platform implementations for plugins
