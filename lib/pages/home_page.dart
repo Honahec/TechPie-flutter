@@ -346,7 +346,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
               alignment: Alignment.topCenter,
-              children: [...previousChildren, ?currentChild],
+              children: [
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
             );
           },
           child: content,
@@ -435,7 +438,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
               alignment: Alignment.topCenter,
-              children: [...previousChildren, ?currentChild],
+              children: [
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
             );
           },
           child: content,

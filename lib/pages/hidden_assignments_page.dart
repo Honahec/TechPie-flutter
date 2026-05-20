@@ -161,7 +161,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
     return ListView.separated(
       padding: EdgeInsets.only(top: topPad),
       itemCount: hiddenKeys.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, i) {
         final key = hiddenKeys[i];
         final a = lookup[key];

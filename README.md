@@ -10,6 +10,10 @@
 
 </div>
 
+> [!WARNING]
+>
+> 注意，由于 HarmonyOS 支持的破坏性加入，上游 Dart/flutter 版本需要回退，部分特性无法使用。相关 SDK 需要降级。
+
 ## Support Platform
 
 理论支持多平台，实际测试如下平台：
@@ -19,7 +23,7 @@
 - [x] MacOS
 - [x] Android
 - [x] iOS
-- [ ] HarmonyOS NEXT
+- [x] HarmonyOS NEXT
 
 ## Roadmap
 
@@ -53,6 +57,15 @@
 
 ## Development
 
+参考 HarmonyOS / 仓库配置
+
+```bash
+export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
+export FLUTTER_OHOS_STORAGE_BASE_URL=https://flutter-ohos.obs.cn-south-1.myhuaweicloud.com
+export PUB_HOSTED_URL=https://pub.flutter-io.cn
+export HOS_SDK_HOME="$HOME/dev/command-line-tools/sdk"
+```
+
 ### Android
 
 - Aliyun mirror
@@ -66,6 +79,11 @@
 - Xcode
 - CocoaPods
 - iOS Deployment Target 13.0
+
+### HarmonyOS
+
+- Flutter (OHOS patch) 3.27.5-ohos-1.0.5
+- [Huawei Command Tools  6.1.1 Beta1](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos)
 
 ## License
 
