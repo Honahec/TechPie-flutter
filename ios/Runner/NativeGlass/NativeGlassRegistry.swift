@@ -24,12 +24,8 @@ enum NativeGlassRegistry {
       withId: NativeGlassTabBarPlatformView.viewType
     )
     registrar.register(
-      NativeGlassFloatingButtonFactory(messenger: messenger),
-      withId: NativeGlassFloatingButtonPlatformView.viewType
-    )
-    registrar.register(
-      NativeGlassButtonGroupFactory(messenger: messenger),
-      withId: NativeGlassButtonGroupPlatformView.viewType
+      NativeGlassButtonFactory(messenger: messenger),
+      withId: NativeGlassButtonPlatformView.viewType
     )
     registrar.register(
       NativeGlassDropdownMenuFactory(messenger: messenger),
@@ -48,8 +44,8 @@ enum NativeGlassRegistry {
       withId: NativeGlassConfirmationButtonPlatformView.viewType
     )
     registrar.register(
-      NativeGlassActionButtonFactory(messenger: messenger),
-      withId: NativeGlassActionButtonPlatformView.viewType
+      NativeNavigationBarFactory(messenger: messenger),
+      withId: NativeNavigationBarPlatformView.viewType
     )
 
     NativeGlassPresenterPlugin.register(with: registrar)

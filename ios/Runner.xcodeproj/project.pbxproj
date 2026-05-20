@@ -10,17 +10,15 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
-		5A0010012F1A000100000001 /* NativeGlassColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010002F1A000100000001 /* NativeGlassColors.swift */; };
 		5A0010032F1A000100000001 /* NativeGlassRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010022F1A000100000001 /* NativeGlassRegistry.swift */; };
 		5A0010052F1A000100000001 /* NativeGlassTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010042F1A000100000001 /* NativeGlassTabBarView.swift */; };
-		5A0010072F1A000100000001 /* NativeGlassFloatingButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010062F1A000100000001 /* NativeGlassFloatingButtonView.swift */; };
-		5A00100A2F1A000100000001 /* NativeGlassButtonGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010092F1A000100000001 /* NativeGlassButtonGroup.swift */; };
+		5A0010072F1A000100000001 /* NativeGlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010062F1A000100000001 /* NativeGlassButton.swift */; };
 		5A00100C2F1A000100000001 /* NativeGlassDropdownMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00100B2F1A000100000001 /* NativeGlassDropdownMenu.swift */; };
 		5A00100E2F1A000100000001 /* NativeGlassSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00100D2F1A000100000001 /* NativeGlassSelect.swift */; };
 		5A0010102F1A000100000001 /* NativeGlassSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00100F2F1A000100000001 /* NativeGlassSwitch.swift */; };
 		5A0010122F1A000100000001 /* NativeGlassConfirmationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010112F1A000100000001 /* NativeGlassConfirmationButton.swift */; };
 		5A0010142F1A000100000001 /* NativeGlassPresenterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */; };
-		5A0010162F1A000100000001 /* NativeGlassActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010152F1A000100000001 /* NativeGlassActionButton.swift */; };
+		5A0010182F1A000100000001 /* NativeNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010172F1A000100000001 /* NativeNavigationBar.swift */; };
 		6BFBE954DB868241E9E9810B /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 052EF181B45C1F8AB028A91F /* Pods_Runner.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -60,17 +58,15 @@
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
-		5A0010002F1A000100000001 /* NativeGlassColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassColors.swift; sourceTree = "<group>"; };
 		5A0010022F1A000100000001 /* NativeGlassRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassRegistry.swift; sourceTree = "<group>"; };
 		5A0010042F1A000100000001 /* NativeGlassTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassTabBarView.swift; sourceTree = "<group>"; };
-		5A0010062F1A000100000001 /* NativeGlassFloatingButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassFloatingButtonView.swift; sourceTree = "<group>"; };
-		5A0010092F1A000100000001 /* NativeGlassButtonGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassButtonGroup.swift; sourceTree = "<group>"; };
+		5A0010062F1A000100000001 /* NativeGlassButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassButton.swift; sourceTree = "<group>"; };
 		5A00100B2F1A000100000001 /* NativeGlassDropdownMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassDropdownMenu.swift; sourceTree = "<group>"; };
 		5A00100D2F1A000100000001 /* NativeGlassSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassSelect.swift; sourceTree = "<group>"; };
 		5A00100F2F1A000100000001 /* NativeGlassSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassSwitch.swift; sourceTree = "<group>"; };
 		5A0010112F1A000100000001 /* NativeGlassConfirmationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassConfirmationButton.swift; sourceTree = "<group>"; };
 		5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassPresenterPlugin.swift; sourceTree = "<group>"; };
-		5A0010152F1A000100000001 /* NativeGlassActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassActionButton.swift; sourceTree = "<group>"; };
+		5A0010172F1A000100000001 /* NativeNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNavigationBar.swift; sourceTree = "<group>"; };
 		6B0AD00AB3D979A68E9ABE84 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -144,15 +140,13 @@
 			children = (
 				5A0010022F1A000100000001 /* NativeGlassRegistry.swift */,
 				5A0010042F1A000100000001 /* NativeGlassTabBarView.swift */,
-				5A0010062F1A000100000001 /* NativeGlassFloatingButtonView.swift */,
-				5A0010092F1A000100000001 /* NativeGlassButtonGroup.swift */,
+				5A0010062F1A000100000001 /* NativeGlassButton.swift */,
 				5A00100B2F1A000100000001 /* NativeGlassDropdownMenu.swift */,
 				5A00100D2F1A000100000001 /* NativeGlassSelect.swift */,
 				5A00100F2F1A000100000001 /* NativeGlassSwitch.swift */,
 				5A0010112F1A000100000001 /* NativeGlassConfirmationButton.swift */,
 				5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */,
-				5A0010152F1A000100000001 /* NativeGlassActionButton.swift */,
-				5A0010002F1A000100000001 /* NativeGlassColors.swift */,
+				5A0010172F1A000100000001 /* NativeNavigationBar.swift */,
 			);
 			path = NativeGlass;
 			sourceTree = "<group>";
@@ -422,12 +416,10 @@
 				5A00100E2F1A000100000001 /* NativeGlassSelect.swift in Sources */,
 				5A00100C2F1A000100000001 /* NativeGlassDropdownMenu.swift in Sources */,
 				5A0010122F1A000100000001 /* NativeGlassConfirmationButton.swift in Sources */,
-				5A0010162F1A000100000001 /* NativeGlassActionButton.swift in Sources */,
-				5A00100A2F1A000100000001 /* NativeGlassButtonGroup.swift in Sources */,
-				5A0010072F1A000100000001 /* NativeGlassFloatingButtonView.swift in Sources */,
+				5A0010182F1A000100000001 /* NativeNavigationBar.swift in Sources */,
+				5A0010072F1A000100000001 /* NativeGlassButton.swift in Sources */,
 				5A0010052F1A000100000001 /* NativeGlassTabBarView.swift in Sources */,
 				5A0010032F1A000100000001 /* NativeGlassRegistry.swift in Sources */,
-				5A0010012F1A000100000001 /* NativeGlassColors.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
@@ -510,6 +502,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;

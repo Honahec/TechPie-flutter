@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:techpie/utils/platform.dart';
 
-class IosGlassFloatingButton extends StatefulWidget {
-  const IosGlassFloatingButton({
+class IosGlassButton extends StatefulWidget {
+  const IosGlassButton({
     super.key,
     required this.onPressed,
     required this.icon,
@@ -15,14 +15,14 @@ class IosGlassFloatingButton extends StatefulWidget {
   final String sfSymbol;
 
   @override
-  State<IosGlassFloatingButton> createState() => _IosGlassFloatingButtonState();
+  State<IosGlassButton> createState() => _IosGlassButtonState();
 }
 
-class _IosGlassFloatingButtonState extends State<IosGlassFloatingButton> {
+class _IosGlassButtonState extends State<IosGlassButton> {
   MethodChannel? _channel;
 
   @override
-  void didUpdateWidget(covariant IosGlassFloatingButton oldWidget) {
+  void didUpdateWidget(covariant IosGlassButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.sfSymbol == widget.sfSymbol) return;
@@ -39,9 +39,9 @@ class _IosGlassFloatingButtonState extends State<IosGlassFloatingButton> {
   @override
   Widget build(BuildContext context) {
     if (!isIos()) {
-      return FloatingActionButton(
+      return IconButton.filled(
         onPressed: widget.onPressed,
-        child: Icon(widget.icon),
+        icon: Icon(widget.icon),
       );
     }
 
@@ -85,5 +85,5 @@ class _IosGlassFloatingButtonState extends State<IosGlassFloatingButton> {
   }
 }
 
-const _viewType = 'techpie/native_glass_floating_button';
-const _channelPrefix = 'techpie/native_glass_floating_button';
+const _viewType = 'techpie/native_glass_button';
+const _channelPrefix = 'techpie/native_glass_button';

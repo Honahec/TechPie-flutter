@@ -8,7 +8,6 @@ import '../widgets/blurred_app_bar.dart';
 import '../widgets/course_detail_panel.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/desktop_select_popover.dart';
-import '../widgets/ios_liquid/ios_glass_button_group.dart';
 import '../widgets/ios_liquid/ios_glass_dropdown_menu.dart';
 import '../utils/platform.dart';
 
@@ -368,34 +367,20 @@ class _SchedulePageState extends State<SchedulePage> {
         ),
         actions: [
           if (useIosChrome)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8),
-              child: Center(
-                child: IosGlassButtonGroup(
-                  width: 88,
-                  buttons: const [
-                    IosGlassButtonGroupButton(
-                      id: 'previous',
-                      icon: Icons.chevron_left,
-                      sfSymbol: 'chevron.left',
-                      tooltip: 'Previous week',
-                    ),
-                    IosGlassButtonGroupButton(
-                      id: 'next',
-                      icon: Icons.chevron_right,
-                      sfSymbol: 'chevron.right',
-                      tooltip: 'Next week',
-                    ),
-                  ],
-                  onPressed: (id) {
-                    if (id == 'previous') {
-                      _previousWeek();
-                    } else if (id == 'next') {
-                      _nextWeek();
-                    }
-                  },
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  tooltip: 'Previous week',
+                  onPressed: _previousWeek,
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  tooltip: 'Next week',
+                  onPressed: _nextWeek,
+                ),
+              ],
             )
           else ...[
             IconButton(

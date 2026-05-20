@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 
-final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFactory {
+final class NativeGlassButtonFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
 
   init(messenger: FlutterBinaryMessenger) {
@@ -18,7 +18,7 @@ final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFacto
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    NativeGlassFloatingButtonPlatformView(
+    NativeGlassButtonPlatformView(
       frame: frame,
       viewId: viewId,
       arguments: args,
@@ -27,8 +27,8 @@ final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFacto
   }
 }
 
-final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView {
-  static let viewType = "techpie/native_glass_floating_button"
+final class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
+  static let viewType = "techpie/native_glass_button"
 
   private let rootView: UIView
   private let channel: FlutterMethodChannel

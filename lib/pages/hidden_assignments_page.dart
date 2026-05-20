@@ -6,7 +6,7 @@ import '../services/assignment_service.dart';
 import '../services/service_provider.dart';
 import '../utils/platform.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_action_button.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 
 class HiddenAssignmentsPage extends StatefulWidget {
   const HiddenAssignmentsPage({super.key});
@@ -63,9 +63,8 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).assignmentService;
     final theme = Theme.of(context);
-    final useLiquidGlass = usesIosLiquidGlass();
     final useLegacyIosChrome = usesLegacyIosChrome();
-    final topPad = useLegacyIosChrome
+    final topPad = isIos() || useLegacyIosChrome
         ? 0.0
         : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
@@ -77,103 +76,106 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
             hiddenKeys.isNotEmpty && _selected.length == hiddenKeys.length;
 
         return Scaffold(
-          extendBodyBehindAppBar: !useLegacyIosChrome,
-          appBar: BlurredAppBar(
-            automaticallyImplyLeading: !useLiquidGlass,
-            leadingWidth: useLiquidGlass ? 0 : null,
-            leading: useLiquidGlass ? const SizedBox.shrink() : null,
-            centerTitle: false,
-            titleSpacing: useLiquidGlass ? 16 : null,
-            title: useLiquidGlass
-                ? _HiddenAssignmentsTopContainer(
-                    selectionMode: _selectionMode,
-                    selectedAll: selectedAll,
-                    hasItems: hiddenKeys.isNotEmpty,
-                    hasSelection: _selected.isNotEmpty,
-                    onBack: () => Navigator.maybePop(context),
-                    onRestore: _restoreSelected,
-                    onToggleSelectionMode: _selectionMode
-                        ? _exitSelectionMode
-                        : _enterSelectionMode,
-                    onToggleSelectAll: hiddenKeys.isEmpty
-                        ? null
-                        : () => _toggleSelectAll(hiddenKeys),
-                  )
-                : Text(
+          extendBodyBehindAppBar: !isIos() && !useLegacyIosChrome,
+          appBar: isIos()
+              ? IosNativeNavigationBar(
+                  title:
+                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                  selectionMode: _selectionMode,
+                  leadingItems: [
+                    IosNativeNavigationBarItem(
+                      id: 'back',
+                      title: 'Deadlines',
+                      sfSymbol: 'chevron.left',
+                      hidden: _selectionMode,
+                      accessibilityLabel: '返回 Deadlines',
+                      placementGroup: 'leading-main',
+                    ),
+                    IosNativeNavigationBarItem(
+                      id: 'toggleSelectAll',
+                      title: selectedAll ? 'Deselect All' : 'Select All',
+                      enabled: hiddenKeys.isNotEmpty,
+                      hidden: !_selectionMode,
+                      accessibilityLabel: selectedAll ? '全不选' : '全选',
+                      placementGroup: 'leading-main',
+                    ),
+                  ],
+                  trailingItems: [
+                    IosNativeNavigationBarItem(
+                      id: 'restore',
+                      sfSymbol: 'arrow.uturn.backward',
+                      enabled: _selected.isNotEmpty,
+                      hidden: !_selectionMode,
+                      accessibilityLabel: '恢复',
+                      placementGroup: 'selection-actions',
+                    ),
+                    IosNativeNavigationBarItem(
+                      id: 'toggleSelection',
+                      title: _selectionMode ? 'Done' : 'Select',
+                      role: _selectionMode
+                          ? IosNativeNavigationBarItemRole.done
+                          : IosNativeNavigationBarItemRole.normal,
+                      enabled: _selectionMode || hiddenKeys.isNotEmpty,
+                      accessibilityLabel: _selectionMode ? '完成' : '选择',
+                      placementGroup: 'selection-actions',
+                    ),
+                  ],
+                  onItemPressed: (id) {
+                    switch (id) {
+                      case 'back':
+                        Navigator.maybePop(context);
+                      case 'toggleSelectAll':
+                        if (hiddenKeys.isNotEmpty) {
+                          _toggleSelectAll(hiddenKeys);
+                        }
+                      case 'restore':
+                        if (_selected.isNotEmpty) {
+                          _restoreSelected();
+                        }
+                      case 'toggleSelection':
+                        _selectionMode
+                            ? _exitSelectionMode()
+                            : _enterSelectionMode();
+                    }
+                  },
+                )
+              : BlurredAppBar(
+                  centerTitle: false,
+                  title: Text(
                     _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
                   ),
-            actions: useLiquidGlass
-                ? null
-                : [
+                  actions: [
                     if (_selectionMode)
-                      if (isIos())
-                        IosGlassActionButton(
-                          icon: selectedAll ? Icons.deselect : Icons.select_all,
-                          sfSymbol: selectedAll
-                              ? 'checklist.unchecked'
-                              : 'checklist.checked',
-                          width: 44,
-                          height: 44,
-                          enabled: hiddenKeys.isNotEmpty,
-                          onPressed: hiddenKeys.isEmpty
-                              ? () {}
-                              : () => _toggleSelectAll(hiddenKeys),
-                        )
-                      else
-                        IconButton(
-                          tooltip: selectedAll ? '全不选' : '全选',
-                          icon: Icon(
-                            selectedAll ? Icons.deselect : Icons.select_all,
-                          ),
-                          onPressed: hiddenKeys.isEmpty
-                              ? null
-                              : () => _toggleSelectAll(hiddenKeys),
+                      IconButton(
+                        tooltip: selectedAll ? '全不选' : '全选',
+                        icon: Icon(
+                          selectedAll ? Icons.deselect : Icons.select_all,
                         ),
+                        onPressed: hiddenKeys.isEmpty
+                            ? null
+                            : () => _toggleSelectAll(hiddenKeys),
+                      ),
                     if (_selectionMode)
-                      if (isIos())
-                        IosGlassActionButton(
-                          icon: Icons.restore,
-                          sfSymbol: 'arrow.uturn.backward',
-                          width: 44,
-                          height: 44,
-                          enabled: _selected.isNotEmpty,
-                          onPressed:
-                              _selected.isEmpty ? () {} : _restoreSelected,
-                        )
-                      else
-                        IconButton(
-                          tooltip: '恢复',
-                          onPressed:
-                              _selected.isNotEmpty ? _restoreSelected : null,
-                          icon: const Icon(Icons.restore),
-                        ),
+                      IconButton(
+                        tooltip: '恢复',
+                        onPressed:
+                            _selected.isNotEmpty ? _restoreSelected : null,
+                        icon: const Icon(Icons.restore),
+                      ),
                     if (hiddenKeys.isNotEmpty)
-                      if (isIos())
-                        IosGlassActionButton(
-                          icon: _selectionMode
+                      IconButton(
+                        tooltip: _selectionMode ? '完成' : '选择',
+                        icon: Icon(
+                          _selectionMode
                               ? Icons.check
                               : Icons.checklist_outlined,
-                          sfSymbol: _selectionMode ? 'checkmark' : 'checklist',
-                          width: 44,
-                          height: 44,
-                          onPressed: _selectionMode
-                              ? _exitSelectionMode
-                              : _enterSelectionMode,
-                        )
-                      else
-                        IconButton(
-                          tooltip: _selectionMode ? '完成' : '选择',
-                          icon: Icon(
-                            _selectionMode
-                                ? Icons.check
-                                : Icons.checklist_outlined,
-                          ),
-                          onPressed: _selectionMode
-                              ? _exitSelectionMode
-                              : _enterSelectionMode,
                         ),
+                        onPressed: _selectionMode
+                            ? _exitSelectionMode
+                            : _enterSelectionMode,
+                      ),
                   ],
-          ),
+                ),
           body: hiddenKeys.isEmpty
               ? Padding(
                   padding: EdgeInsets.only(top: topPad),
@@ -243,99 +245,6 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
                 },
         );
       },
-    );
-  }
-}
-
-class _HiddenAssignmentsTopContainer extends StatelessWidget {
-  const _HiddenAssignmentsTopContainer({
-    required this.selectionMode,
-    required this.selectedAll,
-    required this.hasItems,
-    required this.hasSelection,
-    required this.onBack,
-    required this.onRestore,
-    required this.onToggleSelectionMode,
-    required this.onToggleSelectAll,
-  });
-
-  final bool selectionMode;
-  final bool selectedAll;
-  final bool hasItems;
-  final bool hasSelection;
-  final VoidCallback onBack;
-  final VoidCallback onRestore;
-  final VoidCallback onToggleSelectionMode;
-  final VoidCallback? onToggleSelectAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
-      child: Row(
-        children: [
-          if (selectionMode)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.centerLeft,
-              child: IosGlassActionButton(
-                label: selectedAll ? 'Deselect All' : 'Select All',
-                sfSymbol: 'none',
-                enabled: onToggleSelectAll != null,
-                variant: IosGlassActionButtonVariant.glass,
-                onPressed: onToggleSelectAll ?? () {},
-              ),
-            )
-          else
-            IosGlassActionButton(
-              label: 'Deadlines',
-              sfSymbol: 'chevron.left',
-              variant: IosGlassActionButtonVariant.glass,
-              onPressed: onBack,
-            ),
-          const Spacer(),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SizeTransition(
-                  sizeFactor: animation,
-                  axis: Axis.horizontal,
-                  axisAlignment: 1,
-                  child: child,
-                ),
-              );
-            },
-            child: selectionMode
-                ? Row(
-                    key: const ValueKey('restore-action'),
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IosGlassActionButton(
-                        sfSymbol: 'arrow.uturn.backward',
-                        width: 44,
-                        enabled: hasSelection,
-                        variant: IosGlassActionButtonVariant.glass,
-                        onPressed: onRestore,
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  )
-                : const SizedBox(key: ValueKey('restore-action-hidden')),
-          ),
-          IosGlassActionButton(
-            label: selectionMode ? 'Done' : 'Select',
-            sfSymbol: 'none',
-            enabled: hasItems,
-            variant: IosGlassActionButtonVariant.glass,
-            onPressed: onToggleSelectionMode,
-          ),
-        ],
-      ),
     );
   }
 }
