@@ -13,6 +13,7 @@ import '../services/service_provider.dart';
 import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/blurred_app_bar.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../utils/platform.dart';
 
 class HomePage extends StatefulWidget {
@@ -256,14 +257,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final sp = ServiceProvider.of(context);
     final auth = sp.authService;
     final isDebug = sp.storageService.debugMode;
+    final useIosChrome = isIos();
     final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useLegacyIosChrome
+    final topInset = useIosChrome || useLegacyIosChrome
         ? 16.0
         : 16 + adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useLegacyIosChrome,
-      appBar: const BlurredAppBar(title: Text('Home')),
+      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
+      appBar: useIosChrome
+          ? const IosNativeNavigationBar(title: 'Home', largeTitleMode: true)
+          : const BlurredAppBar(title: Text('Home')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,

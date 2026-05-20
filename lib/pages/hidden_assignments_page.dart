@@ -81,6 +81,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
               ? IosNativeNavigationBar(
                   title:
                       _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                  largeTitleMode: true,
                   selectionMode: _selectionMode,
                   leadingItems: [
                     IosNativeNavigationBarItem(

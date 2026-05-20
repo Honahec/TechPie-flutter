@@ -76,7 +76,14 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
 
   private func buildViewHierarchy() {
     rootView.backgroundColor = .clear
+    rootView.directionalLayoutMargins = NSDirectionalEdgeInsets(
+      top: 0,
+      leading: 20,
+      bottom: 0,
+      trailing: 20
+    )
     navigationBar.translatesAutoresizingMaskIntoConstraints = false
+    navigationBar.preservesSuperviewLayoutMargins = true
     rootView.addSubview(navigationBar)
 
     NSLayoutConstraint.activate([
