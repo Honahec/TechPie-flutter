@@ -102,7 +102,9 @@ class IosNativeNavigationBar extends StatefulWidget
 
   double get _barHeight {
     final hasSubtitle = subtitle != null && subtitle!.isNotEmpty;
-    if (largeTitleMode) return hasSubtitle ? 112.0 : 96.0;
+    if (largeTitleMode) {
+      return hasSubtitle && usesIosLiquidGlass() ? 112.0 : 96.0;
+    }
     return hasSubtitle ? 56.0 : 44.0;
   }
 
