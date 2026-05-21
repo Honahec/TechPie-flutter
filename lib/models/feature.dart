@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum FeatureMode {
   native,
   webviewWithCookie,
@@ -15,6 +17,8 @@ class Feature {
   final FeatureMode mode;
   final String? url;
   final CookieType? cookieType;
+  final Icon icon;
+  final void Function(BuildContext context)? nativeEntry;
 
   Feature({
     required this.id,
@@ -22,6 +26,8 @@ class Feature {
     required this.mode,
     this.url,
     this.cookieType,
+    required this.icon,
+    this.nativeEntry,
   });
 }
 
@@ -32,6 +38,7 @@ final featureEntries = <Feature>[
     mode: FeatureMode.webviewWithCookie,
     url: 'https://ecourse.shanghaitech.edu.cn:8080/',
     cookieType: CookieType.ecourse,
+    icon: Icon(Icons.cast_for_education),
   ),
   Feature(
     id: 'student_leave',
@@ -39,5 +46,14 @@ final featureEntries = <Feature>[
     mode: FeatureMode.webviewWithCookie,
     url: 'https://egate.shanghaitech.edu.cn/xsfw/sys/xsqjapp/*default/index.do',
     cookieType: CookieType.egate,
+    icon: Icon(Icons.door_front_door),
   ),
 ];
+
+final moreFeature = Feature(
+  id: 'more',
+  description: '更多',
+  mode: FeatureMode.native,
+  nativeEntry: (context) {},
+  icon: Icon(Icons.more_horiz),
+);

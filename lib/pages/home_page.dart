@@ -3,18 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../models/assignment.dart';
 import '../models/course.dart';
 import '../models/course_table.dart';
+import '../models/feature.dart';
 import '../services/assignment_service.dart';
 import '../services/schedule_service.dart';
 import '../services/service_provider.dart';
 import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/blurred_app_bar.dart';
+import '../widgets/app_card.dart';
 import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../utils/platform.dart';
+import 'generic_webview_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -304,6 +308,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 16),
+          _buildAppCard(featureEntries),
+          const SizedBox(height: 16),
           _buildTodayClasses(theme, auth.isLoggedIn),
           const SizedBox(height: 8),
           _buildPendingAssignments(theme),
@@ -311,6 +317,82 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  Widget _buildAppCard(
+    List<Feature> features, {
+    int rows = 2,
+  }) {
+    final theme = Theme.of(context);
+
+    return Card.outlined(
+      clipBehavior: Clip.antiAlias,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.topCenter,
+        child: Column(
+          key: ValueKey('apps-${features.length}-$rows'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.apps_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('应用', style: theme.textTheme.titleSmall),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: AppCard(
+                features: features,
+                rows: rows,
+                onFeatureTap: _handleFeatureTap,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleFeatureTap(Feature feature) {
+    switch (feature.mode) {
+      case FeatureMode.native:
+        feature.nativeEntry?.call(context);
+        break;
+      case FeatureMode.webviewWithCookie:
+        final cookies = <WebViewCookie>[];
+        switch (feature.cookieType) {
+          case CookieType.ecourse:
+            break;
+          case CookieType.egate:
+            break;
+          case CookieType.eams:
+            break;
+          case null:
+            break;
+        }
+        if (feature.url != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => GenericWebViewPage(
+                title: feature.description,
+                url: feature.url!,
+                cookies: cookies),
+            ),
+          );
+        }
+        break;
+    }
   }
 
   Widget _buildTodayClasses(ThemeData theme, bool isLoggedIn) {
