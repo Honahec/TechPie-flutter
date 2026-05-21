@@ -141,9 +141,6 @@ final class NativeGlassTabBarPlatformView: NSObject, FlutterPlatformView, UITabB
     
     tabBar.itemPositioning = .fill
 
-    tabBar.tintColor = NativeGlassColors.selectedBlue
-    tabBar.unselectedItemTintColor = NativeGlassColors.normalItem
-
     tabBar.backgroundColor = .clear
     tabBar.clipsToBounds = false
   }

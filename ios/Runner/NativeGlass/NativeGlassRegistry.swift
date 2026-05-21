@@ -4,18 +4,28 @@ import UIKit
 enum NativeGlassRegistry {
   static func registerAll(with registrar: FlutterPluginRegistrar) {
     let messenger = registrar.messenger()
+    let platformChannel = FlutterMethodChannel(
+      name: "techpie/platform",
+      binaryMessenger: messenger
+    )
+
+    platformChannel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "iosMajorVersion":
+        let major = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        result(major)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
 
     registrar.register(
       NativeGlassTabBarFactory(messenger: messenger),
       withId: NativeGlassTabBarPlatformView.viewType
     )
     registrar.register(
-      NativeGlassFloatingButtonFactory(messenger: messenger),
-      withId: NativeGlassFloatingButtonPlatformView.viewType
-    )
-    registrar.register(
-      NativeGlassButtonGroupFactory(messenger: messenger),
-      withId: NativeGlassButtonGroupPlatformView.viewType
+      NativeGlassButtonFactory(messenger: messenger),
+      withId: NativeGlassButtonPlatformView.viewType
     )
     registrar.register(
       NativeGlassDropdownMenuFactory(messenger: messenger),
@@ -34,8 +44,8 @@ enum NativeGlassRegistry {
       withId: NativeGlassConfirmationButtonPlatformView.viewType
     )
     registrar.register(
-      NativeGlassActionButtonFactory(messenger: messenger),
-      withId: NativeGlassActionButtonPlatformView.viewType
+      NativeNavigationBarFactory(messenger: messenger),
+      withId: NativeNavigationBarPlatformView.viewType
     )
 
     NativeGlassPresenterPlugin.register(with: registrar)

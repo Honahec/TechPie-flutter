@@ -32,9 +32,6 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
 
   private let rootView: UIView
   private let channel: FlutterMethodChannel
-  private let backgroundView = UIVisualEffectView(
-    effect: UIBlurEffect(style: .systemChromeMaterial)
-  )
   private let button = UIButton(type: .system)
 
   private var placeholder = "Select"
@@ -101,7 +98,6 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
     rootView.backgroundColor = .clear
 
     button.translatesAutoresizingMaskIntoConstraints = false
-    button.tintColor = NativeGlassColors.floatingButtonForeground
     button.semanticContentAttribute = .forceRightToLeft
     button.contentHorizontalAlignment = .fill
     button.accessibilityTraits.insert(.button)
@@ -118,32 +114,13 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
       return
     }
 
-    backgroundView.translatesAutoresizingMaskIntoConstraints = false
-    backgroundView.clipsToBounds = true
-    backgroundView.layer.cornerRadius = 16
-    backgroundView.layer.borderWidth = 1
-    backgroundView.layer.borderColor = NativeGlassColors.controlBorder.cgColor
-    backgroundView.layer.shadowColor = UIColor.black.cgColor
-    backgroundView.layer.shadowOpacity = 0.06
-    backgroundView.layer.shadowRadius = 8
-    backgroundView.layer.shadowOffset = CGSize(width: 0, height: 4)
-
-    if #available(iOS 13.0, *) {
-      backgroundView.layer.cornerCurve = .continuous
-    }
-
-    rootView.addSubview(backgroundView)
-    backgroundView.contentView.addSubview(button)
+    rootView.addSubview(button)
 
     NSLayoutConstraint.activate([
-      backgroundView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-      backgroundView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-      backgroundView.topAnchor.constraint(equalTo: rootView.topAnchor),
-      backgroundView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
-      button.leadingAnchor.constraint(equalTo: backgroundView.contentView.leadingAnchor),
-      button.trailingAnchor.constraint(equalTo: backgroundView.contentView.trailingAnchor),
-      button.topAnchor.constraint(equalTo: backgroundView.contentView.topAnchor),
-      button.bottomAnchor.constraint(equalTo: backgroundView.contentView.bottomAnchor)
+      button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+      button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+      button.topAnchor.constraint(equalTo: rootView.topAnchor),
+      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
     ])
   }
 
@@ -162,18 +139,7 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
       var configuration = UIButton.Configuration.glass()
       configuration.image = image
       configuration.title = selectedLabel
-      configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
-      configuration.contentInsets = NSDirectionalEdgeInsets(
-        top: 10,
-        leading: 14,
-        bottom: 10,
-        trailing: 14
-      )
-      configuration.imagePadding = image == nil ? 0 : 8
-      configuration.cornerStyle = .capsule
       button.configuration = configuration
-      button.backgroundColor = .clear
-      button.setNeedsUpdateConfiguration()
       return
     }
 
@@ -181,23 +147,10 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
       var configuration = UIButton.Configuration.plain()
       configuration.image = image
       configuration.title = selectedLabel
-      configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
-      configuration.contentInsets = NSDirectionalEdgeInsets(
-        top: 10,
-        leading: 14,
-        bottom: 10,
-        trailing: 14
-      )
-      configuration.imagePadding = 8
-      configuration.cornerStyle = .capsule
       button.configuration = configuration
     } else {
       button.setImage(image, for: .normal)
       button.setTitle(selectedLabel, for: .normal)
-      button.tintColor = NativeGlassColors.floatingButtonForeground
-      button.setTitleColor(NativeGlassColors.floatingButtonForeground, for: .normal)
-      button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
-      button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
     }
   }
 
@@ -225,13 +178,7 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
   private func symbolImage(named systemName: String) -> UIImage? {
     guard systemName != "none" else { return nil }
 
-    let configuration = UIImage.SymbolConfiguration(
-      pointSize: 14,
-      weight: .semibold,
-      scale: .medium
-    )
-
-    return UIImage(systemName: systemName, withConfiguration: configuration)?
+    return UIImage(systemName: systemName)?
       .withRenderingMode(.alwaysTemplate)
   }
 

@@ -20,6 +20,7 @@ import 'widgets/adaptive_feedback.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializePlatformCapabilities();
 
   // OHOS white-screen probe disabled to speed up startup. Re-enable by
   // restoring the runApp(_BootProbe...) calls and wrapping init in try/catch.

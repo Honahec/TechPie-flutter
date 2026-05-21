@@ -81,7 +81,6 @@ final class NativeGlassSwitchPlatformView: NSObject, FlutterPlatformView {
     rootView.backgroundColor = .clear
 
     toggle.translatesAutoresizingMaskIntoConstraints = false
-    toggle.onTintColor = NativeGlassColors.selectedBlue
     toggle.addTarget(self, action: #selector(handleValueChanged), for: .valueChanged)
 
     rootView.addSubview(toggle)

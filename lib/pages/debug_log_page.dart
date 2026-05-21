@@ -13,10 +13,13 @@ class DebugLogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logger = ServiceProvider.of(context).debugLogger;
-    final topPad = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topPad = useLegacyIosChrome
+        ? 0.0
+        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: !useLegacyIosChrome,
       appBar: BlurredAppBar(
         title: const Text('Debug Logs'),
         actions: [
@@ -74,10 +77,10 @@ class _LogTile extends StatelessWidget {
     final statusColor = hasError
         ? theme.colorScheme.error
         : (entry.statusCode != null &&
-              entry.statusCode! >= 200 &&
-              entry.statusCode! < 300)
-        ? Colors.green
-        : theme.colorScheme.onSurface;
+                entry.statusCode! >= 200 &&
+                entry.statusCode! < 300)
+            ? Colors.green
+            : theme.colorScheme.onSurface;
 
     return ExpansionTile(
       leading: Text(

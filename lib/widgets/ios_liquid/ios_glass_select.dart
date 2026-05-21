@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:techpie/utils/platform.dart';
 
 class IosGlassSelectOption {
   const IosGlassSelectOption({required this.value, required this.label});
@@ -36,8 +36,7 @@ class IosGlassSelect extends StatefulWidget {
 class _IosGlassSelectState extends State<IosGlassSelect> {
   MethodChannel? _channel;
 
-  bool get _usesNative =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  bool get _usesNative => isIos();
 
   @override
   void dispose() {

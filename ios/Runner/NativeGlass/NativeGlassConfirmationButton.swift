@@ -32,9 +32,6 @@ final class NativeGlassConfirmationButtonPlatformView: NSObject, FlutterPlatform
 
   private let rootView: UIView
   private let channel: FlutterMethodChannel
-  private let backgroundView = UIVisualEffectView(
-    effect: UIBlurEffect(style: .systemChromeMaterial)
-  )
   private let button = UIButton(type: .system)
 
   private var label: String?
@@ -94,7 +91,6 @@ final class NativeGlassConfirmationButtonPlatformView: NSObject, FlutterPlatform
     button.translatesAutoresizingMaskIntoConstraints = false
     button.accessibilityTraits.insert(.button)
     button.clipsToBounds = false
-
     if #available(iOS 26.0, *) {
       rootView.addSubview(button)
 
@@ -107,32 +103,13 @@ final class NativeGlassConfirmationButtonPlatformView: NSObject, FlutterPlatform
       return
     }
 
-    backgroundView.translatesAutoresizingMaskIntoConstraints = false
-    backgroundView.clipsToBounds = true
-    backgroundView.layer.cornerRadius = 18
-    backgroundView.layer.borderWidth = 1
-    backgroundView.layer.borderColor = NativeGlassColors.controlBorder.cgColor
-    backgroundView.layer.shadowColor = UIColor.black.cgColor
-    backgroundView.layer.shadowOpacity = 0.08
-    backgroundView.layer.shadowRadius = 10
-    backgroundView.layer.shadowOffset = CGSize(width: 0, height: 6)
-
-    if #available(iOS 13.0, *) {
-      backgroundView.layer.cornerCurve = .continuous
-    }
-
-    rootView.addSubview(backgroundView)
-    backgroundView.contentView.addSubview(button)
+    rootView.addSubview(button)
 
     NSLayoutConstraint.activate([
-      backgroundView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-      backgroundView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-      backgroundView.topAnchor.constraint(equalTo: rootView.topAnchor),
-      backgroundView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
-      button.leadingAnchor.constraint(equalTo: backgroundView.contentView.leadingAnchor),
-      button.trailingAnchor.constraint(equalTo: backgroundView.contentView.trailingAnchor),
-      button.topAnchor.constraint(equalTo: backgroundView.contentView.topAnchor),
-      button.bottomAnchor.constraint(equalTo: backgroundView.contentView.bottomAnchor)
+      button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+      button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+      button.topAnchor.constraint(equalTo: rootView.topAnchor),
+      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
     ])
   }
 
@@ -142,42 +119,28 @@ final class NativeGlassConfirmationButtonPlatformView: NSObject, FlutterPlatform
       return
     }
 
-    let foregroundColor = destructive
-      ? NativeGlassColors.destructiveRed
-      : NativeGlassColors.floatingButtonForeground
     let image = symbolImage(named: sfSymbol)
 
     if #available(iOS 15.0, *) {
       var configuration = UIButton.Configuration.plain()
       configuration.image = image
       configuration.title = label
-      configuration.baseForegroundColor = foregroundColor
-      configuration.contentInsets = NSDirectionalEdgeInsets(
-        top: 8,
-        leading: 12,
-        bottom: 8,
-        trailing: 12
-      )
-      configuration.imagePadding = label == nil || label?.isEmpty == true ? 0 : 6
-      configuration.cornerStyle = .capsule
+      if destructive {
+        configuration.baseForegroundColor = .systemRed
+      }
       button.configuration = configuration
     } else {
       button.setImage(image, for: .normal)
       button.setTitle(label, for: .normal)
-      button.tintColor = foregroundColor
-      button.setTitleColor(foregroundColor, for: .normal)
-      button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-      button.titleEdgeInsets = label == nil || label?.isEmpty == true
-        ? .zero
-        : UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+      if destructive {
+        button.tintColor = .systemRed
+        button.setTitleColor(.systemRed, for: .normal)
+      }
     }
   }
 
   @available(iOS 26.0, *)
   private func applyLiquidGlassAppearance() {
-    let foregroundColor = destructive
-      ? NativeGlassColors.destructiveRed
-      : NativeGlassColors.floatingButtonForeground
     let image = symbolImage(named: sfSymbol)
 
     var configuration: UIButton.Configuration =
@@ -186,32 +149,15 @@ final class NativeGlassConfirmationButtonPlatformView: NSObject, FlutterPlatform
       : .glass()
     configuration.image = image
     configuration.title = label
-    configuration.baseForegroundColor = foregroundColor
-    configuration.contentInsets = NSDirectionalEdgeInsets(
-      top: 8,
-      leading: 12,
-      bottom: 8,
-      trailing: 12
-    )
-    configuration.imagePadding = label == nil || label?.isEmpty == true ? 0 : 6
-    configuration.cornerStyle = .capsule
+    if destructive {
+      configuration.baseForegroundColor = .systemRed
+    }
 
     button.configuration = configuration
-    button.tintColor = foregroundColor
-    button.backgroundColor = .clear
-    button.layer.shadowOpacity = 0
-    button.layer.borderWidth = 0
-    button.setNeedsUpdateConfiguration()
   }
 
   private func symbolImage(named systemName: String) -> UIImage? {
-    let configuration = UIImage.SymbolConfiguration(
-      pointSize: 14,
-      weight: .semibold,
-      scale: .medium
-    )
-
-    return UIImage(systemName: systemName, withConfiguration: configuration)?
+    return UIImage(systemName: systemName)?
       .withRenderingMode(.alwaysTemplate)
   }
 

@@ -10,7 +10,7 @@ import '../utils/platform.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_dropdown_menu.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../widgets/swipeable_card.dart';
 import 'hidden_assignments_page.dart';
 
@@ -83,14 +83,18 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   @override
   Widget build(BuildContext context) {
     final assignmentService = ServiceProvider.of(context).assignmentService;
-    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final useIosChrome = isIos();
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topInset = useIosChrome || useLegacyIosChrome
+        ? 0.0
+        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return ListenableBuilder(
       listenable: assignmentService,
       builder: (context, _) {
         final visible = assignmentService.visibleAssignments;
         return Scaffold(
-          extendBodyBehindAppBar: true,
+          extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
           appBar: _selectionMode
               ? _buildSelectionAppBar(context, assignmentService, visible)
               : _buildNormalAppBar(context, assignmentService),
@@ -110,62 +114,60 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     BuildContext context,
     AssignmentService service,
   ) {
-    return BlurredAppBar(
-      title: const Text('Deadlines'),
-      actions: [
-        if (isIos())
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 8),
-            child: Center(
-              child: IosGlassDropdownMenu(
-                icon: Icons.more_vert,
-                sfSymbol: 'ellipsis',
-                tooltip: '更多操作',
-                items: [
-                  IosGlassDropdownMenuItem(
-                    value: 'hidden',
-                    label: '查看已忽略 (${service.overrides.hidden.length})',
-                  ),
-                ],
-                onSelected: (v) {
-                  if (v == 'hidden') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const HiddenAssignmentsPage(),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ),
-          )
-        else
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'hidden') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const HiddenAssignmentsPage(),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
+    if (isIos()) {
+      return IosNativeNavigationBar(
+        title: 'Deadlines',
+        largeTitleMode: true,
+        trailingItems: [
+          IosNativeNavigationBarItem(
+            id: 'more',
+            sfSymbol: 'ellipsis',
+            accessibilityLabel: '更多操作',
+            menuItems: [
+              IosNativeNavigationBarMenuItem(
                 value: 'hidden',
-                child: Row(
-                  children: [
-                    const Icon(Icons.visibility_off_outlined, size: 20),
-                    const SizedBox(width: 12),
-                    Text('查看已忽略 (${service.overrides.hidden.length})'),
-                  ],
-                ),
+                title: '查看已忽略 (${service.overrides.hidden.length})',
               ),
             ],
           ),
+        ],
+        onMenuSelected: (_, value) {
+          if (value == 'hidden') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HiddenAssignmentsPage()),
+            );
+          }
+        },
+      );
+    }
+
+    return BlurredAppBar(
+      title: const Text('Deadlines'),
+      actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (v) {
+            if (v == 'hidden') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HiddenAssignmentsPage()),
+              );
+            }
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'hidden',
+              child: Row(
+                children: [
+                  const Icon(Icons.visibility_off_outlined, size: 20),
+                  const SizedBox(width: 12),
+                  Text('查看已忽略 (${service.overrides.hidden.length})'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -523,7 +525,7 @@ class _PlatformErrorsBanner extends StatelessWidget {
     final errors = service.platformErrors;
     if (errors.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: errors.entries.map((entry) {

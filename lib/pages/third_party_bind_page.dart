@@ -56,8 +56,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
     final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
       title: '开启自动更新 Token',
-      message:
-          '打开后，APP 将于本地加密存储你的账号和密码信息,'
+      message: '打开后，APP 将于本地加密存储你的账号和密码信息,'
           '用于在过期前 48 小时内自动触发 Token 更新。\n\n'
           '凭据仅存放在本设备的 Keychain / EncryptedSharedPreferences 中，'
           '不会上传到服务器。',
@@ -142,15 +141,20 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
   @override
   Widget build(BuildContext context) {
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topInset = useLegacyIosChrome
+        ? 16.0
+        : 16 + adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: !useLegacyIosChrome,
       appBar: BlurredAppBar(title: Text('Bind ${widget.platform.label}')),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             16,
-            16 + kToolbarHeight + MediaQuery.viewPaddingOf(context).top,
+            topInset,
             16,
             16,
           ),
@@ -289,8 +293,8 @@ class _InlineBindFeedback extends StatelessWidget {
               child: Text(
                 message,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onErrorContainer,
-                ),
+                      color: scheme.onErrorContainer,
+                    ),
               ),
             ),
           ],

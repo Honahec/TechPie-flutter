@@ -13,6 +13,7 @@ import '../services/service_provider.dart';
 import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/blurred_app_bar.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../utils/platform.dart';
 
 class HomePage extends StatefulWidget {
@@ -256,14 +257,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final sp = ServiceProvider.of(context);
     final auth = sp.authService;
     final isDebug = sp.storageService.debugMode;
+    final useIosChrome = isIos();
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topInset = useIosChrome || useLegacyIosChrome
+        ? 16.0
+        : 16 + adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: const BlurredAppBar(title: Text('Home')),
+      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
+      appBar: useIosChrome
+          ? const IosNativeNavigationBar(title: 'Home', largeTitleMode: true)
+          : const BlurredAppBar(title: Text('Home')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
-          16 + kToolbarHeight + MediaQuery.viewPaddingOf(context).top,
+          topInset,
           16,
           120,
         ),
@@ -360,11 +368,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Widget _buildPendingAssignments(ThemeData theme) {
     final now = _now;
-    final pending =
-        _assignments.visibleAssignments
-            .where((a) => !_assignments.isCompleted(a) && a.due.isAfter(now))
-            .toList()
-          ..sort((a, b) => a.due.compareTo(b.due));
+    final pending = _assignments.visibleAssignments
+        .where((a) => !_assignments.isCompleted(a) && a.due.isAfter(now))
+        .toList()
+      ..sort((a, b) => a.due.compareTo(b.due));
 
     final showCount = pending.length.clamp(0, 5);
     final overflow = pending.length - showCount;
@@ -591,8 +598,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildCourseContent({required Key key, required ThemeData theme}) {
-    final hasStagger =
-        _staggerController != null &&
+    final hasStagger = _staggerController != null &&
         _itemSlides.length == _todayCourses.length;
 
     return Column(
@@ -647,11 +653,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isPast = status == _CourseStatus.past;
 
     // Smooth title weight transition
-    final titleStyle = (theme.textTheme.bodyLarge ?? const TextStyle())
-        .copyWith(
-          fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-          color: theme.colorScheme.onSurface,
-        );
+    final titleStyle =
+        (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+      color: theme.colorScheme.onSurface,
+    );
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),

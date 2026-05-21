@@ -8,8 +8,7 @@ import '../widgets/blurred_app_bar.dart';
 import '../widgets/course_detail_panel.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/desktop_select_popover.dart';
-import '../widgets/ios_liquid/ios_glass_button_group.dart';
-import '../widgets/ios_liquid/ios_glass_dropdown_menu.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../utils/platform.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -34,6 +33,7 @@ class _SchedulePageState extends State<SchedulePage> {
   // Animation: track slide direction for week transitions
   // 1 = forward (next week), -1 = backward (previous week), 0 = no slide
   int _slideDirection = 0;
+  final PageController _weekPageController = PageController();
   final GlobalKey _viewSettingsAnchorKey = GlobalKey();
 
   @override
@@ -50,6 +50,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   void dispose() {
+    _weekPageController.dispose();
     _schedule.removeListener(_onScheduleChanged);
     super.dispose();
   }
@@ -87,38 +88,37 @@ class _SchedulePageState extends State<SchedulePage> {
         _courses = [];
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_weekPageController.hasClients) return;
+      _weekPageController.jumpToPage(_currentWeek - 1);
+    });
   }
 
   void _previousWeek() {
-    final old = _currentWeek;
-    setState(() {
-      _currentWeek = (_currentWeek - 1).clamp(1, 25).toInt();
-      _slideDirection = _currentWeek < old ? -1 : 0;
-      _filterCoursesForWeek();
-    });
+    _setWeek(_currentWeek - 1);
   }
 
   void _nextWeek() {
-    final old = _currentWeek;
-    setState(() {
-      _currentWeek = (_currentWeek + 1).clamp(1, 25).toInt();
-      _slideDirection = _currentWeek > old ? 1 : 0;
-      _filterCoursesForWeek();
-    });
+    _setWeek(_currentWeek + 1);
   }
 
   void _goToCurrentWeek() {
-    final old = _currentWeek;
     final computedWeek = _schedule.currentWeek().clamp(1, 25).toInt();
 
-    setState(() {
-      _currentWeek = computedWeek;
-      _slideDirection = _currentWeek > old ? 1 : (_currentWeek < old ? -1 : 0);
-      _filterCoursesForWeek();
-    });
+    _setWeek(computedWeek);
   }
 
   void _setWeek(int week) {
+    _setCurrentWeek(week);
+    if (!_weekPageController.hasClients) return;
+    _weekPageController.animateToPage(
+      _currentWeek - 1,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _setCurrentWeek(int week) {
     final old = _currentWeek;
     setState(() {
       _currentWeek = week.clamp(1, 25).toInt();
@@ -136,6 +136,29 @@ class _SchedulePageState extends State<SchedulePage> {
         includeGhosts: _showGhostCourses,
       );
     }
+  }
+
+  List<Course> _coursesForWeek(int week) {
+    final table = _schedule.courseTable;
+    if (table == null) return const [];
+
+    return eamsToDisplayCourses(
+      table.courses,
+      week.clamp(1, 25).toInt(),
+      includeGhosts: _showGhostCourses,
+    );
+  }
+
+  DateTime _weekStartForWeek(int week) {
+    final termBegin = _schedule.termBegin;
+    if (termBegin != null) {
+      final weekStartDate = termBegin.add(
+        Duration(days: (week.clamp(1, 25).toInt() - 1) * 7),
+      );
+      return weekStartDate.subtract(Duration(days: weekStartDate.weekday - 1));
+    }
+    final now = DateTime.now();
+    return now.subtract(Duration(days: now.weekday - 1));
   }
 
   void _showSemesterPicker() {
@@ -198,31 +221,13 @@ class _SchedulePageState extends State<SchedulePage> {
             final isViewingCurrentWeek = _currentWeek == computedWeek;
 
             void selectWeek(int week) {
-              final old = _currentWeek;
-
-              setState(() {
-                _currentWeek = week.clamp(1, 25).toInt();
-                _slideDirection = _currentWeek > old
-                    ? 1
-                    : (_currentWeek < old ? -1 : 0);
-                _filterCoursesForWeek();
-              });
-
+              _setWeek(week);
               setModalState(() {});
               Navigator.pop(context);
             }
 
             void goToCurrentWeek() {
-              final old = _currentWeek;
-
-              setState(() {
-                _currentWeek = computedWeek;
-                _slideDirection = computedWeek > old
-                    ? 1
-                    : (computedWeek < old ? -1 : 0);
-                _filterCoursesForWeek();
-              });
-
+              _setWeek(computedWeek);
               setModalState(() {});
               Navigator.pop(context);
             }
@@ -270,9 +275,8 @@ class _SchedulePageState extends State<SchedulePage> {
                                   )
                                 : const SizedBox(width: 24),
                             title: Text('第 $week 周'),
-                            subtitle: isActualCurrentWeek
-                                ? const Text('本周')
-                                : null,
+                            subtitle:
+                                isActualCurrentWeek ? const Text('本周') : null,
                             onTap: () => selectWeek(week),
                           );
                         },
@@ -295,18 +299,6 @@ class _SchedulePageState extends State<SchedulePage> {
     return days;
   }
 
-  DateTime get _weekStart {
-    final termBegin = _schedule.termBegin;
-    if (termBegin != null) {
-      final weekStartDate = termBegin.add(
-        Duration(days: (_currentWeek - 1) * 7),
-      );
-      return weekStartDate.subtract(Duration(days: weekStartDate.weekday - 1));
-    }
-    final now = DateTime.now();
-    return now.subtract(Duration(days: now.weekday - 1));
-  }
-
   String get _semesterLabel {
     final info = _schedule.semesterInfo;
     final id = _schedule.selectedSemesterId;
@@ -323,171 +315,147 @@ class _SchedulePageState extends State<SchedulePage> {
     final auth = ServiceProvider.of(context).authService;
     final actualCurrentWeek = _schedule.currentWeek().clamp(1, 25).toInt();
     final isViewingCurrentWeek = _currentWeek == actualCurrentWeek;
+    final useIosChrome = isIos();
+    final useLegacyIosChrome = usesLegacyIosChrome();
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: BlurredAppBar(
-        titleSpacing: 16,
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isDesktopLayout(context))
-              _DesktopWeekTitleMenu(
-                currentWeek: _currentWeek,
-                semesterLabel: _semesterLabel,
-                slideDirection: _slideDirection,
-                onWeekChanged: _setWeek,
-              )
-            else if (isIos())
-              _IosWeekTitleMenu(
-                currentWeek: _currentWeek,
-                actualCurrentWeek: actualCurrentWeek,
-                semesterLabel: _semesterLabel,
-                onWeekChanged: _setWeek,
-              )
-            else
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _showWeekPicker,
-                child: _WeekTitleContent(
-                  currentWeek: _currentWeek,
-                  semesterLabel: _semesterLabel,
-                  slideDirection: _slideDirection,
-                  trailingIcon: Icons.unfold_more,
-                ),
-              ),
-            if (isDesktopLayout(context) && !isViewingCurrentWeek) ...[
-              const SizedBox(width: 12),
-              TextButton.icon(
-                onPressed: _goToCurrentWeek,
-                icon: const Icon(Icons.today_outlined, size: 18),
-                label: const Text('回到本周'),
-              ),
-            ],
-            const Spacer(),
-          ],
-        ),
-        actions: [
-          if (isIos())
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8),
-              child: Center(
-                child: IosGlassButtonGroup(
-                  width: 88,
-                  buttons: const [
-                    IosGlassButtonGroupButton(
-                      id: 'previous',
-                      icon: Icons.chevron_left,
-                      sfSymbol: 'chevron.left',
-                      tooltip: 'Previous week',
-                    ),
-                    IosGlassButtonGroupButton(
-                      id: 'next',
-                      icon: Icons.chevron_right,
-                      sfSymbol: 'chevron.right',
-                      tooltip: 'Next week',
-                    ),
-                  ],
-                  onPressed: (id) {
-                    if (id == 'previous') {
-                      _previousWeek();
-                    } else if (id == 'next') {
-                      _nextWeek();
-                    }
-                  },
-                ),
-              ),
-            )
-          else ...[
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              tooltip: 'Previous week',
-              onPressed: _previousWeek,
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              tooltip: 'Next week',
-              onPressed: _nextWeek,
-            ),
-          ],
-          if (isDesktopLayout(context) && !isIos())
-            IconButton(
-              key: _viewSettingsAnchorKey,
-              icon: const Icon(Icons.more_vert),
-              tooltip: '视图设置',
-              onPressed: _showViewSettingsMenu,
-            )
-          else if (isIos())
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8),
-              child: Center(
-                child: IosGlassDropdownMenu(
-                  icon: Icons.more_vert,
+      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
+      appBar: useIosChrome
+          ? IosNativeNavigationBar(
+              title: '第 $_currentWeek 周',
+              subtitle: _semesterLabel.isEmpty ? null : _semesterLabel,
+              largeTitleMode: true,
+              trailingItems: [
+                IosNativeNavigationBarItem(
+                  id: 'settings',
                   sfSymbol: 'ellipsis',
-                  tooltip: '视图设置',
-                  items: [
-                    IosGlassDropdownMenuItem(
+                  accessibilityLabel: '视图设置',
+                  menuItems: [
+                    IosNativeNavigationBarMenuItem(
+                      value: 'currentWeek',
+                      title: '回到本周',
+                      sfSymbol: 'calendar.badge.clock',
+                      checked: isViewingCurrentWeek,
+                    ),
+                    IosNativeNavigationBarMenuItem(
                       value: 'semester',
-                      label: '切换学期',
+                      title: '切换学期',
                       children: [
                         for (final entry
                             in _schedule.semesterInfo?.allSemesters ?? const [])
-                          IosGlassDropdownMenuItem(
+                          IosNativeNavigationBarMenuItem(
                             value: 'semester:${entry.key}',
-                            label: entry.value,
+                            title: entry.value,
                             checked: _schedule.selectedSemesterId == entry.key,
                           ),
                       ],
                     ),
-                    IosGlassDropdownMenuItem(
+                    IosNativeNavigationBarMenuItem(
                       value: 'saturday',
-                      label: '显示周六',
+                      title: '显示周六',
                       checked: _showSaturday,
                     ),
-                    IosGlassDropdownMenuItem(
+                    IosNativeNavigationBarMenuItem(
                       value: 'sunday',
-                      label: '显示周日',
+                      title: '显示周日',
                       checked: _showSunday,
                     ),
-                    IosGlassDropdownMenuItem(
+                    IosNativeNavigationBarMenuItem(
                       value: 'ghost',
-                      label: '显示非本周课程',
+                      title: '显示非本周课程',
                       checked: _showGhostCourses,
                     ),
                   ],
-                  onSelected: _onMenuSelected,
-                ),
-              ),
-            )
-          else
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              tooltip: '视图设置',
-              onSelected: _onMenuSelected,
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'semester', child: Text('切换学期')),
-                CheckedPopupMenuItem(
-                  value: 'saturday',
-                  checked: _showSaturday,
-                  child: const Text('显示周六'),
-                ),
-                CheckedPopupMenuItem(
-                  value: 'sunday',
-                  checked: _showSunday,
-                  child: const Text('显示周日'),
-                ),
-                CheckedPopupMenuItem(
-                  value: 'ghost',
-                  checked: _showGhostCourses,
-                  child: const Text('显示非本周课程'),
                 ),
               ],
+              onMenuSelected: (_, value) => _onMenuSelected(value),
+            )
+          : BlurredAppBar(
+              titleSpacing: 16,
+              title: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (isDesktopLayout(context))
+                    _DesktopWeekTitleMenu(
+                      currentWeek: _currentWeek,
+                      semesterLabel: _semesterLabel,
+                      slideDirection: _slideDirection,
+                      onWeekChanged: _setWeek,
+                    )
+                  else
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _showWeekPicker,
+                      child: _WeekTitleContent(
+                        currentWeek: _currentWeek,
+                        semesterLabel: _semesterLabel,
+                        slideDirection: _slideDirection,
+                        trailingIcon: Icons.unfold_more,
+                      ),
+                    ),
+                  if (isDesktopLayout(context) && !isViewingCurrentWeek) ...[
+                    const SizedBox(width: 12),
+                    TextButton.icon(
+                      onPressed: _goToCurrentWeek,
+                      icon: const Icon(Icons.today_outlined, size: 18),
+                      label: const Text('回到本周'),
+                    ),
+                  ],
+                  const Spacer(),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  tooltip: 'Previous week',
+                  onPressed: _previousWeek,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  tooltip: 'Next week',
+                  onPressed: _nextWeek,
+                ),
+                if (isDesktopLayout(context))
+                  IconButton(
+                    key: _viewSettingsAnchorKey,
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: '视图设置',
+                    onPressed: _showViewSettingsMenu,
+                  )
+                else
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: '视图设置',
+                    onSelected: _onMenuSelected,
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'semester',
+                        child: Text('切换学期'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'saturday',
+                        checked: _showSaturday,
+                        child: const Text('显示周六'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'sunday',
+                        checked: _showSunday,
+                        child: const Text('显示周日'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'ghost',
+                        checked: _showGhostCourses,
+                        child: const Text('显示非本周课程'),
+                      ),
+                    ],
+                  ),
+              ],
             ),
-        ],
-      ),
       body: Padding(
         padding: EdgeInsets.only(
-          top: kToolbarHeight + MediaQuery.viewPaddingOf(context).top,
+          top: useIosChrome || useLegacyIosChrome
+              ? 0
+              : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top,
         ),
         child: !auth.isLoggedIn
             ? Center(
@@ -510,87 +478,123 @@ class _SchedulePageState extends State<SchedulePage> {
                 ),
               )
             : _schedule.loading && _courses.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : _schedule.error != null && _courses.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '加载失败',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton.tonal(
-                      onPressed: _refresh,
-                      child: const Text('重试'),
-                    ),
-                  ],
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: _refresh,
-                child: Column(
-                  children: [
-                    _DayHeader(
-                      weekStart: _weekStart,
-                      today: today,
-                      visibleDays: _visibleDayIndices,
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOut,
-                        switchOutCurve: Curves.easeIn,
-                        child:
-                            _courses
-                                .where(
-                                  (c) =>
-                                      _visibleDayIndices.contains(c.dayOfWeek),
-                                )
-                                .isEmpty
-                            ? ListView(
-                                key: ValueKey<String>('empty-$_currentWeek'),
-                                children: [
-                                  SizedBox(
-                                    height: 300,
-                                    child: Center(
-                                      child: Text(
-                                        '本周没有课程',
-                                        style: theme.textTheme.bodyLarge
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                ? const Center(child: CircularProgressIndicator())
+                : _schedule.error != null && _courses.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: theme.colorScheme.error,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '加载失败',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            FilledButton.tonal(
+                              onPressed: _refresh,
+                              child: const Text('重试'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: useIosChrome
+                            ? PageView.builder(
+                                controller: _weekPageController,
+                                itemCount: 25,
+                                onPageChanged: (index) {
+                                  _setCurrentWeek(index + 1);
+                                },
+                                itemBuilder: (context, index) {
+                                  final week = index + 1;
+                                  return _buildScheduleWeek(
+                                    context,
+                                    theme,
+                                    today,
+                                    week,
+                                    _coursesForWeek(week),
+                                  );
+                                },
                               )
-                            : _TimetableGrid(
-                                key: ValueKey<int>(_currentWeek),
-                                courses: _courses,
-                                periods: _periods,
-                                weekStart: _weekStart,
-                                today: today,
-                                visibleDays: _visibleDayIndices,
+                            : _buildScheduleWeek(
+                                context,
+                                theme,
+                                today,
+                                _currentWeek,
+                                _courses,
+                                animated: true,
                               ),
                       ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleWeek(
+    BuildContext context,
+    ThemeData theme,
+    DateTime today,
+    int week,
+    List<Course> courses, {
+    bool animated = false,
+  }) {
+    final visibleDays = _visibleDayIndices;
+    final visibleCourses = courses
+        .where((course) => visibleDays.contains(course.dayOfWeek))
+        .toList();
+
+    final content = visibleCourses.isEmpty
+        ? ListView(
+            key: ValueKey<String>('empty-$week'),
+            children: [
+              SizedBox(
+                height: 300,
+                child: Center(
+                  child: Text(
+                    '本周没有课程',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
+                  ),
                 ),
               ),
-      ),
+            ],
+          )
+        : _TimetableGrid(
+            key: ValueKey<int>(week),
+            courses: courses,
+            periods: _periods,
+            weekStart: _weekStartForWeek(week),
+            today: today,
+            visibleDays: visibleDays,
+          );
+
+    return Column(
+      children: [
+        _DayHeader(
+          weekStart: _weekStartForWeek(week),
+          today: today,
+          visibleDays: visibleDays,
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: animated
+              ? AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: content,
+                )
+              : content,
+        ),
+      ],
     );
   }
 
@@ -604,6 +608,8 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     switch (value) {
+      case 'currentWeek':
+        _goToCurrentWeek();
       case 'semester':
         _showSemesterPicker();
       case 'saturday':
@@ -709,8 +715,8 @@ class _DesktopSemesterSelectButton extends StatelessWidget {
     final selectedId = selectedSemesterId;
     final currentValue =
         selectedId != null && semesters.any((entry) => entry.key == selectedId)
-        ? selectedId
-        : (semesters.isNotEmpty ? semesters.first.key : '');
+            ? selectedId
+            : (semesters.isNotEmpty ? semesters.first.key : '');
 
     if (semesters.isEmpty || currentValue.isEmpty) {
       return DesktopMenuRow(
@@ -793,69 +799,6 @@ class _DesktopWeekTitleMenu extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _IosWeekTitleMenu extends StatelessWidget {
-  final int currentWeek;
-  final int actualCurrentWeek;
-  final String semesterLabel;
-  final ValueChanged<int> onWeekChanged;
-
-  const _IosWeekTitleMenu({
-    required this.currentWeek,
-    required this.actualCurrentWeek,
-    required this.semesterLabel,
-    required this.onWeekChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          IosGlassDropdownMenu(
-            key: ValueKey<int>(currentWeek),
-            icon: Icons.expand_more_rounded,
-            sfSymbol: 'none',
-            label: '第 $currentWeek 周',
-            width: 96,
-            height: 36,
-            items: [
-              for (int week = 1; week <= 25; week++)
-                IosGlassDropdownMenuItem(
-                  value: '$week',
-                  label: week == actualCurrentWeek
-                      ? '第 $week 周 · 本周'
-                      : '第 $week 周',
-                  checked: week == currentWeek,
-                ),
-            ],
-            onSelected: (value) {
-              final week = int.tryParse(value);
-              if (week != null) {
-                onWeekChanged(week);
-              }
-            },
-          ),
-          if (semesterLabel.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              semesterLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -1158,8 +1101,7 @@ class _DayColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Sort: ghost courses first (behind), then active courses on top
-    final sorted = [...courses]
-      ..sort((a, b) {
+    final sorted = [...courses]..sort((a, b) {
         if (a.isGhost != b.isGhost) return a.isGhost ? -1 : 1;
         return 0;
       });
@@ -1200,7 +1142,7 @@ class _DayColumn extends StatelessWidget {
             right: 2,
             height:
                 (course.endPeriod - course.startPeriod + 1) * _kPeriodHeight -
-                4,
+                    4,
             child: _CourseBlock(course: course, periods: periods),
           ),
       ],

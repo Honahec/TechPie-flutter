@@ -19,10 +19,13 @@ class ThirdPartyAccountsPage extends StatelessWidget {
     final tpAuth = sp.thirdPartyAuthService;
     final auth = sp.authService;
     final theme = Theme.of(context);
-    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topInset = useLegacyIosChrome
+        ? 0.0
+        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: !useLegacyIosChrome,
       appBar: const BlurredAppBar(title: Text('Linked Accounts')),
       body: ListenableBuilder(
         listenable: Listenable.merge([tpAuth, auth]),
@@ -83,9 +86,9 @@ class _BlackboardTile extends StatelessWidget {
       onTap: loggedIn
           ? null
           : () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginPage()),
-            ),
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              ),
     );
   }
 }
@@ -97,9 +100,9 @@ class _ThirdPartyTile extends StatelessWidget {
   const _ThirdPartyTile({required this.platform, required this.account});
 
   IconData get _icon => switch (platform) {
-    ThirdPartyPlatform.gradescope => Icons.grading_outlined,
-    ThirdPartyPlatform.hydro => Icons.terminal_outlined,
-  };
+        ThirdPartyPlatform.gradescope => Icons.grading_outlined,
+        ThirdPartyPlatform.hydro => Icons.terminal_outlined,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +142,7 @@ class _ThirdPartyTile extends StatelessWidget {
       isThreeLine: subtitleParts.length > 1,
       trailing: isIos()
           ? IosGlassConfirmationButton(
-              label: 'Unbind',
+              label: usesIosLiquidGlass() ? 'Unbind' : null,
               confirmTitle: '解绑 ${platform.label}?',
               confirmLabel: '解绑',
               destructive: true,

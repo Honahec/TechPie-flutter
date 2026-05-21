@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:techpie/utils/platform.dart';
 
 class IosGlassConfirmationButton extends StatefulWidget {
   const IosGlassConfirmationButton({
@@ -35,8 +35,7 @@ class _IosGlassConfirmationButtonState
     extends State<IosGlassConfirmationButton> {
   MethodChannel? _channel;
 
-  bool get _usesNative =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  bool get _usesNative => isIos();
 
   @override
   void dispose() {
@@ -63,8 +62,7 @@ class _IosGlassConfirmationButtonState
       );
     }
 
-    final width =
-        widget.width ??
+    final width = widget.width ??
         ((widget.label == null || widget.label!.isEmpty) ? 36.0 : 92.0);
 
     return SizedBox(

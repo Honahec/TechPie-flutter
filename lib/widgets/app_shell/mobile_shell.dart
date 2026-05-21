@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../ios_liquid/ios_glass_floating_button.dart';
+import '../../utils/platform.dart';
+import '../ios_liquid/ios_glass_button.dart';
 import '../ios_liquid/ios_glass_tab_bar.dart';
 import 'app_destination.dart';
 
@@ -23,26 +23,25 @@ class MobileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usesIosLiquidGlass =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final usesIosChrome = isIos();
 
     return Scaffold(
       extendBody: true,
       body: child,
       floatingActionButton: selectedIndex == assignmentsIndex
-          ? usesIosLiquidGlass
-                ? IosGlassFloatingButton(
-                    onPressed: () {},
-                    icon: Icons.add,
-                    sfSymbol: 'plus',
-                  )
-                : FloatingActionButton(
-                    onPressed: () {},
-                    child: const Icon(Icons.add),
-                  )
+          ? usesIosChrome
+              ? IosGlassButton(
+                  onPressed: () {},
+                  icon: Icons.add,
+                  sfSymbol: 'plus',
+                )
+              : FloatingActionButton(
+                  onPressed: () {},
+                  child: const Icon(Icons.add),
+                )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: usesIosLiquidGlass
+      bottomNavigationBar: usesIosChrome
           ? IosGlassTabBar(
               selectedIndex: selectedIndex,
               items: destinations

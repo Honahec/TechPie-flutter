@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 
-final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFactory {
+final class NativeGlassButtonFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
 
   init(messenger: FlutterBinaryMessenger) {
@@ -18,7 +18,7 @@ final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFacto
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    NativeGlassFloatingButtonPlatformView(
+    NativeGlassButtonPlatformView(
       frame: frame,
       viewId: viewId,
       arguments: args,
@@ -27,8 +27,8 @@ final class NativeGlassFloatingButtonFactory: NSObject, FlutterPlatformViewFacto
   }
 }
 
-final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView {
-  static let viewType = "techpie/native_glass_floating_button"
+final class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
+  static let viewType = "techpie/native_glass_button"
 
   private let rootView: UIView
   private let channel: FlutterMethodChannel
@@ -86,16 +86,6 @@ final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView
     button.imageView?.contentMode = .center
 
     button.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
-    button.addTarget(
-      self,
-      action: #selector(handlePressBegan),
-      for: [.touchDown, .touchDragEnter]
-    )
-    button.addTarget(
-      self,
-      action: #selector(handlePressEnded),
-      for: [.touchCancel, .touchDragExit, .touchUpInside, .touchUpOutside]
-    )
 
     rootView.addSubview(button)
 
@@ -108,13 +98,7 @@ final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView
   }
 
   private func symbolImage() -> UIImage? {
-    let symbolConfiguration = UIImage.SymbolConfiguration(
-      pointSize: 22,
-      weight: .semibold,
-      scale: .medium
-    )
-
-    return UIImage(systemName: sfSymbol, withConfiguration: symbolConfiguration)?
+    return UIImage(systemName: sfSymbol)?
       .withRenderingMode(.alwaysTemplate)
   }
 
@@ -134,71 +118,20 @@ final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView
   private func applyLiquidGlassAppearance(image: UIImage?) {
     var configuration = UIButton.Configuration.prominentGlass()
     configuration.image = image
-    configuration.cornerStyle = .capsule
-    configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
-    configuration.baseBackgroundColor = NativeGlassColors.barBackground
-    configuration.contentInsets = NSDirectionalEdgeInsets(
-      top: 18,
-      leading: 18,
-      bottom: 18,
-      trailing: 18
-    )
 
     button.configuration = configuration
-    button.tintColor = NativeGlassColors.floatingButtonForeground
-    button.backgroundColor = .clear
-    button.layer.shadowOpacity = 0
-    button.layer.borderWidth = 0
-    button.setNeedsUpdateConfiguration()
   }
 
   @available(iOS 15.0, *)
   private func applyModernFallbackAppearance(image: UIImage?) {
     var configuration = UIButton.Configuration.plain()
     configuration.image = image
-    configuration.cornerStyle = .capsule
-    configuration.baseForegroundColor = NativeGlassColors.floatingButtonForeground
-    configuration.baseBackgroundColor = NativeGlassColors.barBackground
-    configuration.contentInsets = NSDirectionalEdgeInsets(
-      top: 18,
-      leading: 18,
-      bottom: 18,
-      trailing: 18
-    )
 
     button.configuration = configuration
-    button.tintColor = NativeGlassColors.floatingButtonForeground
-    button.backgroundColor = NativeGlassColors.barBackground
-    button.layer.cornerRadius = 32
-    button.layer.cornerCurve = .continuous
-    button.layer.shadowColor = UIColor.black.cgColor
-    button.layer.shadowOpacity = 0.16
-    button.layer.shadowRadius = 18
-    button.layer.shadowOffset = CGSize(width: 0, height: 8)
-    button.layer.borderWidth = 0
-    button.setNeedsUpdateConfiguration()
   }
 
   private func applyLegacyFallbackAppearance(image: UIImage?) {
     button.setImage(image, for: .normal)
-    button.tintColor = NativeGlassColors.floatingButtonForeground
-    button.backgroundColor = NativeGlassColors.barBackground
-    button.contentEdgeInsets = UIEdgeInsets(
-      top: 18,
-      left: 18,
-      bottom: 18,
-      right: 18
-    )
-    button.layer.cornerRadius = 32
-    button.layer.shadowColor = UIColor.black.cgColor
-    button.layer.shadowOpacity = 0.16
-    button.layer.shadowRadius = 18
-    button.layer.shadowOffset = CGSize(width: 0, height: 8)
-    button.layer.borderWidth = 0
-
-    if #available(iOS 13.0, *) {
-      button.layer.cornerCurve = .continuous
-    }
   }
 
   private func handle(call: FlutterMethodCall, result: FlutterResult) {
@@ -236,38 +169,4 @@ final class NativeGlassFloatingButtonPlatformView: NSObject, FlutterPlatformView
     channel.invokeMethod("onTap", arguments: nil)
   }
 
-  @objc
-  private func handlePressBegan() {
-    let feedback = UIImpactFeedbackGenerator(style: .soft)
-    feedback.impactOccurred(intensity: 0.35)
-
-    if #available(iOS 26.0, *) {
-      return
-    }
-
-    UIView.animate(
-      withDuration: 0.14,
-      delay: 0,
-      options: [.beginFromCurrentState, .curveEaseOut]
-    ) {
-      self.button.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
-      self.button.alpha = 0.88
-    }
-  }
-
-  @objc
-  private func handlePressEnded() {
-    if #available(iOS 26.0, *) {
-      return
-    }
-
-    UIView.animate(
-      withDuration: 0.20,
-      delay: 0,
-      options: [.beginFromCurrentState, .curveEaseOut]
-    ) {
-      self.button.transform = .identity
-      self.button.alpha = 1.0
-    }
-  }
 }

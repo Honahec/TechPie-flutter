@@ -6,7 +6,7 @@ import '../services/assignment_service.dart';
 import '../services/service_provider.dart';
 import '../utils/platform.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_action_button.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 
 class HiddenAssignmentsPage extends StatefulWidget {
   const HiddenAssignmentsPage({super.key});
@@ -63,7 +63,10 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).assignmentService;
     final theme = Theme.of(context);
-    final topPad = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topPad = isIos() || useLegacyIosChrome
+        ? 0.0
+        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return ListenableBuilder(
       listenable: service,
@@ -73,63 +76,106 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
             hiddenKeys.isNotEmpty && _selected.length == hiddenKeys.length;
 
         return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: BlurredAppBar(
-            automaticallyImplyLeading: !isIos(),
-            leadingWidth: isIos() ? 0 : null,
-            leading: isIos() ? const SizedBox.shrink() : null,
-            centerTitle: false,
-            titleSpacing: isIos() ? 8 : null,
-            title: isIos()
-                ? _HiddenAssignmentsTopContainer(
-                    selectionMode: _selectionMode,
-                    selectedAll: selectedAll,
-                    hasItems: hiddenKeys.isNotEmpty,
-                    hasSelection: _selected.isNotEmpty,
-                    onBack: () => Navigator.maybePop(context),
-                    onRestore: _restoreSelected,
-                    onToggleSelectionMode: _selectionMode
-                        ? _exitSelectionMode
-                        : _enterSelectionMode,
-                    onToggleSelectAll: hiddenKeys.isEmpty
-                        ? null
-                        : () => _toggleSelectAll(hiddenKeys),
-                  )
-                : const Text('已忽略的作业'),
-            actions: isIos()
-                ? null
-                : [
+          extendBodyBehindAppBar: !isIos() && !useLegacyIosChrome,
+          appBar: isIos()
+              ? IosNativeNavigationBar(
+                  title:
+                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                  selectionMode: _selectionMode,
+                  leadingItems: [
+                    IosNativeNavigationBarItem(
+                      id: 'back',
+                      title: 'Deadlines',
+                      sfSymbol: 'chevron.left',
+                      hidden: _selectionMode,
+                      accessibilityLabel: '返回 Deadlines',
+                      placementGroup: 'leading-main',
+                    ),
+                    IosNativeNavigationBarItem(
+                      id: 'toggleSelectAll',
+                      title: selectedAll ? 'Deselect All' : 'Select All',
+                      enabled: hiddenKeys.isNotEmpty,
+                      hidden: !_selectionMode,
+                      accessibilityLabel: selectedAll ? '全不选' : '全选',
+                      placementGroup: 'leading-main',
+                    ),
+                  ],
+                  trailingItems: [
+                    IosNativeNavigationBarItem(
+                      id: 'restore',
+                      sfSymbol: 'arrow.uturn.backward',
+                      enabled: _selected.isNotEmpty,
+                      hidden: !_selectionMode,
+                      accessibilityLabel: '恢复',
+                      placementGroup: 'selection-actions',
+                    ),
+                    IosNativeNavigationBarItem(
+                      id: 'toggleSelection',
+                      title: _selectionMode ? 'Done' : 'Select',
+                      role: _selectionMode
+                          ? IosNativeNavigationBarItemRole.done
+                          : IosNativeNavigationBarItemRole.normal,
+                      enabled: _selectionMode || hiddenKeys.isNotEmpty,
+                      accessibilityLabel: _selectionMode ? '完成' : '选择',
+                      placementGroup: 'selection-actions',
+                    ),
+                  ],
+                  onItemPressed: (id) {
+                    switch (id) {
+                      case 'back':
+                        Navigator.maybePop(context);
+                      case 'toggleSelectAll':
+                        if (hiddenKeys.isNotEmpty) {
+                          _toggleSelectAll(hiddenKeys);
+                        }
+                      case 'restore':
+                        if (_selected.isNotEmpty) {
+                          _restoreSelected();
+                        }
+                      case 'toggleSelection':
+                        _selectionMode
+                            ? _exitSelectionMode()
+                            : _enterSelectionMode();
+                    }
+                  },
+                )
+              : BlurredAppBar(
+                  centerTitle: false,
+                  title: Text(
+                    _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                  ),
+                  actions: [
                     if (_selectionMode)
-                      _NavigationTextAction(
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.zero,
-                        label: selectedAll ? 'Deselect All' : 'Select All',
-                        width: selectedAll ? 124 : 108,
+                      IconButton(
+                        tooltip: selectedAll ? '全不选' : '全选',
+                        icon: Icon(
+                          selectedAll ? Icons.deselect : Icons.select_all,
+                        ),
                         onPressed: hiddenKeys.isEmpty
                             ? null
                             : () => _toggleSelectAll(hiddenKeys),
-                        usesIosLiquidGlass: false,
                       ),
                     if (_selectionMode)
                       IconButton(
                         tooltip: '恢复',
-                        onPressed: _selected.isNotEmpty
-                            ? _restoreSelected
-                            : null,
+                        onPressed:
+                            _selected.isNotEmpty ? _restoreSelected : null,
                         icon: const Icon(Icons.restore),
                       ),
                     if (hiddenKeys.isNotEmpty)
-                      _NavigationTextAction(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsetsDirectional.only(end: 12),
-                        label: _selectionMode ? 'Done' : 'Select',
+                      IconButton(
+                        tooltip: _selectionMode ? '完成' : '选择',
+                        icon: Icon(
+                          _selectionMode
+                              ? Icons.check
+                              : Icons.checklist_outlined,
+                        ),
                         onPressed: _selectionMode
                             ? _exitSelectionMode
                             : _enterSelectionMode,
-                        usesIosLiquidGlass: false,
                       ),
                   ],
-          ),
+                ),
           body: hiddenKeys.isEmpty
               ? Padding(
                   padding: EdgeInsets.only(top: topPad),
@@ -199,151 +245,6 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
                 },
         );
       },
-    );
-  }
-}
-
-class _HiddenAssignmentsTopContainer extends StatelessWidget {
-  const _HiddenAssignmentsTopContainer({
-    required this.selectionMode,
-    required this.selectedAll,
-    required this.hasItems,
-    required this.hasSelection,
-    required this.onBack,
-    required this.onRestore,
-    required this.onToggleSelectionMode,
-    required this.onToggleSelectAll,
-  });
-
-  final bool selectionMode;
-  final bool selectedAll;
-  final bool hasItems;
-  final bool hasSelection;
-  final VoidCallback onBack;
-  final VoidCallback onRestore;
-  final VoidCallback onToggleSelectionMode;
-  final VoidCallback? onToggleSelectAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
-      child: Row(
-        children: [
-          if (selectionMode)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.centerLeft,
-              child: IosGlassActionButton(
-                label: selectedAll ? 'Deselect All' : 'Select All',
-                sfSymbol: 'none',
-                width: selectedAll ? 132 : 120,
-                enabled: onToggleSelectAll != null,
-                onPressed: onToggleSelectAll ?? () {},
-              ),
-            )
-          else
-            IosGlassActionButton(
-              label: 'Deadlines',
-              sfSymbol: 'chevron.left',
-              width: 120,
-              onPressed: onBack,
-            ),
-          const Spacer(),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SizeTransition(
-                  sizeFactor: animation,
-                  axis: Axis.horizontal,
-                  axisAlignment: 1,
-                  child: child,
-                ),
-              );
-            },
-            child: selectionMode
-                ? Row(
-                    key: const ValueKey('restore-action'),
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IosGlassActionButton(
-                        sfSymbol: 'arrow.uturn.backward',
-                        width: 44,
-                        enabled: hasSelection,
-                        variant: IosGlassActionButtonVariant.glass,
-                        onPressed: onRestore,
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  )
-                : const SizedBox(key: ValueKey('restore-action-hidden')),
-          ),
-          IosGlassActionButton(
-            label: selectionMode ? 'Done' : 'Select',
-            sfSymbol: 'none',
-            width: 80,
-            enabled: hasItems,
-            onPressed: onToggleSelectionMode,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavigationTextAction extends StatelessWidget {
-  const _NavigationTextAction({
-    required this.alignment,
-    required this.padding,
-    required this.label,
-    required this.onPressed,
-    required this.usesIosLiquidGlass,
-    this.width,
-  });
-
-  final Alignment alignment;
-  final EdgeInsetsGeometry padding;
-  final String label;
-  final VoidCallback? onPressed;
-  final bool usesIosLiquidGlass;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    final button = usesIosLiquidGlass
-        ? const SizedBox.shrink()
-        : AnimatedSize(
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeInOutCubic,
-            alignment: alignment,
-            child: SizedBox(
-              width: width,
-              child: TextButton(
-                onPressed: onPressed,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 8,
-                  ),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  label,
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
-                ),
-              ),
-            ),
-          );
-
-    return Align(
-      alignment: alignment,
-      child: Padding(padding: padding, child: button),
     );
   }
 }

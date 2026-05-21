@@ -10,6 +10,7 @@ import '../widgets/blurred_app_bar.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/ios_liquid/ios_glass_select.dart';
 import '../widgets/ios_liquid/ios_glass_switch.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import 'debug_log_page.dart';
 import 'login_page.dart';
 import 'third_party_accounts_page.dart';
@@ -62,11 +63,20 @@ class _SettingsPageState extends State<SettingsPage> {
     final storage = sp.storageService;
     final themeService = sp.themeService;
     final tpAuth = sp.thirdPartyAuthService;
-    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
+    final useIosChrome = isIos();
+    final useLegacyIosChrome = usesLegacyIosChrome();
+    final topInset = useIosChrome || useLegacyIosChrome
+        ? 0.0
+        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: const BlurredAppBar(title: Text('Settings')),
+      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
+      appBar: useIosChrome
+          ? const IosNativeNavigationBar(
+              title: 'Settings',
+              largeTitleMode: true,
+            )
+          : const BlurredAppBar(title: Text('Settings')),
       body: ListenableBuilder(
         listenable: Listenable.merge([auth, logger, themeService, tpAuth]),
         builder: (context, _) => ListView(

@@ -1,12 +1,13 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:techpie/utils/platform.dart';
 
-/// AppBar with a fixed elevation and a Telegram-like Gaussian blur backdrop.
+/// AppBar with a fixed elevation and a Gaussian blur backdrop where supported.
 ///
 /// Replaces Material 3's scroll-triggered elevation lift with a constant
-/// translucent surface that blurs whatever is rendered behind it. Pair with
-/// `Scaffold(extendBodyBehindAppBar: true)` so the body shows through.
+/// surface. On iOS versions before Liquid Glass, this intentionally falls back
+/// to an opaque title bar so controls don't float over content.
 class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
   const BlurredAppBar({
     super.key,
@@ -38,14 +39,34 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? foregroundColor;
 
   @override
-  Size get preferredSize =>
-      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize => Size.fromHeight(
+      adaptiveTopBarHeight() + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appBarTheme = theme.appBarTheme;
     final baseColor = appBarTheme.backgroundColor ?? theme.colorScheme.surface;
+
+    if (usesLegacyIosChrome()) {
+      return AppBar(
+        leading: leading,
+        automaticallyImplyLeading: automaticallyImplyLeading,
+        title: title,
+        actions: actions,
+        bottom: bottom,
+        centerTitle: centerTitle,
+        titleSpacing: titleSpacing,
+        leadingWidth: leadingWidth,
+        toolbarHeight: adaptiveTopBarHeight(),
+        backgroundColor: baseColor,
+        foregroundColor: foregroundColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: elevation,
+        scrolledUnderElevation: elevation,
+        shadowColor: Colors.transparent,
+      );
+    }
 
     return ClipRect(
       child: BackdropFilter(
@@ -59,6 +80,7 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
           centerTitle: centerTitle,
           titleSpacing: titleSpacing,
           leadingWidth: leadingWidth,
+          toolbarHeight: adaptiveTopBarHeight(),
           backgroundColor: baseColor.withValues(alpha: backgroundOpacity),
           foregroundColor: foregroundColor,
           surfaceTintColor: Colors.transparent,
