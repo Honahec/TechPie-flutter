@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_win_floating/webview_win_floating.dart';
 
 class GenericWebViewPage extends StatefulWidget {
   const GenericWebViewPage({
@@ -26,10 +23,6 @@ class _GenericWebViewPageState extends State<GenericWebViewPage> {
   @override
   void initState() {
     super.initState();
-
-    if (Platform.isWindows || Platform.isLinux) {
-      WindowsWebViewPlatform.registerWith();
-    }
 
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
