@@ -10,6 +10,7 @@ import 'services/assignment_service.dart';
 import 'services/auth_service.dart';
 import 'services/debug_logger.dart';
 import 'services/http_client.dart';
+import 'services/oa_gym_service.dart';
 import 'services/schedule_service.dart';
 import 'services/service_provider.dart';
 import 'services/storage_service.dart';
@@ -57,6 +58,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
     storageService,
     httpClient,
   );
+  final oaGymService = OaGymService(authService, storageService);
   final assignmentService = AssignmentService(
     storageService,
     httpClient,
@@ -68,6 +70,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
     await thirdPartyAuthService.clearAll();
     await assignmentService.clearCache();
     await assignmentService.clearAllOverrides();
+    oaGymService.clearSession();
   };
 
   // -- Boot critical path: local I/O only --
@@ -86,6 +89,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
       scheduleService: scheduleService,
       assignmentService: assignmentService,
       thirdPartyAuthService: thirdPartyAuthService,
+      oaGymService: oaGymService,
     ),
   );
 
@@ -165,6 +169,7 @@ class TechPieApp extends StatefulWidget {
   final ScheduleService scheduleService;
   final AssignmentService assignmentService;
   final ThirdPartyAuthService thirdPartyAuthService;
+  final OaGymService oaGymService;
 
   const TechPieApp({
     super.key,
@@ -175,6 +180,7 @@ class TechPieApp extends StatefulWidget {
     required this.scheduleService,
     required this.assignmentService,
     required this.thirdPartyAuthService,
+    required this.oaGymService,
   });
 
   @override
@@ -205,6 +211,7 @@ class _TechPieAppState extends State<TechPieApp> {
         scheduleService: widget.scheduleService,
         assignmentService: widget.assignmentService,
         thirdPartyAuthService: widget.thirdPartyAuthService,
+        oaGymService: widget.oaGymService,
         child: MaterialApp(
           scaffoldMessengerKey: rootMessengerKey,
           title: 'TechPie',

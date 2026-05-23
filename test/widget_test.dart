@@ -7,6 +7,7 @@ import 'package:techpie/services/assignment_service.dart';
 import 'package:techpie/services/auth_service.dart';
 import 'package:techpie/services/debug_logger.dart';
 import 'package:techpie/services/http_client.dart';
+import 'package:techpie/services/oa_gym_service.dart';
 import 'package:techpie/services/schedule_service.dart';
 import 'package:techpie/services/storage_service.dart';
 import 'package:techpie/services/theme_service.dart';
@@ -31,6 +32,7 @@ void main() {
     final schedule = ScheduleService(storage, http, auth);
     final tpAuth = ThirdPartyAuthService(storage, http);
     final assignments = AssignmentService(storage, http, auth, tpAuth);
+    final oaGym = OaGymService(auth, storage);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -41,6 +43,7 @@ void main() {
         scheduleService: schedule,
         assignmentService: assignments,
         thirdPartyAuthService: tpAuth,
+        oaGymService: oaGym,
       ),
     );
 
@@ -66,6 +69,7 @@ void main() {
     final schedule = ScheduleService(storage, http, auth);
     final tpAuth = ThirdPartyAuthService(storage, http);
     final assignments = AssignmentService(storage, http, auth, tpAuth);
+    final oaGym = OaGymService(auth, storage);
 
     await tester.pumpWidget(
       TechPieApp(
@@ -76,6 +80,7 @@ void main() {
         scheduleService: schedule,
         assignmentService: assignments,
         thirdPartyAuthService: tpAuth,
+        oaGymService: oaGym,
       ),
     );
 

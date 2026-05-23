@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'assignment_service.dart';
 import 'auth_service.dart';
 import 'debug_logger.dart';
+import 'oa_gym_service.dart';
 import 'schedule_service.dart';
 import 'storage_service.dart';
 import 'theme_service.dart';
@@ -16,6 +17,7 @@ class ServiceProvider extends InheritedWidget {
   final ScheduleService scheduleService;
   final AssignmentService assignmentService;
   final ThirdPartyAuthService thirdPartyAuthService;
+  final OaGymService oaGymService;
 
   const ServiceProvider({
     super.key,
@@ -26,11 +28,13 @@ class ServiceProvider extends InheritedWidget {
     required this.scheduleService,
     required this.assignmentService,
     required this.thirdPartyAuthService,
+    required this.oaGymService,
     required super.child,
   });
 
   static ServiceProvider of(BuildContext context) {
-    final result = context.dependOnInheritedWidgetOfExactType<ServiceProvider>();
+    final result =
+        context.dependOnInheritedWidgetOfExactType<ServiceProvider>();
     assert(result != null, 'No ServiceProvider found in context');
     return result!;
   }
@@ -43,5 +47,6 @@ class ServiceProvider extends InheritedWidget {
       themeService != oldWidget.themeService ||
       scheduleService != oldWidget.scheduleService ||
       assignmentService != oldWidget.assignmentService ||
-      thirdPartyAuthService != oldWidget.thirdPartyAuthService;
+      thirdPartyAuthService != oldWidget.thirdPartyAuthService ||
+      oaGymService != oldWidget.oaGymService;
 }

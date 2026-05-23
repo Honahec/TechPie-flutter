@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../pages/oa_gym_page.dart';
+
 enum FeatureMode {
   native,
   webviewWithCookie,
@@ -47,6 +49,15 @@ final featureEntries = <Feature>[
     url: 'https://egate.shanghaitech.edu.cn/xsfw/sys/xsqjapp/*default/index.do',
     cookieType: CookieType.egate,
     icon: Icon(Icons.door_front_door),
+  ),
+  Feature(
+    id: 'oa_gym',
+    description: '场馆预约',
+    mode: FeatureMode.native,
+    nativeEntry: (context) => Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const OaGymPage()),
+    ),
+    icon: Icon(Icons.sports_tennis),
   ),
 ];
 

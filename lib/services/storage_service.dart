@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/assignment_overrides.dart';
 import '../models/course_table.dart';
+import '../models/oa_gym.dart';
 import '../models/third_party_account.dart';
 import '../models/user_session.dart';
 
@@ -27,9 +28,9 @@ class StorageService {
   final SharedPreferences _prefs;
 
   StorageService(this._prefs)
-    : _secure = const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-      );
+      : _secure = const FlutterSecureStorage(
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        );
 
   // Secure session storage
   Future<void> saveSession(UserSession session) async {
@@ -61,7 +62,8 @@ class StorageService {
     final raw = await _secure.read(key: _thirdPartyKey(p));
     if (raw == null) return null;
     try {
-      return ThirdPartyAccount.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      return ThirdPartyAccount.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
@@ -186,4 +188,25 @@ class StorageService {
 
   Future<void> clearAssignmentOverrides() =>
       _prefs.remove(_assignmentOverridesKey);
+
+  // OA gym booking profile. This is non-sensitive contact info used to submit
+  // reservation forms and can be edited by the user.
+  static const _oaBookingProfileKey = 'oa_booking_profile';
+
+  Future<void> saveOaBookingProfile(OaBookingProfile profile) =>
+      _prefs.setString(_oaBookingProfileKey, jsonEncode(profile.toJson()));
+
+  OaBookingProfile loadOaBookingProfile() {
+    final raw = _prefs.getString(_oaBookingProfileKey);
+    if (raw == null) {
+      return const OaBookingProfile(name: '', phone: '', email: '');
+    }
+    try {
+      return OaBookingProfile.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return const OaBookingProfile(name: '', phone: '', email: '');
+    }
+  }
 }
