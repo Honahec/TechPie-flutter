@@ -130,7 +130,7 @@ class _BookingTabState extends State<_BookingTab> {
   final Set<OaSport> _sports = {OaSport.badminton};
   final Map<String, Set<int>> _selectedCourts = {};
   DateTime _date = DateTime.now();
-  RangeValues _timeRange = const RangeValues(8, 10);
+  RangeValues _timeRange = const RangeValues(18, 20);
   List<OaAvailability> _availability = [];
   bool _checking = false;
   bool _submitting = false;
@@ -138,8 +138,10 @@ class _BookingTabState extends State<_BookingTab> {
   String? _result;
 
   String get _dateString => _formatDate(_date);
-  int get _startSlot => _timeRange.start.round();
-  int get _endSlot => _timeRange.end.round();
+  int get _startHour => _timeRange.start.round();
+  int get _endHour => _timeRange.end.round();
+  List<int> get _selectedSlots =>
+      oaSlotIdsForEndpointRange(_startHour, _endHour);
 
   @override
   void didChangeDependencies() {
@@ -171,6 +173,14 @@ class _BookingTabState extends State<_BookingTab> {
 
   Future<void> _refreshAvailability() async {
     if (_sports.isEmpty) return;
+    if (_selectedSlots.isEmpty) {
+      setState(() {
+        _error = '请选择有效时间段，例如 18:00 到 19:00';
+        _availability = [];
+        _selectedCourts.clear();
+      });
+      return;
+    }
     setState(() {
       _checking = true;
       _error = null;
@@ -183,8 +193,8 @@ class _BookingTabState extends State<_BookingTab> {
       final data = await service.checkAvailability(
         sports: _sports,
         date: _dateString,
-        startSlot: _startSlot,
-        endSlot: _endSlot,
+        startSlot: _selectedSlots.first,
+        endSlot: _selectedSlots.last,
       );
       if (!mounted) return;
       setState(() => _availability = data);
@@ -198,7 +208,9 @@ class _BookingTabState extends State<_BookingTab> {
 
   Future<void> _submit() async {
     if (_selectedCourts.isEmpty) {
-      setState(() => _error = '请先选择可预约场地');
+      setState(
+        () => _error = _selectedSlots.isEmpty ? '请选择有效时间段' : '请先选择可预约场地',
+      );
       return;
     }
     setState(() {
@@ -312,17 +324,27 @@ class _BookingTabState extends State<_BookingTab> {
                   onTap: _pickDate,
                 ),
                 Text(
-                  '时间段 ${oaTimeSlots[_startSlot - 1].start} - ${oaTimeSlots[_endSlot - 1].end}',
+                  '时间段 ${oaEndpointRangeLabel(_startHour, _endHour)}',
                   style: theme.textTheme.bodyMedium,
                 ),
+                if (_selectedSlots.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '左右端点不能重合。请至少选择 1 小时时段。',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.error,
+                      ),
+                    ),
+                  ),
                 RangeSlider(
                   values: _timeRange,
-                  min: 1,
-                  max: 11,
-                  divisions: 10,
+                  min: oaTimeEndpointStart.toDouble(),
+                  max: oaTimeEndpointEnd.toDouble(),
+                  divisions: oaTimeEndpointEnd - oaTimeEndpointStart,
                   labels: RangeLabels(
-                    oaTimeSlots[_startSlot - 1].range,
-                    oaTimeSlots[_endSlot - 1].range,
+                    '${_startHour.toString().padLeft(2, '0')}:00',
+                    '${_endHour.toString().padLeft(2, '0')}:00',
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -374,7 +396,7 @@ class _BookingTabState extends State<_BookingTab> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    for (var slot = _startSlot; slot <= _endSlot; slot++)
+                    for (final slot in _selectedSlots)
                       _AvailabilitySlot(
                         sport: sport,
                         slot: slot,
@@ -484,8 +506,8 @@ class _SearchTab extends StatefulWidget {
 class _SearchTabState extends State<_SearchTab> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
-  RangeValues _timeRange = const RangeValues(8, 10);
-  final Set<OaSport> _sports = {OaSport.badminton};
+  RangeValues _timeRange = const RangeValues(18, 20);
+  final Set<OaSport> _sports = {};
   final Set<String> _venues = {};
   List<OaCourtSearchResult> _results = [];
   bool _loading = false;
@@ -529,6 +551,15 @@ class _SearchTabState extends State<_SearchTab> {
   }
 
   Future<void> _search() async {
+    final selectedSlots = oaSlotIdsForEndpointRange(
+      _timeRange.start.round(),
+      _timeRange.end.round(),
+    );
+    if (selectedSlots.isEmpty) {
+      setState(() => _error = '请选择有效时间段，例如 18:00 到 19:00');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -536,20 +567,12 @@ class _SearchTabState extends State<_SearchTab> {
     });
     try {
       final ranges = <String>[
-        for (var slot = _timeRange.start.round();
-            slot <= _timeRange.end.round();
-            slot++)
-          oaTimeSlots[slot - 1].range,
+        for (final slot in selectedSlots) oaTimeSlots[slot - 1].range,
       ];
       final data = await ServiceProvider.of(context).oaGymService.searchCourts(
             startDate: _formatDate(_startDate),
             endDate: _formatDate(_endDate),
-            venueNames: _venues.isNotEmpty
-                ? _venues
-                : _venuesForSports(
-                    ServiceProvider.of(context).oaGymService.venues.keys,
-                    _sports,
-                  ).toSet(),
+            venueNames: _venues.isNotEmpty ? _venues : <String>{},
             timeRanges: ranges,
           );
       if (!mounted) return;
@@ -566,6 +589,7 @@ class _SearchTabState extends State<_SearchTab> {
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).oaGymService;
     final concreteVenues = _venuesForSports(service.venues.keys, _sports);
+    final flatResults = _flattenResults(_results);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
@@ -602,6 +626,17 @@ class _SearchTabState extends State<_SearchTab> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
+                    FilterChip(
+                      selected: _sports.isEmpty && _venues.isEmpty,
+                      label: const Text('所有场地'),
+                      avatar: const Icon(Icons.apps_rounded, size: 18),
+                      onSelected: (_) {
+                        setState(() {
+                          _sports.clear();
+                          _venues.clear();
+                        });
+                      },
+                    ),
                     for (final sport in OaSport.values)
                       FilterChip(
                         selected: _sports.contains(sport),
@@ -610,11 +645,16 @@ class _SearchTabState extends State<_SearchTab> {
                         onSelected: (_) {
                           setState(() {
                             if (_sports.contains(sport)) {
-                              if (_sports.length > 1) _sports.remove(sport);
+                              _sports.remove(sport);
+                              _venues.removeAll(
+                                _venuesForSports(service.venues.keys, {sport}),
+                              );
                             } else {
                               _sports.add(sport);
+                              _venues.addAll(
+                                _venuesForSports(service.venues.keys, {sport}),
+                              );
                             }
-                            _venues.clear();
                           });
                         },
                       ),
@@ -622,13 +662,23 @@ class _SearchTabState extends State<_SearchTab> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '时间段 ${oaTimeSlots[_timeRange.start.round() - 1].start} - ${oaTimeSlots[_timeRange.end.round() - 1].end}',
+                  '时间段 ${oaEndpointRangeLabel(_timeRange.start.round(), _timeRange.end.round())}',
                 ),
+                if (_timeRange.start.round() == _timeRange.end.round())
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '左右端点不能重合。请至少选择 1 小时时段。',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  ),
                 RangeSlider(
                   values: _timeRange,
-                  min: 1,
-                  max: 11,
-                  divisions: 10,
+                  min: oaTimeEndpointStart.toDouble(),
+                  max: oaTimeEndpointEnd.toDouble(),
+                  divisions: oaTimeEndpointEnd - oaTimeEndpointStart,
                   onChanged: (value) => setState(() => _timeRange = value),
                 ),
                 if (concreteVenues.isNotEmpty) ...[
@@ -658,7 +708,7 @@ class _SearchTabState extends State<_SearchTab> {
                   const SizedBox(height: 8),
                   Text(
                     _venues.isEmpty
-                        ? '未选择时默认查询当前分类全部场地'
+                        ? '未选择具体场地时默认查询全部场地'
                         : '已选 ${_venues.length} 个场地',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -680,7 +730,7 @@ class _SearchTabState extends State<_SearchTab> {
         ),
         const SizedBox(height: 12),
         if (_error != null) _MessageCard(message: _error!, isError: true),
-        if (_results.isNotEmpty)
+        if (flatResults.isNotEmpty)
           Card.outlined(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -689,7 +739,7 @@ class _SearchTabState extends State<_SearchTab> {
                 children: [
                   Text('查询结果', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
-                  for (final entry in _flattenResults(_results))
+                  for (final entry in flatResults)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.event_note_outlined),
@@ -929,7 +979,9 @@ List<_FlatResult> _flattenResults(List<OaCourtSearchResult> results) {
 
 List<String> _venuesForSports(Iterable<String> venues, Set<OaSport> sports) =>
     venues.where((item) {
-      if (!RegExp(r'\d').hasMatch(item)) return false;
+      if (const {'所有场地', '室内羽毛球场', '室内乒乓球场', '网球场', '匹克球场'}.contains(item)) {
+        return false;
+      }
       if (sports.contains(OaSport.badminton) && item.contains('羽毛球')) {
         return true;
       }

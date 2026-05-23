@@ -56,6 +56,18 @@ const oaTimeSlots = <OaTimeSlot>[
   OaTimeSlot(id: 11, start: '21:00', end: '22:00'),
 ];
 
+const oaTimeEndpointStart = 11;
+const oaTimeEndpointEnd = 22;
+
+List<int> oaSlotIdsForEndpointRange(int startHour, int endHour) => [
+      for (var hour = startHour; hour < endHour; hour++)
+        hour - oaTimeEndpointStart + 1,
+    ];
+
+String oaEndpointRangeLabel(int startHour, int endHour) =>
+    '${startHour.toString().padLeft(2, '0')}:00-'
+    '${endHour.toString().padLeft(2, '0')}:00';
+
 class OaSportConfig {
   final OaSport sport;
   final String field32340;

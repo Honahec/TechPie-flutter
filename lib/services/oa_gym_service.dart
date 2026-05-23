@@ -225,11 +225,15 @@ class OaGymService extends ChangeNotifier {
       await _ensureMetadata();
     });
 
-    final actualVenues = venueNames.isNotEmpty
-        ? venueNames
-        : _venues.keys.where((v) => RegExp(r'\d').hasMatch(v)).toSet();
-    final actualTimes = timeRanges.isEmpty ? <String>[''] : timeRanges;
+    final actualVenues = _resolveSearchVenues(venueNames);
+    if (actualVenues.isEmpty) {
+      throw OaGymException('未找到可查询场地，请刷新数据后重试');
+    }
+    final actualTimes = timeRanges.contains('')
+        ? <String>['']
+        : (timeRanges.isEmpty ? <String>[''] : timeRanges.toSet().toList());
     final results = <OaCourtSearchResult>[];
+    final errors = <String>[];
 
     for (final venue in actualVenues) {
       for (final range in actualTimes) {
@@ -247,14 +251,61 @@ class OaGymService extends ChangeNotifier {
               rows: rows,
             ),
           );
-        } catch (_) {
+        } catch (e) {
           // Match the original app's behavior: one failed venue/time does not
           // discard the whole query.
+          errors.add('${range.isEmpty ? '全部时间' : range} $venue: $e');
         }
       }
     }
+    if (results.isEmpty && errors.isNotEmpty) {
+      throw OaGymException('查询失败：${errors.take(3).join('；')}');
+    }
     return results;
   }
+
+  Set<String> _resolveSearchVenues(Set<String> venueNames) {
+    final requested = venueNames.isEmpty ? {'所有场地'} : venueNames;
+    final resolved = <String>{};
+    for (final venue in requested) {
+      if (venue == '所有场地') {
+        resolved.addAll(
+          _venues.keys.where((v) => !_isVenueGroup(v)),
+        );
+      } else if (venue == '室内羽毛球场') {
+        resolved.addAll(
+          _allVenues.keys
+              .where((v) => v.contains('羽毛球') && _venues.containsKey(v)),
+        );
+      } else if (venue == '室内乒乓球场') {
+        resolved.addAll(
+          _allVenues.keys
+              .where((v) => v.contains('乒乓球') && _venues.containsKey(v)),
+        );
+      } else if (venue == '网球场') {
+        resolved.addAll(
+          _allVenues.keys
+              .where((v) => v.contains('网球') && _venues.containsKey(v)),
+        );
+      } else if (venue == '匹克球场') {
+        resolved.addAll(
+          _allVenues.keys
+              .where((v) => v.contains('匹克球') && _venues.containsKey(v)),
+        );
+      } else if (_venues.containsKey(venue)) {
+        resolved.add(venue);
+      }
+    }
+    return resolved;
+  }
+
+  bool _isVenueGroup(String venue) => const {
+        '所有场地',
+        '室内羽毛球场',
+        '室内乒乓球场',
+        '网球场',
+        '匹克球场',
+      }.contains(venue);
 
   Future<void> _withLoading(Future<void> Function() task) async {
     _loading = true;
@@ -291,15 +342,7 @@ class OaGymService extends ChangeNotifier {
     final serviceUrl = Uri.parse(
       '$_idsBaseUrl/authserver/login?service=${Uri.encodeComponent(_oaTargetUrl)}',
     );
-    final r1 = await _get(serviceUrl, followRedirects: false);
-    final next1 = _location(r1, serviceUrl);
-    if (next1 != null) {
-      final r2 = await _get(next1, followRedirects: false);
-      final next2 = _location(r2, next1);
-      if (next2 != null) {
-        await _get(next2);
-      }
-    }
+    await _get(serviceUrl);
 
     if (!_cookies.has('oa.shanghaitech.edu.cn', 'shkjdx_session')) {
       throw OaGymException('未能获取 OA 会话，请重新登录 TechPie 后再试');
@@ -330,20 +373,36 @@ class OaGymService extends ChangeNotifier {
       '?customid=7101&browsertype=browser.tygcg&sqlwhere=&workflowid=-1'
       '&currenttime=$ts&sqlcondition=',
     );
+    const metadataHeaders = {
+      'Referer': '$_oaBaseUrl/',
+      'Origin': _oaBaseUrl,
+    };
 
-    final timeTable = _extractTableString((await _get(timeUrl)).body);
-    final venueTable = _extractTableString((await _get(venueUrl)).body);
+    final timeTable = _extractTableString(
+        (await _get(timeUrl, headers: metadataHeaders)).body);
+    final venueTable = _extractTableString(
+        (await _get(venueUrl, headers: metadataHeaders)).body);
+    if (timeTable.isEmpty || venueTable.isEmpty) {
+      final missing = [
+        if (timeTable.isEmpty) '时间段表',
+        if (venueTable.isEmpty) '场地表',
+      ].join('、');
+      throw OaGymException('加载 OA 场馆数据失败：未获取到$missing，请重新登录后重试');
+    }
+
     final nextTimeSlots = <String, String>{};
     final nextAllVenues = <String, String>{};
 
-    for (final row in await _fetchXmlData(timeTable)) {
+    final timeRows = await _fetchXmlData(timeTable);
+    final venueRows = await _fetchXmlData(venueTable);
+    for (final row in timeRows) {
       if (row.length > 2) {
         final id = row[0];
-        final name = _cleanHtml(row[2]);
+        final name = _normalizeTimeRange(_cleanHtml(row[2]));
         if (id.isNotEmpty && name.isNotEmpty) nextTimeSlots[name] = id;
       }
     }
-    for (final row in await _fetchXmlData(venueTable)) {
+    for (final row in venueRows) {
       if (row.length > 2) {
         final id = row[0];
         final name = _cleanHtml(row[2]);
@@ -351,54 +410,137 @@ class OaGymService extends ChangeNotifier {
       }
     }
 
+    final nextVenues = _filterVenues(nextAllVenues);
+    final concreteVenueCount =
+        nextVenues.keys.where((v) => !_isVenueGroup(v)).length;
+    if (nextTimeSlots.isEmpty || concreteVenueCount == 0) {
+      throw OaGymException(
+        '加载 OA 场馆数据失败：解析到 ${nextTimeSlots.length} 个时间段、'
+        '${nextAllVenues.length} 个场地、$concreteVenueCount 个可查询场地，请稍后重试',
+      );
+    }
+
     _timeSlots = nextTimeSlots;
     _allVenues = nextAllVenues;
-    _venues = _filterVenues(nextAllVenues);
+    _venues = nextVenues;
     _metadataReady = true;
   }
 
   Map<String, String> _filterVenues(Map<String, String> all) {
-    const allowed = [
-      '所有场地',
-      '室内羽毛球场',
-      '室内乒乓球场',
-      '网球场',
-      '匹克球场',
-      '羽毛球场地1号',
-      '羽毛球场地2号',
-      '羽毛球场地3号',
-      '羽毛球场地4号',
-      '羽毛球场地5号',
-      '羽毛球场地6号',
-      '乒乓球场1号',
-      '乒乓球场2号',
-      '乒乓球场3号',
-      '乒乓球场4号',
-      '乒乓球场5号',
-      '乒乓球场6号',
-      '网球场1号',
-      '网球场2号',
-      '网球场3号',
+    final result = <String, String>{
+      '所有场地': 'all',
+      '室内羽毛球场': 'badminton_group',
+      '室内乒乓球场': 'pingpong_group',
+      '网球场': 'tennis_group',
+      '匹克球场': 'pickleball_group',
+    };
+    final used = <String>{};
+
+    void addMatch(String canonical, bool Function(String normalized) matches) {
+      final actual = _findVenue(all, canonical, matches);
+      if (actual == null || !used.add(actual)) return;
+      result[actual] = all[actual]!;
+    }
+
+    for (var number = 1; number <= 6; number++) {
+      addMatch(
+        '羽毛球场地$number号',
+        (name) => name.contains('羽毛球') && _venueNumberMatches(name, number),
+      );
+      addMatch(
+        '乒乓球场$number号',
+        (name) => name.contains('乒乓') && _venueNumberMatches(name, number),
+      );
+    }
+
+    for (var number = 1; number <= 3; number++) {
+      addMatch(
+        '网球场$number号',
+        (name) =>
+            name.contains('网球') &&
+            _venueNumberMatches(name, number) &&
+            (number != 3 || !name.contains('多功能')),
+      );
+    }
+    addMatch(
       '网球场3号（多功能）',
+      (name) =>
+          name.contains('网球') &&
+          name.contains('多功能') &&
+          _venueNumberMatches(name, 3),
+    );
+    addMatch(
       '匹克球1号场地',
-    ];
-    final result = <String, String>{};
-    for (final name in allowed) {
-      if (name == '所有场地') {
-        result[name] = 'all';
-      } else if (name == '室内羽毛球场') {
-        result[name] = 'badminton_group';
-      } else if (name == '室内乒乓球场') {
-        result[name] = 'pingpong_group';
-      } else if (name == '网球场') {
-        result[name] = 'tennis_group';
-      } else if (name == '匹克球场') {
-        result[name] = 'pickleball_group';
-      } else if (all[name] != null) {
-        result[name] = all[name]!;
+      (name) => name.contains('匹克') && _venueNumberMatches(name, 1),
+    );
+
+    if (!result.keys.any((name) => !_isVenueGroup(name))) {
+      for (final entry in all.entries) {
+        final normalized = _normalizeVenueName(entry.key);
+        if (normalized.contains('羽毛球') ||
+            normalized.contains('乒乓') ||
+            normalized.contains('网球') ||
+            normalized.contains('匹克')) {
+          result[entry.key] = entry.value;
+        }
       }
     }
     return result;
+  }
+
+  String? _findVenue(
+    Map<String, String> venues,
+    String canonical,
+    bool Function(String normalized) matches,
+  ) {
+    if (venues.containsKey(canonical)) return canonical;
+    final target = _normalizeVenueName(canonical);
+    for (final venue in venues.keys) {
+      if (_normalizeVenueName(venue) == target) return venue;
+    }
+    for (final venue in venues.keys) {
+      if (matches(_normalizeVenueName(venue))) return venue;
+    }
+    return null;
+  }
+
+  bool _venueNumberMatches(String normalized, int number) {
+    final ascii = number.toString();
+    final chinese = const {
+      1: '一',
+      2: '二',
+      3: '三',
+      4: '四',
+      5: '五',
+      6: '六',
+    }[number];
+    return normalized.contains('$ascii号') ||
+        normalized.contains('场地$ascii') ||
+        normalized.contains('第$ascii') ||
+        (chinese != null &&
+            (normalized.contains('$chinese号') ||
+                normalized.contains('场地$chinese') ||
+                normalized.contains('第$chinese')));
+  }
+
+  String _normalizeVenueName(String value) {
+    final cleaned = _cleanHtml(value);
+    final chars = <int>[];
+    for (final rune in cleaned.runes) {
+      if (rune >= 0xff10 && rune <= 0xff19) {
+        chars.add(rune - 0xff10 + 0x30);
+      } else {
+        chars.add(rune);
+      }
+    }
+    return String.fromCharCodes(chars)
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll('（', '(')
+        .replaceAll('）', ')')
+        .replaceAll('號', '号')
+        .replaceAll('場', '场')
+        .replaceAll('館', '馆')
+        .toLowerCase();
   }
 
   Future<List<int>> _queryAvailability({
@@ -504,7 +646,8 @@ class OaGymService extends ChangeNotifier {
     ];
 
     if (timeRange != null && timeRange.isNotEmpty) {
-      final timeId = _timeSlots[timeRange];
+      final normalizedTimeRange = _normalizeTimeRange(timeRange);
+      final timeId = _timeSlots[normalizedTimeRange];
       if (timeId == null) throw OaGymException('找不到时间段: $timeRange');
       pairs.addAll([
         const MapEntry('check_con', '31871'),
@@ -514,7 +657,7 @@ class OaGymService extends ChangeNotifier {
         const MapEntry('con31871_viewtype', '0'),
         const MapEntry('con31871_opt', '1'),
         MapEntry('con31871_value', timeId),
-        MapEntry('con31871_name', timeRange),
+        MapEntry('con31871_name', normalizedTimeRange),
       ]);
     }
     final encodedBody = pairs
@@ -544,16 +687,10 @@ class OaGymService extends ChangeNotifier {
     if (tableString.isEmpty) return const [];
     final rows = <List<String>>[];
     for (var page = 0; page <= 20; page++) {
-      final url = Uri.parse(
-        '$_oaBaseUrl/weaver/weaver.common.util.taglib.SplitPageXmlServlet',
-      ).replace(
-        queryParameters: {
-          'tableString': tableString,
-          'pageIndex': '$page',
-          'mode': 'run',
-        },
+      final response = await _fetchXmlPage(
+        tableString: tableString,
+        page: page,
       );
-      final response = await _post(url, body: const {});
       final body = response.body.trim();
       if (body.isEmpty) break;
       final pageRows = _parseXmlRows(body);
@@ -564,23 +701,66 @@ class OaGymService extends ChangeNotifier {
     return rows;
   }
 
+  Future<http.Response> _fetchXmlPage({
+    required String tableString,
+    required int page,
+  }) async {
+    final url = Uri.parse(
+      '$_oaBaseUrl/weaver/weaver.common.util.taglib.SplitPageXmlServlet',
+    );
+    final body = {
+      'tableString': tableString,
+      'pageIndex': '$page',
+      'mode': 'run',
+    };
+    final headers = const {
+      'Referer': '$_oaBaseUrl/',
+      'Origin': _oaBaseUrl,
+    };
+
+    final response = await _post(url, body: body, headers: headers);
+    if (_parseXmlRows(response.body).isNotEmpty ||
+        response.body.trim().isEmpty) {
+      return response;
+    }
+
+    // The React app sends these as POST body fields. The older Python script
+    // uses query params. Try both so TechPie tolerates either OA behavior.
+    return _post(url.replace(queryParameters: body),
+        body: const {}, headers: headers);
+  }
+
   List<List<String>> _parseXmlRows(String xml) {
     final result = <List<String>>[];
-    final rowPattern =
-        RegExp(r'<row\b[^>]*>([\s\S]*?)<\/row>', multiLine: true);
-    final colPattern =
-        RegExp(r'<col\b([^>]*)>([\s\S]*?)<\/col>', multiLine: true);
+    final rowPattern = RegExp(
+      r'<row\b[^>]*>([\s\S]*?)<\/row>',
+      multiLine: true,
+      caseSensitive: false,
+    );
+    final colPattern = RegExp(
+      r'<col\b([^>]*?)(?:\/>|>([\s\S]*?)<\/col>)',
+      multiLine: true,
+      caseSensitive: false,
+    );
     for (final rowMatch in rowPattern.allMatches(xml)) {
       final rowBody = rowMatch.group(1) ?? '';
       final row = <String>[];
       for (final colMatch in colPattern.allMatches(rowBody)) {
         final attrs = colMatch.group(1) ?? '';
-        final show = RegExp(r'showvalue="([^"]*)"').firstMatch(attrs)?.group(1);
+        final show = _attributeValue(attrs, 'showvalue');
         row.add(_cleanHtml(show ?? colMatch.group(2) ?? ''));
       }
       if (row.isNotEmpty) result.add(row);
     }
     return result;
+  }
+
+  String? _attributeValue(String attrs, String name) {
+    final pattern = RegExp(
+      '$name\\s*=\\s*([\\\'"])(.*?)\\1',
+      caseSensitive: false,
+    );
+    return pattern.firstMatch(attrs)?.group(2);
   }
 
   Future<http.Response> _get(
@@ -642,12 +822,94 @@ class OaGymService extends ChangeNotifier {
   }
 
   Future<http.Response> _send(http.BaseRequest request) async {
+    final shouldFollowRedirects = request.followRedirects;
+    final original = request is http.Request ? request : null;
+    if (original != null) {
+      var current = _cloneRequest(original, followRedirects: false);
+      for (var redirect = 0; redirect <= 10; redirect++) {
+        final response = await _sendOnce(current);
+        if (!shouldFollowRedirects || !_isRedirect(response.statusCode)) {
+          return response;
+        }
+        final next = _location(response, current.url);
+        if (next == null) return response;
+        current = _redirectRequest(current, next, response.statusCode);
+      }
+      throw OaGymException('OA 登录跳转次数过多，请重新登录后重试');
+    }
+    return _sendOnce(request);
+  }
+
+  Future<http.Response> _sendOnce(http.BaseRequest request) async {
     final streamed = await _client.send(request).timeout(
           const Duration(seconds: 20),
         );
-    final response = await http.Response.fromStream(streamed);
+    final bytes = await streamed.stream.toBytes();
+    final response = http.Response.bytes(
+      bytes,
+      streamed.statusCode,
+      request: streamed.request,
+      headers: _headersForResponseBody(streamed.headers),
+      isRedirect: streamed.isRedirect,
+      persistentConnection: streamed.persistentConnection,
+      reasonPhrase: streamed.reasonPhrase,
+    );
     _cookies.capture(request.url.host, response.headers);
     return response;
+  }
+
+  http.Request _cloneRequest(http.Request source,
+      {required bool followRedirects}) {
+    final request = http.Request(source.method, source.url)
+      ..followRedirects = followRedirects
+      ..headers.addAll(source.headers)
+      ..bodyBytes = source.bodyBytes;
+    return request;
+  }
+
+  http.Request _redirectRequest(http.Request source, Uri next, int statusCode) {
+    final switchToGet = source.method == 'POST' &&
+        (statusCode == 301 || statusCode == 302 || statusCode == 303);
+    final method = switchToGet ? 'GET' : source.method;
+    final headers = Map<String, String>.from(source.headers)
+      ..removeWhere(
+        (key, _) =>
+            key.toLowerCase() == 'cookie' ||
+            key.toLowerCase() == 'content-length' ||
+            (switchToGet && key.toLowerCase() == 'content-type'),
+      );
+    final request = http.Request(method, next)
+      ..followRedirects = false
+      ..headers.addAll(_headersFor(next, headers));
+    if (!switchToGet) request.bodyBytes = source.bodyBytes;
+    return request;
+  }
+
+  bool _isRedirect(int statusCode) =>
+      statusCode == 301 ||
+      statusCode == 302 ||
+      statusCode == 303 ||
+      statusCode == 307 ||
+      statusCode == 308;
+
+  Map<String, String> _headersForResponseBody(Map<String, String> headers) {
+    final result = Map<String, String>.from(headers);
+    final contentType = headers.entries
+            .where((entry) => entry.key.toLowerCase() == 'content-type')
+            .firstOrNull
+            ?.value ??
+        '';
+    final hasCharset = RegExp(
+      r'charset=([^;\s]+)',
+      caseSensitive: false,
+    ).hasMatch(contentType);
+    result.removeWhere((key, _) => key.toLowerCase() == 'content-type');
+    result['content-type'] = hasCharset
+        ? contentType
+        : (contentType.isEmpty
+            ? 'text/plain; charset=utf-8'
+            : '$contentType; charset=utf-8');
+    return result;
   }
 
   Uri? _location(http.Response response, Uri base) {
@@ -672,11 +934,36 @@ class OaGymService extends ChangeNotifier {
     return '';
   }
 
-  String _cleanHtml(String value) => value
-      .replaceAll(RegExp(r'<[^>]+>'), '')
+  String _normalizeTimeRange(String value) => _cleanHtml(value)
+      .replaceAll('–', '-')
+      .replaceAll('—', '-')
+      .replaceAll('－', '-')
+      .replaceAll(RegExp(r'\s+'), '');
+
+  String _cleanHtml(String value) {
+    final decoded = _decodeEntities(value)
+        .replaceAll('<![CDATA[', '')
+        .replaceAll(']]>', '')
+        .replaceAll(RegExp(r'<[^>]+>'), '');
+    return _decodeEntities(decoded).replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  String _decodeEntities(String value) => value
       .replaceAll('&nbsp;', ' ')
       .replaceAll('&amp;', '&')
-      .trim();
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&apos;', "'")
+      .replaceAll('&#39;', "'")
+      .replaceAllMapped(
+        RegExp(r'&#x([0-9a-fA-F]+);'),
+        (match) => String.fromCharCode(int.parse(match.group(1)!, radix: 16)),
+      )
+      .replaceAllMapped(
+        RegExp(r'&#(\d+);'),
+        (match) => String.fromCharCode(int.parse(match.group(1)!)),
+      );
 
   String _stripBom(String value) => value.replaceFirst('\ufeff', '');
 
