@@ -206,14 +206,10 @@ class _SettingsPageState extends State<SettingsPage> {
             // General section
             _sectionHeader(theme, 'General'),
             ListTile(
-              leading: const Icon(Icons.notifications_outlined),
-              title: const Text('Notifications'),
-              subtitle: const Text('Manage notification preferences'),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DebugLogPage()),
-              ),
-            ),
+                leading: const Icon(Icons.notifications_outlined),
+                title: const Text('Notifications'),
+                subtitle: const Text('Manage notification preferences'),
+                onTap: () {}),
             ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('About'),
