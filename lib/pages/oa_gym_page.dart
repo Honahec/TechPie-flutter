@@ -588,8 +588,15 @@ class _SearchTabState extends State<_SearchTab> {
   @override
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).oaGymService;
-    final concreteVenues = _venuesForSports(service.venues.keys, _sports);
-    final flatResults = _flattenResults(_results);
+    final groupedVenues = _venuesBySport(service.venues.keys, _sports);
+    final groupedResults = _groupSearchResults(_results);
+    final totalResults = groupedResults.fold<int>(
+      0,
+      (sum, group) =>
+          sum +
+          group.timeSlots
+              .fold<int>(0, (count, slot) => count + slot.items.length),
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
@@ -622,6 +629,8 @@ class _SearchTabState extends State<_SearchTab> {
                     ),
                   ],
                 ),
+                Text('项目分类', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -630,6 +639,9 @@ class _SearchTabState extends State<_SearchTab> {
                       selected: _sports.isEmpty && _venues.isEmpty,
                       label: const Text('所有场地'),
                       avatar: const Icon(Icons.apps_rounded, size: 18),
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       onSelected: (_) {
                         setState(() {
                           _sports.clear();
@@ -642,6 +654,9 @@ class _SearchTabState extends State<_SearchTab> {
                         selected: _sports.contains(sport),
                         label: Text(sport.label),
                         avatar: Icon(_sportIcon(sport), size: 18),
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onSelected: (_) {
                           setState(() {
                             if (_sports.contains(sport)) {
@@ -660,7 +675,49 @@ class _SearchTabState extends State<_SearchTab> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                if (_sports.isEmpty)
+                  Text(
+                    '未选择具体场地时默认查询全部场地',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                else
+                  for (final sport
+                      in OaSport.values.where(_sports.contains)) ...[
+                    Text(
+                      sport.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final venue
+                            in groupedVenues[sport] ?? const <String>[])
+                          FilterChip(
+                            selected: _venues.contains(venue),
+                            label: Text(venue),
+                            showCheckmark: false,
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            onSelected: (_) {
+                              setState(() {
+                                if (_venues.contains(venue)) {
+                                  _venues.remove(venue);
+                                } else {
+                                  _venues.add(venue);
+                                }
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                 Text(
                   '时间段 ${oaEndpointRangeLabel(_timeRange.start.round(), _timeRange.end.round())}',
                 ),
@@ -681,35 +738,10 @@ class _SearchTabState extends State<_SearchTab> {
                   divisions: oaTimeEndpointEnd - oaTimeEndpointStart,
                   onChanged: (value) => setState(() => _timeRange = value),
                 ),
-                if (concreteVenues.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text('场地', style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final venue in concreteVenues)
-                        FilterChip(
-                          selected: _venues.contains(venue),
-                          label: Text(venue),
-                          onSelected: (_) {
-                            setState(() {
-                              if (_venues.contains(venue)) {
-                                _venues.remove(venue);
-                              } else {
-                                _venues.add(venue);
-                              }
-                            });
-                          },
-                        ),
-                    ],
-                  ),
+                if (_sports.isNotEmpty && _venues.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    _venues.isEmpty
-                        ? '未选择具体场地时默认查询全部场地'
-                        : '已选 ${_venues.length} 个场地',
+                    '已选 ${_venues.length} 个场地',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -730,28 +762,99 @@ class _SearchTabState extends State<_SearchTab> {
         ),
         const SizedBox(height: 12),
         if (_error != null) _MessageCard(message: _error!, isError: true),
-        if (flatResults.isNotEmpty)
+        if (_loading)
+          const Card.outlined(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          )
+        else if (groupedResults.isNotEmpty)
           Card.outlined(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('查询结果', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  for (final entry in flatResults)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_note_outlined),
-                      title: Text('${entry.venue} · ${entry.timeRange}'),
-                      subtitle: Text(
-                        [
-                          if (entry.user.isNotEmpty) entry.user,
-                          if (entry.date.isNotEmpty) entry.date,
-                          if (entry.status.isNotEmpty) entry.status,
-                        ].join(' · '),
+                  Text(
+                    '查询结果 · $totalResults 条记录',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  for (final dateGroup in groupedResults) ...[
+                    ExpansionTile(
+                      title: Text(
+                        '${dateGroup.date}（${dateGroup.timeSlots.length} 个时段）',
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(bottom: 12),
+                      children: [
+                        for (final timeGroup in dateGroup.timeSlots) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${timeGroup.timeRange}（${timeGroup.items.length} 条）',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 8),
+                                for (var i = 0; i < timeGroup.items.length; i++)
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: i == timeGroup.items.length - 1
+                                          ? 0
+                                          : 8,
+                                    ),
+                                    child: ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      tileColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.25),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      leading: const Icon(
+                                        Icons.event_note_outlined,
+                                      ),
+                                      title: Text(timeGroup.items[i].venue),
+                                      subtitle: Text(
+                                        [
+                                          if (timeGroup
+                                              .items[i].user.isNotEmpty)
+                                            timeGroup.items[i].user,
+                                          if (timeGroup
+                                              .items[i].bookingDate.isNotEmpty)
+                                            timeGroup.items[i].bookingDate,
+                                          if (timeGroup
+                                              .items[i].useDate.isNotEmpty)
+                                            timeGroup.items[i].useDate,
+                                          if (timeGroup
+                                              .items[i].status.isNotEmpty)
+                                            timeGroup.items[i].status,
+                                        ].join(' · '),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                  ],
                 ],
               ),
             ),
@@ -937,49 +1040,51 @@ class _MessageCard extends StatelessWidget {
   }
 }
 
-class _FlatResult {
-  final String venue;
-  final String timeRange;
-  final String user;
-  final String date;
-  final String status;
-
-  const _FlatResult({
-    required this.venue,
-    required this.timeRange,
-    required this.user,
-    required this.date,
-    required this.status,
-  });
-}
-
-List<_FlatResult> _flattenResults(List<OaCourtSearchResult> results) {
-  final items = <_FlatResult>[];
-  final seen = <String>{};
-  for (final result in results) {
-    for (final row in result.rows) {
-      final user = row.length > 7 ? row[7] : '';
-      final date = row.length > 9 ? row[9] : '';
-      final status = row.length > 6 ? row[6] : '';
-      final key = '${result.venue}|${result.timeRange}|$user|$date|$status';
-      if (!seen.add(key)) continue;
-      items.add(
-        _FlatResult(
-          venue: result.venue,
-          timeRange: result.timeRange.isEmpty ? '全部时间' : result.timeRange,
-          user: user,
-          date: date,
-          status: status,
-        ),
-      );
+Map<OaSport, List<String>> _venuesBySport(
+  Iterable<String> venues,
+  Set<OaSport> sports,
+) {
+  final result = <OaSport, List<String>>{
+    for (final sport in sports) sport: <String>[],
+  };
+  for (final item in venues) {
+    if (const {
+      '所有场地',
+      '室内羽毛球场',
+      '室内乒乓球场',
+      '网球场',
+      '匹克球场',
+    }.contains(item)) {
+      continue;
+    }
+    if (sports.contains(OaSport.badminton) && item.contains('羽毛球')) {
+      result[OaSport.badminton]!.add(item);
+      continue;
+    }
+    if (sports.contains(OaSport.pingpong) && item.contains('乒乓球')) {
+      result[OaSport.pingpong]!.add(item);
+      continue;
+    }
+    if (sports.contains(OaSport.tennis) && item.contains('网球')) {
+      result[OaSport.tennis]!.add(item);
+      continue;
+    }
+    if (sports.contains(OaSport.pickleball) && item.contains('匹克球')) {
+      result[OaSport.pickleball]!.add(item);
     }
   }
-  return items;
+  return result;
 }
 
 List<String> _venuesForSports(Iterable<String> venues, Set<OaSport> sports) =>
     venues.where((item) {
-      if (const {'所有场地', '室内羽毛球场', '室内乒乓球场', '网球场', '匹克球场'}.contains(item)) {
+      if (const {
+        '所有场地',
+        '室内羽毛球场',
+        '室内乒乓球场',
+        '网球场',
+        '匹克球场',
+      }.contains(item)) {
         return false;
       }
       if (sports.contains(OaSport.badminton) && item.contains('羽毛球')) {
@@ -997,6 +1102,60 @@ List<String> _venuesForSports(Iterable<String> venues, Set<OaSport> sports) =>
       return false;
     }).toList();
 
+List<_SearchDateGroup> _groupSearchResults(List<OaCourtSearchResult> results) {
+  final dateMap = <String, Map<String, List<_SearchResultItem>>>{};
+  final seen = <String>{};
+
+  for (final result in results) {
+    for (final row in result.rows) {
+      final key = '${result.venue}|${result.timeRange}|${row.join('\u001f')}';
+      if (!seen.add(key)) continue;
+      final useDate = row.length > 9 ? row[9].trim() : '';
+      if (useDate.isEmpty) continue;
+      final timeRange = result.timeRange.isEmpty ? '全部时间' : result.timeRange;
+      final itemsByTime = dateMap.putIfAbsent(
+          useDate, () => <String, List<_SearchResultItem>>{});
+      final items =
+          itemsByTime.putIfAbsent(timeRange, () => <_SearchResultItem>[]);
+      items.add(
+        _SearchResultItem(
+          venue: result.venue,
+          user: row.length > 7 ? row[7].trim() : '',
+          bookingDate: row.length > 2 ? row[2].trim() : '',
+          useDate: useDate,
+          status: row.length > 6 ? row[6].trim() : '',
+        ),
+      );
+    }
+  }
+
+  final groups = <_SearchDateGroup>[];
+  final dates = dateMap.keys.toList()..sort();
+  for (final date in dates) {
+    final timeMap = dateMap[date]!;
+    final timeSlots = timeMap.keys.toList()
+      ..sort((a, b) {
+        if (a == b) return 0;
+        if (a == '全部时间') return -1;
+        if (b == '全部时间') return 1;
+        return a.compareTo(b);
+      });
+    groups.add(
+      _SearchDateGroup(
+        date: date,
+        timeSlots: [
+          for (final timeRange in timeSlots)
+            _SearchTimeGroup(
+              timeRange: timeRange,
+              items: timeMap[timeRange] ?? const [],
+            ),
+        ],
+      ),
+    );
+  }
+  return groups;
+}
+
 String _formatDate(DateTime date) => '${date.year.toString().padLeft(4, '0')}-'
     '${date.month.toString().padLeft(2, '0')}-'
     '${date.day.toString().padLeft(2, '0')}';
@@ -1013,3 +1172,39 @@ IconData _sportIcon(OaSport sport) => switch (sport) {
       OaSport.tennis => Icons.sports_tennis,
       OaSport.pickleball => Icons.sports_baseball,
     };
+
+class _SearchDateGroup {
+  final String date;
+  final List<_SearchTimeGroup> timeSlots;
+
+  const _SearchDateGroup({
+    required this.date,
+    required this.timeSlots,
+  });
+}
+
+class _SearchTimeGroup {
+  final String timeRange;
+  final List<_SearchResultItem> items;
+
+  const _SearchTimeGroup({
+    required this.timeRange,
+    required this.items,
+  });
+}
+
+class _SearchResultItem {
+  final String venue;
+  final String user;
+  final String bookingDate;
+  final String useDate;
+  final String status;
+
+  const _SearchResultItem({
+    required this.venue,
+    required this.user,
+    required this.bookingDate,
+    required this.useDate,
+    required this.status,
+  });
+}
