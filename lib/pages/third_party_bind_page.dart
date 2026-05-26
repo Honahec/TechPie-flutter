@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/third_party_account.dart';
 import '../services/service_provider.dart';
@@ -33,6 +34,13 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
   bool get _isHydro => widget.platform == ThirdPartyPlatform.hydro;
   bool get _isGradescope => widget.platform == ThirdPartyPlatform.gradescope;
+
+  Future<void> _dismissKeyboard() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (isIos()) {
+      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    }
+  }
 
   @override
   void dispose() {
@@ -79,6 +87,8 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    await _dismissKeyboard();
+    if (!mounted) return;
     setState(() => _busy = true);
 
     final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
@@ -104,6 +114,8 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
       );
       if (!mounted) return;
       setState(() => _inlineError = null);
+      await _dismissKeyboard();
+      if (!mounted) return;
       if (!isIos()) {
         showAdaptiveFeedback(
           context: context,
