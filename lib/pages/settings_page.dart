@@ -127,10 +127,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: const Icon(Icons.login),
                 title: const Text('Login'),
                 subtitle: const Text('Sign in to your campus account'),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                ),
+                onTap: () => presentLoginPage(context),
               ),
             const Divider(),
 

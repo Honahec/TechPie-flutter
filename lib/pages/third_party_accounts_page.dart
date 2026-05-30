@@ -83,12 +83,7 @@ class _BlackboardTile extends StatelessWidget {
       trailing: loggedIn
           ? Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20)
           : const Icon(Icons.chevron_right),
-      onTap: loggedIn
-          ? null
-          : () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              ),
+      onTap: loggedIn ? null : () => presentLoginPage(context),
     );
   }
 }

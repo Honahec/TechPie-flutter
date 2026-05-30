@@ -118,11 +118,7 @@ class _OaGymPageState extends State<OaGymPage>
                         ),
                         const SizedBox(height: 16),
                         FilledButton.icon(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const LoginPage(),
-                            ),
-                          ),
+                          onPressed: () => presentLoginPage(context),
                           icon: const Icon(Icons.login),
                           label: const Text('去登录'),
                         ),

@@ -1,17 +1,115 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/auth_service.dart';
+import '../services/schedule_service.dart';
 import '../services/service_provider.dart';
 import '../utils/platform.dart';
 import '../widgets/adaptive_feedback.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageCopy {
+  const _LoginPageCopy({
+    required this.pageTitle,
+    required this.brandName,
+    required this.subtitle,
+  });
+
+  final String pageTitle;
+  final String brandName;
+  final String subtitle;
+}
+
+const _loginPageCopy = _LoginPageCopy(
+  pageTitle: '登录',
+  brandName: 'TechPie',
+  subtitle: '登录以访问校园服务',
+);
+
+const MethodChannel _nativeGlassPresenterChannel = MethodChannel(
+  'techpie/native_glass_presenter',
+);
+
+Future<void> presentLoginPage(BuildContext context) async {
+  if (isIos() && usesIosLiquidGlass()) {
+    final sp = ServiceProvider.of(context);
+    await _presentNativeLoginSheet(
+      authService: sp.authService,
+      scheduleService: sp.scheduleService,
+    );
+    return;
+  }
+
+  if (context.mounted) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+  }
+}
+
+Future<void> _presentNativeLoginSheet({
+  required AuthService authService,
+  required ScheduleService scheduleService,
+}) async {
+  _nativeGlassPresenterChannel.setMethodCallHandler((call) async {
+    final arguments = (call.arguments as Map<Object?, Object?>?) ?? const {};
+
+    Future<Map<String, Object?>> runAction(
+        Future<void> Function() action) async {
+      try {
+        await action();
+        return const <String, Object?>{'ok': true};
+      } catch (error) {
+        return <String, Object?>{'ok': false, 'message': '$error'};
+      }
+    }
+
+    switch (call.method) {
+      case 'nativeLoginSheet.sendSms':
+        final phone = (arguments['phone'] as String? ?? '').trim();
+        return runAction(() => authService.sendSmsCode(phone));
+      case 'nativeLoginSheet.smsLogin':
+        final phone = (arguments['phone'] as String? ?? '').trim();
+        final code = (arguments['code'] as String? ?? '').trim();
+        return runAction(() async {
+          await authService.smsLogin(phone, code);
+          unawaited(scheduleService.fetchAll());
+        });
+      case 'nativeLoginSheet.egateLogin':
+        final username = (arguments['username'] as String? ?? '').trim();
+        final password = (arguments['password'] as String? ?? '').trim();
+        return runAction(() async {
+          await authService.egateLogin(username, password);
+          unawaited(scheduleService.fetchAll());
+        });
+      default:
+        throw MissingPluginException(
+            'Unknown login sheet action ${call.method}');
+    }
+  });
+
+  try {
+    await _nativeGlassPresenterChannel.invokeMethod<void>(
+      'presentLoginSheet',
+      <String, Object?>{
+        'pageTitle': _loginPageCopy.pageTitle,
+        'brandName': _loginPageCopy.brandName,
+        'subtitle': _loginPageCopy.subtitle,
+      },
+    );
+  } finally {
+    _nativeGlassPresenterChannel.setMethodCallHandler(null);
+  }
 }
 
 class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
@@ -22,6 +120,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   bool _sendingSms = false;
   bool _obscurePassword = true;
+  int _selectedLoginMethod = 0;
   int _cooldown = 0;
   Timer? _cooldownTimer;
   DateTime? _cooldownBackgroundedAt;
@@ -238,6 +337,15 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    const copy = _loginPageCopy;
+    if (isIos()) {
+      return _buildIosLoginPage(context, copy);
+    }
+
+    return _buildMaterialLoginPage(context, copy);
+  }
+
+  Widget _buildMaterialLoginPage(BuildContext context, _LoginPageCopy copy) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -271,7 +379,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'TechPie',
+                      copy.brandName,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold,
@@ -279,7 +387,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '登录以访问校园服务',
+                      copy.subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onPrimaryContainer,
                       ),
@@ -348,6 +456,511 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIosLoginPage(BuildContext context, _LoginPageCopy copy) {
+    final theme = Theme.of(context);
+    final canPop = Navigator.canPop(context);
+    final liquidGlass = usesIosLiquidGlass();
+    final backgroundColor = CupertinoDynamicColor.resolve(
+      liquidGlass
+          ? CupertinoColors.systemBackground
+          : CupertinoColors.systemGroupedBackground,
+      context,
+    );
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: IosNativeNavigationBar(
+        title: copy.pageTitle,
+        leadingItems: [
+          if (canPop)
+            const IosNativeNavigationBarItem(
+              id: 'back',
+              title: '返回',
+              sfSymbol: 'chevron.left',
+              accessibilityLabel: '返回',
+            ),
+        ],
+        onItemPressed: (id) {
+          if (id == 'back') {
+            Navigator.maybePop(context);
+          }
+        },
+      ),
+      body: CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: theme.brightness,
+          primaryColor: theme.colorScheme.primary,
+          scaffoldBackgroundColor: backgroundColor,
+        ),
+        child: SafeArea(
+          top: false,
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(20, liquidGlass ? 4 : 12, 20, 28),
+            children: [
+              _IosLoginHeader(copy: copy, liquidGlass: liquidGlass),
+              SizedBox(height: liquidGlass ? 20 : 18),
+              CupertinoSlidingSegmentedControl<int>(
+                groupValue: _selectedLoginMethod,
+                children: const {
+                  0: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text('短信'),
+                  ),
+                  1: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text('统一认证'),
+                  ),
+                },
+                onValueChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _selectedLoginMethod = value);
+                },
+              ),
+              const SizedBox(height: 18),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: _selectedLoginMethod == 0
+                    ? _IosSmsLoginForm(
+                        key: const ValueKey<String>('sms'),
+                        phoneController: _phoneController,
+                        codeController: _codeController,
+                        cooldown: _cooldown,
+                        sendingSms: _sendingSms,
+                        inlineMessage: _smsInlineMessage,
+                        onSendSms: _sendSms,
+                        onLogin: _smsLogin,
+                        liquidGlass: liquidGlass,
+                      )
+                    : _IosEgateLoginForm(
+                        key: const ValueKey<String>('egate'),
+                        usernameController: _usernameController,
+                        passwordController: _passwordController,
+                        obscurePassword: _obscurePassword,
+                        inlineMessage: _egateInlineMessage,
+                        onToggleObscure: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        onLogin: _egateLogin,
+                        liquidGlass: liquidGlass,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IosLoginHeader extends StatelessWidget {
+  const _IosLoginHeader({
+    required this.copy,
+    required this.liquidGlass,
+  });
+
+  final _LoginPageCopy copy;
+  final bool liquidGlass;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelColor = CupertinoDynamicColor.resolve(
+      CupertinoColors.secondaryLabel,
+      context,
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 2,
+        right: 2,
+        top: liquidGlass ? 0 : 2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            copy.brandName,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            copy.subtitle,
+            style: TextStyle(
+              color: labelColor,
+              fontSize: liquidGlass ? 17 : 15,
+              height: 1.25,
+              letterSpacing: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IosSmsLoginForm extends StatelessWidget {
+  final TextEditingController phoneController;
+  final TextEditingController codeController;
+  final int cooldown;
+  final bool sendingSms;
+  final String? inlineMessage;
+  final VoidCallback onSendSms;
+  final VoidCallback onLogin;
+  final bool liquidGlass;
+
+  const _IosSmsLoginForm({
+    super.key,
+    required this.phoneController,
+    required this.codeController,
+    required this.cooldown,
+    required this.sendingSms,
+    required this.inlineMessage,
+    required this.onSendSms,
+    required this.onLogin,
+    required this.liquidGlass,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ServiceProvider.of(context).authService;
+
+    return ListenableBuilder(
+      listenable: auth,
+      builder: (context, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _IosAdaptiveFormSection(
+              liquidGlass: liquidGlass,
+              children: [
+                CupertinoFormRow(
+                  prefix: const _IosFormLabel('手机号码'),
+                  child: CupertinoTextField.borderless(
+                    controller: phoneController,
+                    placeholder: '请输入手机号',
+                    keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+                CupertinoFormRow(
+                  prefix: const _IosFormLabel('验证码'),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CupertinoTextField.borderless(
+                          controller: codeController,
+                          placeholder: '短信验证码',
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          onSubmitted: (_) => onLogin(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _IosCodeButton(
+                        cooldown: cooldown,
+                        sendingSms: sendingSms,
+                        onPressed: onSendSms,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (inlineMessage != null) ...[
+              const SizedBox(height: 12),
+              _IosInlineFeedback(message: inlineMessage!),
+            ],
+            const SizedBox(height: 18),
+            _IosPrimaryButton(
+              label: '登录',
+              loading: auth.loading,
+              onPressed: auth.loading ? null : onLogin,
+              liquidGlass: liquidGlass,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _IosEgateLoginForm extends StatelessWidget {
+  final TextEditingController usernameController;
+  final TextEditingController passwordController;
+  final bool obscurePassword;
+  final String? inlineMessage;
+  final VoidCallback onToggleObscure;
+  final VoidCallback onLogin;
+  final bool liquidGlass;
+
+  const _IosEgateLoginForm({
+    super.key,
+    required this.usernameController,
+    required this.passwordController,
+    required this.obscurePassword,
+    required this.inlineMessage,
+    required this.onToggleObscure,
+    required this.onLogin,
+    required this.liquidGlass,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ServiceProvider.of(context).authService;
+
+    return ListenableBuilder(
+      listenable: auth,
+      builder: (context, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _IosAdaptiveFormSection(
+              liquidGlass: liquidGlass,
+              children: [
+                CupertinoFormRow(
+                  prefix: const _IosFormLabel('学号'),
+                  child: CupertinoTextField.borderless(
+                    controller: usernameController,
+                    placeholder: '请输入学号',
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+                CupertinoFormRow(
+                  prefix: const _IosFormLabel('密码'),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CupertinoTextField.borderless(
+                          controller: passwordController,
+                          placeholder: '请输入密码',
+                          obscureText: obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          onSubmitted: (_) => onLogin(),
+                        ),
+                      ),
+                      CupertinoButton(
+                        minSize: 34,
+                        padding: EdgeInsets.zero,
+                        onPressed: onToggleObscure,
+                        child: Icon(
+                          obscurePassword
+                              ? CupertinoIcons.eye
+                              : CupertinoIcons.eye_slash,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (inlineMessage != null) ...[
+              const SizedBox(height: 12),
+              _IosInlineFeedback(message: inlineMessage!),
+            ],
+            const SizedBox(height: 18),
+            _IosPrimaryButton(
+              label: '登录',
+              loading: auth.loading,
+              onPressed: auth.loading ? null : onLogin,
+              liquidGlass: liquidGlass,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _IosAdaptiveFormSection extends StatelessWidget {
+  const _IosAdaptiveFormSection({
+    required this.children,
+    required this.liquidGlass,
+  });
+
+  final List<Widget> children;
+  final bool liquidGlass;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!liquidGlass) {
+      return CupertinoFormSection.insetGrouped(
+        margin: EdgeInsets.zero,
+        children: children,
+      );
+    }
+
+    final fill = CupertinoDynamicColor.resolve(
+      CupertinoColors.secondarySystemBackground,
+      context,
+    );
+    final separator = CupertinoDynamicColor.resolve(
+      CupertinoColors.separator,
+      context,
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: separator.withValues(alpha: 0.18)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          children: [
+            for (var index = 0; index < children.length; index++) ...[
+              children[index],
+              if (index < children.length - 1)
+                Padding(
+                  padding: const EdgeInsets.only(left: 92),
+                  child: SizedBox(
+                    height: 0.5,
+                    child: ColoredBox(color: separator.withValues(alpha: 0.36)),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IosFormLabel extends StatelessWidget {
+  const _IosFormLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 72,
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 16,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _IosCodeButton extends StatelessWidget {
+  const _IosCodeButton({
+    required this.cooldown,
+    required this.sendingSms,
+    required this.onPressed,
+  });
+
+  final int cooldown;
+  final bool sendingSms;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = cooldown > 0 || sendingSms;
+
+    return CupertinoButton(
+      minSize: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      onPressed: disabled ? null : onPressed,
+      child: sendingSms
+          ? const CupertinoActivityIndicator(radius: 9)
+          : Text(cooldown > 0 ? '${cooldown}s' : '发送'),
+    );
+  }
+}
+
+class _IosPrimaryButton extends StatelessWidget {
+  const _IosPrimaryButton({
+    required this.label,
+    required this.loading,
+    required this.onPressed,
+    required this.liquidGlass,
+  });
+
+  final String label;
+  final bool loading;
+  final VoidCallback? onPressed;
+  final bool liquidGlass;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton.filled(
+      minSize: liquidGlass ? 56 : 52,
+      borderRadius: BorderRadius.circular(liquidGlass ? 28 : 13),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (loading) ...[
+            const CupertinoActivityIndicator(color: CupertinoColors.white),
+            const SizedBox(width: 8),
+          ],
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+class _IosInlineFeedback extends StatelessWidget {
+  const _IosInlineFeedback({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final red =
+        CupertinoDynamicColor.resolve(CupertinoColors.systemRed, context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: red.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(CupertinoIcons.exclamationmark_circle, size: 18, color: red),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  color: red,
+                  fontSize: 14,
+                  height: 1.25,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
