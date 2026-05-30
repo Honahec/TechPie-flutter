@@ -121,11 +121,9 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
     }
 
     let leadingItems = makeVisibleBarButtonItems(configuration.leadingItems)
-    let trailingItems = makeVisibleBarButtonItems(
-      configuration.trailingItems
-    ).reversed()
+    let trailingItems = makeVisibleBarButtonItems(configuration.trailingItems)
     navigationItem.setLeftBarButtonItems(leadingItems, animated: animated)
-    navigationItem.setRightBarButtonItems(Array(trailingItems), animated: animated)
+    navigationItem.setRightBarButtonItems(trailingItems, animated: animated)
 
     if !didInstallNavigationItem {
       didInstallNavigationItem = true

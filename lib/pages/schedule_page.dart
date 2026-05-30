@@ -549,13 +549,6 @@ class _SchedulePageState extends State<SchedulePage> {
               largeTitleMode: true,
               trailingItems: [
                 IosNativeNavigationBarItem(
-                  id: 'currentWeek',
-                  sfSymbol: 'calendar.badge.clock',
-                  hidden: isViewingCurrentWeek,
-                  accessibilityLabel: '回到本周',
-                  placementGroup: 'week-actions',
-                ),
-                IosNativeNavigationBarItem(
                   id: 'settings',
                   sfSymbol: 'ellipsis',
                   accessibilityLabel: '视图设置',
@@ -603,6 +596,13 @@ class _SchedulePageState extends State<SchedulePage> {
                       ],
                     ),
                   ],
+                ),
+                IosNativeNavigationBarItem(
+                  id: 'currentWeek',
+                  sfSymbol: 'calendar.badge.clock',
+                  hidden: isViewingCurrentWeek,
+                  accessibilityLabel: '回到本周',
+                  placementGroup: 'week-actions',
                 ),
               ],
               onItemPressed: (id) {
