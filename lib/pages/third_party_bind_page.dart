@@ -387,7 +387,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               const SizedBox(height: 10),
               IosNativeTextField(
                 label: 'Domain',
-                placeholder: 'SI100B_2025_Autumn',
+                placeholder: 'Domain',
                 controller: _hydroDomainsCtrl,
                 minLines: 2,
                 maxLines: 6,

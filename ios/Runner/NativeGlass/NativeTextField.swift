@@ -34,6 +34,7 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   private let label = UILabel()
   private let textField = UITextField()
   private let textView = UITextView()
+  private let textViewPlaceholderLabel = UILabel()
   private let inputContainer = UIView()
   private let stack = UIStackView()
   private let channel: FlutterMethodChannel
@@ -96,6 +97,18 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
     textView.textContainerInset = UIEdgeInsets(top: 8, left: 6, bottom: 8, right: 6)
     applyTextViewBorderStyle()
 
+    textViewPlaceholderLabel.font = .preferredFont(forTextStyle: .body)
+    textViewPlaceholderLabel.adjustsFontForContentSizeCategory = true
+    textViewPlaceholderLabel.textColor = .placeholderText
+    textViewPlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
+    textView.addSubview(textViewPlaceholderLabel)
+
+    NSLayoutConstraint.activate([
+      textViewPlaceholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 11),
+      textViewPlaceholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: textView.trailingAnchor, constant: -11),
+      textViewPlaceholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 8)
+    ])
+
     inputContainer.setContentHuggingPriority(.defaultLow, for: .horizontal)
     inputContainer.setContentCompressionResistancePriority(.required, for: .horizontal)
 
@@ -118,8 +131,10 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   private func applyConfiguration(_ params: [String: Any]) {
     text = params["text"] as? String ?? text
     let labelText = params["label"] as? String ?? ""
+    let placeholderText = params["placeholder"] as? String ?? labelText
     label.text = labelText
-    textField.placeholder = params["placeholder"] as? String ?? labelText
+    textField.placeholder = placeholderText
+    textViewPlaceholderLabel.text = placeholderText
 
     let maxLines = params["maxLines"] as? Int ?? 1
     multiline = maxLines > 1
@@ -128,6 +143,7 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
 
     textField.text = text
     textView.text = text
+    updateTextViewPlaceholderVisibility()
     textField.isSecureTextEntry = params["obscureText"] as? Bool ?? false
     textField.isEnabled = params["enabled"] as? Bool ?? true
     textView.isEditable = params["enabled"] as? Bool ?? true
@@ -171,8 +187,8 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   }
 
   private func shouldHideLeadingLabel(multiline: Bool) -> Bool {
-    guard !multiline else {
-      return false
+    if multiline {
+      return true
     }
 
     if #available(iOS 26.0, *) {
@@ -194,6 +210,7 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
         text = nextText
         textField.text = nextText
         textView.text = nextText
+        updateTextViewPlaceholderVisibility()
       }
       result(nil)
     case "updateConfiguration":
@@ -214,7 +231,12 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   }
 
   func textViewDidChange(_ textView: UITextView) {
+    updateTextViewPlaceholderVisibility()
     emitChanged(textView.text ?? "")
+  }
+
+  private func updateTextViewPlaceholderVisibility() {
+    textViewPlaceholderLabel.isHidden = !(textView.text ?? "").isEmpty
   }
 
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
