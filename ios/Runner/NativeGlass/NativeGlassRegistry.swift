@@ -44,8 +44,8 @@ enum NativeGlassRegistry {
       withId: NativeGlassConfirmationButtonPlatformView.viewType
     )
     registrar.register(
-      NativeTextFieldFactory(messenger: messenger),
-      withId: NativeTextFieldPlatformView.viewType
+      NativeTextViewFactory(messenger: messenger),
+      withId: NativeTextViewPlatformView.viewType
     )
     registrar.register(
       NativeTextFieldGroupFactory(messenger: messenger),

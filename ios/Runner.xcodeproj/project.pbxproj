@@ -20,7 +20,7 @@
 		5A0010142F1A000100000001 /* NativeGlassPresenterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */; };
 		5A0010152F1A000100000001 /* IcsFilePresenterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010162F1A000100000001 /* IcsFilePresenterPlugin.swift */; };
 		5A0010182F1A000100000001 /* NativeNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010172F1A000100000001 /* NativeNavigationBar.swift */; };
-		5A00101A2F1A000100000001 /* NativeTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010192F1A000100000001 /* NativeTextField.swift */; };
+		5A00101A2F1A000100000001 /* NativeTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0010192F1A000100000001 /* NativeTextView.swift */; };
 		5A00101C2F1A000100000001 /* NativeSegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00101B2F1A000100000001 /* NativeSegmentedControl.swift */; };
 		5A00101E2F1A000100000001 /* NativeTextFieldGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A00101D2F1A000100000001 /* NativeTextFieldGroup.swift */; };
 		6BFBE954DB868241E9E9810B /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 052EF181B45C1F8AB028A91F /* Pods_Runner.framework */; };
@@ -73,7 +73,7 @@
 		5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGlassPresenterPlugin.swift; sourceTree = "<group>"; };
 		5A0010162F1A000100000001 /* IcsFilePresenterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IcsFilePresenterPlugin.swift; sourceTree = "<group>"; };
 		5A0010172F1A000100000001 /* NativeNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNavigationBar.swift; sourceTree = "<group>"; };
-		5A0010192F1A000100000001 /* NativeTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTextField.swift; sourceTree = "<group>"; };
+		5A0010192F1A000100000001 /* NativeTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTextView.swift; sourceTree = "<group>"; };
 		5A00101B2F1A000100000001 /* NativeSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSegmentedControl.swift; sourceTree = "<group>"; };
 		5A00101D2F1A000100000001 /* NativeTextFieldGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTextFieldGroup.swift; sourceTree = "<group>"; };
 		6B0AD00AB3D979A68E9ABE84 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -159,7 +159,7 @@
 				5A0010132F1A000100000001 /* NativeGlassPresenterPlugin.swift */,
 				5A0010162F1A000100000001 /* IcsFilePresenterPlugin.swift */,
 				5A0010172F1A000100000001 /* NativeNavigationBar.swift */,
-				5A0010192F1A000100000001 /* NativeTextField.swift */,
+				5A0010192F1A000100000001 /* NativeTextView.swift */,
 				5A00101B2F1A000100000001 /* NativeSegmentedControl.swift */,
 				5A00101D2F1A000100000001 /* NativeTextFieldGroup.swift */,
 			);
@@ -440,7 +440,7 @@
 				5A00100C2F1A000100000001 /* NativeGlassDropdownMenu.swift in Sources */,
 				5A0010122F1A000100000001 /* NativeGlassConfirmationButton.swift in Sources */,
 				5A0010182F1A000100000001 /* NativeNavigationBar.swift in Sources */,
-				5A00101A2F1A000100000001 /* NativeTextField.swift in Sources */,
+				5A00101A2F1A000100000001 /* NativeTextView.swift in Sources */,
 				5A00101C2F1A000100000001 /* NativeSegmentedControl.swift in Sources */,
 				5A00101E2F1A000100000001 /* NativeTextFieldGroup.swift in Sources */,
 				5A0010072F1A000100000001 /* NativeGlassButton.swift in Sources */,

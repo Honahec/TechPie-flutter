@@ -10,8 +10,8 @@ import '../widgets/adaptive_feedback.dart';
 import '../widgets/blurred_app_bar.dart';
 import '../widgets/ios_liquid/ios_glass_switch.dart';
 import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import '../widgets/ios_liquid/ios_native_text_field.dart';
 import '../widgets/ios_liquid/ios_native_text_field_group.dart';
+import '../widgets/ios_liquid/ios_native_text_view.dart';
 
 class ThirdPartyBindPage extends StatefulWidget {
   final ThirdPartyPlatform platform;
@@ -385,14 +385,12 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              IosNativeTextField(
-                label: 'Domain',
+              IosNativeTextView(
                 placeholder: 'Domain',
                 controller: _hydroDomainsCtrl,
                 minLines: 2,
                 maxLines: 6,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 4),
               Text(

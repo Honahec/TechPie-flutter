@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 
-final class NativeTextFieldFactory: NSObject, FlutterPlatformViewFactory {
+final class NativeTextViewFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
 
   init(messenger: FlutterBinaryMessenger) {
@@ -18,7 +18,7 @@ final class NativeTextFieldFactory: NSObject, FlutterPlatformViewFactory {
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    NativeTextFieldPlatformView(
+    NativeTextViewPlatformView(
       frame: frame,
       viewId: viewId,
       arguments: args,
@@ -27,22 +27,15 @@ final class NativeTextFieldFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
-final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFieldDelegate, UITextViewDelegate {
-  static let viewType = "techpie/native_text_field"
+final class NativeTextViewPlatformView: NSObject, FlutterPlatformView, UITextViewDelegate {
+  static let viewType = "techpie/native_text_view"
 
   private let rootView: UIView
-  private let label = UILabel()
-  private let textField = UITextField()
   private let textView = UITextView()
   private let textViewPlaceholderLabel = UILabel()
-  private let inputContainer = UIView()
-  private let stack = UIStackView()
   private let channel: FlutterMethodChannel
 
-  private var multiline = false
   private var text = ""
-  private var activeInputView: UIView?
-  private var activeInputConstraints: [NSLayoutConstraint] = []
 
   init(
     frame: CGRect,
@@ -77,17 +70,6 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   private func buildViewHierarchy() {
     rootView.backgroundColor = .clear
 
-    label.font = .preferredFont(forTextStyle: .body)
-    label.adjustsFontForContentSizeCategory = true
-    label.setContentHuggingPriority(.required, for: .horizontal)
-    label.widthAnchor.constraint(greaterThanOrEqualToConstant: 84).isActive = true
-
-    textField.delegate = self
-    textField.borderStyle = .roundedRect
-    textField.clearButtonMode = .whileEditing
-    textField.autocapitalizationType = .none
-    textField.autocorrectionType = .no
-
     textView.delegate = self
     textView.font = .preferredFont(forTextStyle: .body)
     textView.adjustsFontForContentSizeCategory = true
@@ -109,74 +91,31 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
       textViewPlaceholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 8)
     ])
 
-    inputContainer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-    inputContainer.setContentCompressionResistancePriority(.required, for: .horizontal)
+    textView.translatesAutoresizingMaskIntoConstraints = false
+    rootView.addSubview(textView)
 
-    stack.addArrangedSubview(label)
-    stack.addArrangedSubview(inputContainer)
-    stack.axis = .horizontal
-    stack.alignment = .fill
-    stack.spacing = 12
-    stack.translatesAutoresizingMaskIntoConstraints = false
-
-    rootView.addSubview(stack)
     NSLayoutConstraint.activate([
-      stack.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-      stack.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-      stack.topAnchor.constraint(equalTo: rootView.topAnchor),
-      stack.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      textView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+      textView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+      textView.topAnchor.constraint(equalTo: rootView.topAnchor),
+      textView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
     ])
   }
 
   private func applyConfiguration(_ params: [String: Any]) {
     text = params["text"] as? String ?? text
-    let labelText = params["label"] as? String ?? ""
-    let placeholderText = params["placeholder"] as? String ?? labelText
-    label.text = labelText
-    textField.placeholder = placeholderText
+    let placeholderText = params["placeholder"] as? String ?? ""
     textViewPlaceholderLabel.text = placeholderText
 
-    let maxLines = params["maxLines"] as? Int ?? 1
-    multiline = maxLines > 1
-    label.isHidden = shouldHideLeadingLabel(multiline: multiline)
-    installInputView(multiline ? textView : textField)
-
-    textField.text = text
     textView.text = text
     updateTextViewPlaceholderVisibility()
-    textField.isSecureTextEntry = params["obscureText"] as? Bool ?? false
-    textField.isEnabled = params["enabled"] as? Bool ?? true
     textView.isEditable = params["enabled"] as? Bool ?? true
 
     let keyboardType = params["keyboardType"] as? String ?? "text"
-    textField.keyboardType = uiKeyboardType(keyboardType)
     textView.keyboardType = uiKeyboardType(keyboardType)
 
     let returnKeyType = uiReturnKeyType(params["textInputAction"] as? String)
-    textField.returnKeyType = returnKeyType
     textView.returnKeyType = returnKeyType
-  }
-
-  private func installInputView(_ nextInputView: UIView) {
-    guard activeInputView !== nextInputView else {
-      return
-    }
-
-    NSLayoutConstraint.deactivate(activeInputConstraints)
-    activeInputConstraints.removeAll()
-    activeInputView?.removeFromSuperview()
-    activeInputView = nextInputView
-
-    nextInputView.translatesAutoresizingMaskIntoConstraints = false
-    inputContainer.addSubview(nextInputView)
-
-    activeInputConstraints = [
-      nextInputView.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor),
-      nextInputView.trailingAnchor.constraint(equalTo: inputContainer.trailingAnchor),
-      nextInputView.topAnchor.constraint(equalTo: inputContainer.topAnchor),
-      nextInputView.bottomAnchor.constraint(equalTo: inputContainer.bottomAnchor)
-    ]
-    NSLayoutConstraint.activate(activeInputConstraints)
   }
 
   private func applyTextViewBorderStyle() {
@@ -184,18 +123,6 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
     textView.layer.borderWidth = 1
     textView.layer.cornerRadius = 10
     textView.layer.borderColor = UIColor.separator.cgColor
-  }
-
-  private func shouldHideLeadingLabel(multiline: Bool) -> Bool {
-    if multiline {
-      return true
-    }
-
-    if #available(iOS 26.0, *) {
-      return true
-    }
-
-    return false
   }
 
   private func handle(call: FlutterMethodCall, result: FlutterResult) {
@@ -208,7 +135,6 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
       let nextText = params["text"] as? String ?? ""
       if text != nextText {
         text = nextText
-        textField.text = nextText
         textView.text = nextText
         updateTextViewPlaceholderVisibility()
       }
@@ -226,10 +152,6 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
     channel.invokeMethod("onChanged", arguments: ["text": nextText])
   }
 
-  func textFieldDidChangeSelection(_ textField: UITextField) {
-    emitChanged(textField.text ?? "")
-  }
-
   func textViewDidChange(_ textView: UITextView) {
     updateTextViewPlaceholderVisibility()
     emitChanged(textView.text ?? "")
@@ -237,12 +159,6 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
 
   private func updateTextViewPlaceholderVisibility() {
     textViewPlaceholderLabel.isHidden = !(textView.text ?? "").isEmpty
-  }
-
-  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    textField.resignFirstResponder()
-    channel.invokeMethod("onSubmitted", arguments: ["text": textField.text ?? ""])
-    return true
   }
 
   private func uiKeyboardType(_ value: String) -> UIKeyboardType {
