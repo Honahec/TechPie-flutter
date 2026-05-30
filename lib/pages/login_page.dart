@@ -10,7 +10,7 @@ import '../utils/platform.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../widgets/ios_liquid/ios_native_segmented_control.dart';
-import '../widgets/ios_liquid/ios_native_text_field.dart';
+import '../widgets/ios_liquid/ios_native_text_field_group.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -524,11 +524,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                       passwordController: _passwordController,
                       obscurePassword: _obscurePassword,
                       inlineMessage: _egateInlineMessage,
-                      onToggleObscure: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
                       onLogin: _egateLogin,
                       liquidGlass: liquidGlass,
                     ),
@@ -620,23 +615,29 @@ class _IosSmsLoginForm extends StatelessWidget {
           children: [
             _IosAdaptiveFormSection(
               children: [
-                IosNativeTextField(
-                  label: '手机号码',
-                  placeholder: '请输入手机号',
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
+                IosNativeTextFieldGroup(
+                  items: [
+                    IosNativeTextFieldGroupItem(
+                      placeholder: '手机号码',
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ],
                 ),
                 Row(
                   children: [
                     Expanded(
-                      child: IosNativeTextField(
-                        label: '验证码',
-                        placeholder: '短信验证码',
-                        controller: codeController,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => onLogin(),
+                      child: IosNativeTextFieldGroup(
+                        items: [
+                          IosNativeTextFieldGroupItem(
+                            placeholder: '验证码',
+                            controller: codeController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => onLogin(),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -672,7 +673,6 @@ class _IosEgateLoginForm extends StatelessWidget {
   final TextEditingController passwordController;
   final bool obscurePassword;
   final String? inlineMessage;
-  final VoidCallback onToggleObscure;
   final VoidCallback onLogin;
   final bool liquidGlass;
 
@@ -682,7 +682,6 @@ class _IosEgateLoginForm extends StatelessWidget {
     required this.passwordController,
     required this.obscurePassword,
     required this.inlineMessage,
-    required this.onToggleObscure,
     required this.onLogin,
     required this.liquidGlass,
   });
@@ -699,31 +698,19 @@ class _IosEgateLoginForm extends StatelessWidget {
           children: [
             _IosAdaptiveFormSection(
               children: [
-                IosNativeTextField(
-                  label: '学号',
-                  placeholder: '请输入学号',
-                  controller: usernameController,
-                  textInputAction: TextInputAction.next,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: IosNativeTextField(
-                        label: '密码',
-                        placeholder: '请输入密码',
-                        controller: passwordController,
-                        obscureText: obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => onLogin(),
-                      ),
+                IosNativeTextFieldGroup(
+                  items: [
+                    IosNativeTextFieldGroupItem(
+                      placeholder: '学号',
+                      controller: usernameController,
+                      textInputAction: TextInputAction.next,
                     ),
-                    IconButton(
-                      onPressed: onToggleObscure,
-                      icon: Icon(
-                        obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
+                    IosNativeTextFieldGroupItem(
+                      placeholder: '密码',
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => onLogin(),
                     ),
                   ],
                 ),

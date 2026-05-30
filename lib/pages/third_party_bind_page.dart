@@ -11,6 +11,7 @@ import '../widgets/blurred_app_bar.dart';
 import '../widgets/ios_liquid/ios_glass_switch.dart';
 import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import '../widgets/ios_liquid/ios_native_text_field.dart';
+import '../widgets/ios_liquid/ios_native_text_field_group.dart';
 
 class ThirdPartyBindPage extends StatefulWidget {
   final ThirdPartyPlatform platform;
@@ -342,35 +343,46 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               _InlineBindFeedback(message: _inlineError!),
               const SizedBox(height: 16),
             ],
-            IosNativeTextField(
-              label: _isGradescope ? '邮箱' : '用户名',
-              placeholder: _isGradescope ? '请输入邮箱' : '请输入用户名',
-              controller: _accountCtrl,
-              keyboardType: _isGradescope
-                  ? TextInputType.emailAddress
-                  : TextInputType.text,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 10),
-            IosNativeTextField(
-              label: '密码',
-              placeholder: '请输入密码',
-              controller: _passwordCtrl,
-              obscureText: _obscure,
-              textInputAction:
-                  _isHydro ? TextInputAction.next : TextInputAction.done,
-              onSubmitted: (_) {
-                if (!_isHydro) _submit();
-              },
+            IosNativeTextFieldGroup(
+              items: [
+                IosNativeTextFieldGroupItem(
+                  placeholder: _isGradescope ? '邮箱' : '用户名',
+                  controller: _accountCtrl,
+                  keyboardType: _isGradescope
+                      ? TextInputType.emailAddress
+                      : TextInputType.text,
+                  textInputAction: TextInputAction.next,
+                ),
+                IosNativeTextFieldGroupItem(
+                  placeholder: '密码',
+                  controller: _passwordCtrl,
+                  obscureText: _obscure,
+                  textInputAction:
+                      _isHydro ? TextInputAction.next : TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!_isHydro) _submit();
+                  },
+                ),
+              ],
             ),
             if (_isHydro) ...[
-              const SizedBox(height: 10),
-              IosNativeTextField(
-                label: 'Origin',
-                placeholder: 'https://acm.shanghaitech.edu.cn',
-                controller: _hydroOriginCtrl,
-                keyboardType: TextInputType.url,
-                textInputAction: TextInputAction.next,
+              const SizedBox(height: 16),
+              IosNativeTextFieldGroup(
+                items: [
+                  IosNativeTextFieldGroupItem(
+                    placeholder: 'Origin',
+                    controller: _hydroOriginCtrl,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '默认 https://acm.shanghaitech.edu.cn',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: secondaryLabel,
+                ),
               ),
               const SizedBox(height: 10),
               IosNativeTextField(
@@ -381,6 +393,13 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                 maxLines: 6,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '每行一个,或用逗号分隔\n例: SI100B_2025_Autumn',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: secondaryLabel,
+                ),
               ),
             ],
             const SizedBox(height: 16),

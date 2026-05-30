@@ -34,10 +34,14 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
   private let label = UILabel()
   private let textField = UITextField()
   private let textView = UITextView()
+  private let inputContainer = UIView()
+  private let stack = UIStackView()
   private let channel: FlutterMethodChannel
 
   private var multiline = false
   private var text = ""
+  private var activeInputView: UIView?
+  private var activeInputConstraints: [NSLayoutConstraint] = []
 
   init(
     frame: CGRect,
@@ -78,21 +82,27 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
     label.widthAnchor.constraint(greaterThanOrEqualToConstant: 84).isActive = true
 
     textField.delegate = self
+    textField.borderStyle = .roundedRect
     textField.clearButtonMode = .whileEditing
     textField.autocapitalizationType = .none
     textField.autocorrectionType = .no
 
     textView.delegate = self
-    textView.backgroundColor = .clear
     textView.font = .preferredFont(forTextStyle: .body)
     textView.adjustsFontForContentSizeCategory = true
     textView.autocapitalizationType = .none
     textView.autocorrectionType = .no
     textView.isScrollEnabled = true
+    textView.textContainerInset = UIEdgeInsets(top: 8, left: 6, bottom: 8, right: 6)
+    applyTextViewBorderStyle()
 
-    let stack = UIStackView(arrangedSubviews: [label, textField, textView])
+    inputContainer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    inputContainer.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+    stack.addArrangedSubview(label)
+    stack.addArrangedSubview(inputContainer)
     stack.axis = .horizontal
-    stack.alignment = .center
+    stack.alignment = .fill
     stack.spacing = 12
     stack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -107,13 +117,14 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
 
   private func applyConfiguration(_ params: [String: Any]) {
     text = params["text"] as? String ?? text
-    label.text = params["label"] as? String ?? ""
-    textField.placeholder = params["placeholder"] as? String
+    let labelText = params["label"] as? String ?? ""
+    label.text = labelText
+    textField.placeholder = params["placeholder"] as? String ?? labelText
 
     let maxLines = params["maxLines"] as? Int ?? 1
     multiline = maxLines > 1
-    textField.isHidden = multiline
-    textView.isHidden = !multiline
+    label.isHidden = shouldHideLeadingLabel(multiline: multiline)
+    installInputView(multiline ? textView : textField)
 
     textField.text = text
     textView.text = text
@@ -128,6 +139,47 @@ final class NativeTextFieldPlatformView: NSObject, FlutterPlatformView, UITextFi
     let returnKeyType = uiReturnKeyType(params["textInputAction"] as? String)
     textField.returnKeyType = returnKeyType
     textView.returnKeyType = returnKeyType
+  }
+
+  private func installInputView(_ nextInputView: UIView) {
+    guard activeInputView !== nextInputView else {
+      return
+    }
+
+    NSLayoutConstraint.deactivate(activeInputConstraints)
+    activeInputConstraints.removeAll()
+    activeInputView?.removeFromSuperview()
+    activeInputView = nextInputView
+
+    nextInputView.translatesAutoresizingMaskIntoConstraints = false
+    inputContainer.addSubview(nextInputView)
+
+    activeInputConstraints = [
+      nextInputView.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor),
+      nextInputView.trailingAnchor.constraint(equalTo: inputContainer.trailingAnchor),
+      nextInputView.topAnchor.constraint(equalTo: inputContainer.topAnchor),
+      nextInputView.bottomAnchor.constraint(equalTo: inputContainer.bottomAnchor)
+    ]
+    NSLayoutConstraint.activate(activeInputConstraints)
+  }
+
+  private func applyTextViewBorderStyle() {
+    textView.backgroundColor = .secondarySystemBackground
+    textView.layer.borderWidth = 1
+    textView.layer.cornerRadius = 10
+    textView.layer.borderColor = UIColor.separator.cgColor
+  }
+
+  private func shouldHideLeadingLabel(multiline: Bool) -> Bool {
+    guard !multiline else {
+      return false
+    }
+
+    if #available(iOS 26.0, *) {
+      return true
+    }
+
+    return false
   }
 
   private func handle(call: FlutterMethodCall, result: FlutterResult) {

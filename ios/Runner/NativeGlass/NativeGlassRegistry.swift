@@ -48,6 +48,10 @@ enum NativeGlassRegistry {
       withId: NativeTextFieldPlatformView.viewType
     )
     registrar.register(
+      NativeTextFieldGroupFactory(messenger: messenger),
+      withId: NativeTextFieldGroupPlatformView.viewType
+    )
+    registrar.register(
       NativeSegmentedControlFactory(messenger: messenger),
       withId: NativeSegmentedControlPlatformView.viewType
     )
