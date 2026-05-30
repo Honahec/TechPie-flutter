@@ -1,4 +1,5 @@
 import Flutter
+import SwiftUI
 import UIKit
 
 final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
@@ -141,7 +142,7 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
       result(nil)
     }
 
-    let controller = NativeLoginSheetViewController(
+    let controller = NativeLoginSheetHostingController(
       copy: copy,
       channel: channel,
       onDismiss: complete
@@ -184,56 +185,38 @@ private struct NativeLoginSheetCopy {
 }
 
 @available(iOS 26.0, *)
-private final class NativeLoginSheetViewController: UIViewController, UITextFieldDelegate {
-  private let copy: NativeLoginSheetCopy
-  private let channel: FlutterMethodChannel
+private final class NativeLoginSheetHostingController: UIHostingController<NativeLoginSheetView> {
+  private let model: NativeLoginSheetModel
   private let onDismiss: () -> Void
-
-  private let titleLabel = UILabel()
-  private let subtitleLabel = UILabel()
-  private let segmentedControl = UISegmentedControl(items: ["短信", "统一认证"])
-  private let feedbackLabel = UILabel()
-  private let smsStack = UIStackView()
-  private let egateStack = UIStackView()
-  private let phoneField = UITextField()
-  private let codeField = UITextField()
-  private let usernameField = UITextField()
-  private let passwordField = UITextField()
-  private let sendCodeButton = UIButton(type: .system)
-  private let smsLoginButton = UIButton(type: .system)
-  private let egateLoginButton = UIButton(type: .system)
-
   private var didNotifyDismiss = false
-  private var cooldown = 0
-  private var cooldownTimer: Timer?
 
   init(
     copy: NativeLoginSheetCopy,
     channel: FlutterMethodChannel,
     onDismiss: @escaping () -> Void
   ) {
-    self.copy = copy
-    self.channel = channel
+    let model = NativeLoginSheetModel(copy: copy, channel: channel)
+    self.model = model
     self.onDismiss = onDismiss
-    super.init(nibName: nil, bundle: nil)
+    super.init(rootView: NativeLoginSheetView(model: model))
+    model.dismiss = { [weak self] in
+      self?.dismiss(animated: true)
+    }
   }
 
-  required init?(coder: NSCoder) {
+  @MainActor
+  required dynamic init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
   deinit {
-    cooldownTimer?.invalidate()
+    model.invalidate()
   }
 
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    view.backgroundColor = .systemBackground
     isModalInPresentation = false
-    buildViewHierarchy()
-    configureContent()
-    updateSelectedMode()
   }
 
   override func viewDidDisappear(_ animated: Bool) {
@@ -247,184 +230,88 @@ private final class NativeLoginSheetViewController: UIViewController, UITextFiel
   private func notifyDismiss() {
     guard !didNotifyDismiss else { return }
     didNotifyDismiss = true
-    cooldownTimer?.invalidate()
+    model.invalidate()
     onDismiss()
   }
+}
 
-  private func buildViewHierarchy() {
-    let rootStack = UIStackView()
-    rootStack.axis = .vertical
-    rootStack.spacing = 18
-    rootStack.translatesAutoresizingMaskIntoConstraints = false
-    rootStack.isLayoutMarginsRelativeArrangement = true
-    rootStack.directionalLayoutMargins = NSDirectionalEdgeInsets(
-      top: 22,
-      leading: 22,
-      bottom: 24,
-      trailing: 22
-    )
+@available(iOS 26.0, *)
+private enum NativeLoginMode: String, CaseIterable {
+  case sms
+  case egate
+}
 
-    let headerStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
-    headerStack.axis = .vertical
-    headerStack.spacing = 4
+@available(iOS 26.0, *)
+private final class NativeLoginSheetModel: ObservableObject {
+  private let copy: NativeLoginSheetCopy
+  private let channel: FlutterMethodChannel
+  var dismiss: (() -> Void)?
 
-    feedbackLabel.numberOfLines = 0
-    feedbackLabel.isHidden = true
-
-    rootStack.addArrangedSubview(headerStack)
-    rootStack.addArrangedSubview(segmentedControl)
-    rootStack.addArrangedSubview(smsStack)
-    rootStack.addArrangedSubview(egateStack)
-    rootStack.addArrangedSubview(feedbackLabel)
-
-    view.addSubview(rootStack)
-
-    NSLayoutConstraint.activate([
-      rootStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-      rootStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-      rootStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-      rootStack.bottomAnchor.constraint(lessThanOrEqualTo: view.keyboardLayoutGuide.topAnchor)
-    ])
+  @Published var mode: NativeLoginMode = .sms {
+    didSet {
+      feedback = nil
+    }
   }
+  @Published var phone = ""
+  @Published var code = ""
+  @Published var username = ""
+  @Published var password = ""
+  @Published var feedback: String?
+  @Published var isSendingCode = false
+  @Published var isSmsLoggingIn = false
+  @Published var isEgateLoggingIn = false
+  @Published var cooldown = 0
 
-  private func configureContent() {
-    titleLabel.text = copy.brandName
-    titleLabel.font = .preferredFont(forTextStyle: .title2)
-    titleLabel.adjustsFontForContentSizeCategory = true
+  private var cooldownTimer: Timer?
 
-    subtitleLabel.text = copy.subtitle
-    subtitleLabel.font = .preferredFont(forTextStyle: .subheadline)
-    subtitleLabel.textColor = .secondaryLabel
-    subtitleLabel.adjustsFontForContentSizeCategory = true
-
-    segmentedControl.selectedSegmentIndex = 0
-    segmentedControl.addTarget(
-      self,
-      action: #selector(handleModeChanged),
-      for: .valueChanged
-    )
-
-    configureTextField(
-      phoneField,
-      placeholder: "手机号码",
-      keyboardType: .phonePad,
-      textContentType: .telephoneNumber,
-      returnKeyType: .next
-    )
-    configureTextField(
-      codeField,
-      placeholder: "验证码",
-      keyboardType: .numberPad,
-      textContentType: .oneTimeCode,
-      returnKeyType: .done
-    )
-    configureTextField(
-      usernameField,
-      placeholder: "学号",
-      keyboardType: .default,
-      textContentType: .username,
-      returnKeyType: .next
-    )
-    configureTextField(
-      passwordField,
-      placeholder: "密码",
-      keyboardType: .default,
-      textContentType: .password,
-      returnKeyType: .done
-    )
-    passwordField.isSecureTextEntry = true
-
-    configureButton(sendCodeButton, title: "发送验证码", prominent: false)
-    configureButton(smsLoginButton, title: copy.pageTitle, prominent: true)
-    configureButton(egateLoginButton, title: copy.pageTitle, prominent: true)
-
-    sendCodeButton.addTarget(self, action: #selector(handleSendCode), for: .touchUpInside)
-    smsLoginButton.addTarget(self, action: #selector(handleSmsLogin), for: .touchUpInside)
-    egateLoginButton.addTarget(self, action: #selector(handleEgateLogin), for: .touchUpInside)
-
-    smsStack.axis = .vertical
-    smsStack.spacing = 12
-    smsStack.addArrangedSubview(phoneField)
-    smsStack.addArrangedSubview(makeHorizontalStack([codeField, sendCodeButton]))
-    smsStack.addArrangedSubview(smsLoginButton)
-
-    egateStack.axis = .vertical
-    egateStack.spacing = 12
-    egateStack.addArrangedSubview(usernameField)
-    egateStack.addArrangedSubview(passwordField)
-    egateStack.addArrangedSubview(egateLoginButton)
-
-    feedbackLabel.font = .preferredFont(forTextStyle: .footnote)
-    feedbackLabel.adjustsFontForContentSizeCategory = true
-    feedbackLabel.textColor = .systemRed
-  }
-
-  private func configureTextField(
-    _ textField: UITextField,
-    placeholder: String,
-    keyboardType: UIKeyboardType,
-    textContentType: UITextContentType?,
-    returnKeyType: UIReturnKeyType
+  init(
+    copy: NativeLoginSheetCopy,
+    channel: FlutterMethodChannel
   ) {
-    textField.placeholder = placeholder
-    textField.keyboardType = keyboardType
-    textField.textContentType = textContentType
-    textField.returnKeyType = returnKeyType
-    textField.borderStyle = .roundedRect
-    textField.clearButtonMode = .whileEditing
-    textField.delegate = self
-    textField.heightAnchor.constraint(greaterThanOrEqualToConstant: 48).isActive = true
+    self.copy = copy
+    self.channel = channel
   }
 
-  private func configureButton(
-    _ button: UIButton,
-    title: String,
-    prominent: Bool
-  ) {
-    var configuration: UIButton.Configuration = prominent ? .prominentGlass() : .glass()
-    configuration.title = title
-    configuration.cornerStyle = .capsule
-    button.configuration = configuration
-    button.heightAnchor.constraint(greaterThanOrEqualToConstant: 48).isActive = true
+  func invalidate() {
+    cooldownTimer?.invalidate()
+    cooldownTimer = nil
   }
 
-  private func makeHorizontalStack(_ views: [UIView]) -> UIStackView {
-    let stack = UIStackView(arrangedSubviews: views)
-    stack.axis = .horizontal
-    stack.spacing = 10
-    stack.alignment = .fill
-    stack.distribution = .fill
-    return stack
+  var title: String {
+    copy.brandName
   }
 
-  @objc
-  private func handleModeChanged() {
-    clearFeedback()
-    updateSelectedMode()
+  var subtitle: String {
+    copy.subtitle
   }
 
-  private func updateSelectedMode() {
-    let useSms = segmentedControl.selectedSegmentIndex == 0
-    smsStack.isHidden = !useSms
-    egateStack.isHidden = useSms
+  var loginButtonTitle: String {
+    copy.pageTitle
   }
 
-  @objc
-  private func handleSendCode() {
-    let phone = trimmedText(phoneField)
+  var sendCodeTitle: String {
+    cooldown > 0 ? "\(cooldown)s" : "发送验证码"
+  }
+
+  var canSendCode: Bool {
+    !isSendingCode && cooldown == 0
+  }
+
+  func sendSms() {
+    let phone = trimmed(phone)
     guard !phone.isEmpty else {
-      showFeedback("请输入手机号码")
+      feedback = "请输入手机号码"
       return
     }
 
-    setLoading(sendCodeButton, true)
+    isSendingCode = true
     channel.invokeMethod(
       "nativeLoginSheet.sendSms",
       arguments: ["phone": phone]
     ) { [weak self] response in
       DispatchQueue.main.async {
         guard let self else { return }
-        self.setLoading(self.sendCodeButton, false)
+        self.isSendingCode = false
         self.handleResponse(response) {
           self.startCooldown()
         }
@@ -432,49 +319,47 @@ private final class NativeLoginSheetViewController: UIViewController, UITextFiel
     }
   }
 
-  @objc
-  private func handleSmsLogin() {
-    let phone = trimmedText(phoneField)
-    let code = trimmedText(codeField)
+  func smsLogin() {
+    let phone = trimmed(phone)
+    let code = trimmed(code)
     guard !phone.isEmpty, !code.isEmpty else {
-      showFeedback("请输入手机号码和验证码")
+      feedback = "请输入手机号码和验证码"
       return
     }
 
-    setLoading(smsLoginButton, true)
+    isSmsLoggingIn = true
     channel.invokeMethod(
       "nativeLoginSheet.smsLogin",
       arguments: ["phone": phone, "code": code]
     ) { [weak self] response in
       DispatchQueue.main.async {
         guard let self else { return }
-        self.setLoading(self.smsLoginButton, false)
+        self.isSmsLoggingIn = false
         self.handleResponse(response) {
-          self.dismiss(animated: true)
+          self.dismiss?()
         }
       }
     }
   }
 
-  @objc
-  private func handleEgateLogin() {
-    let username = trimmedText(usernameField)
-    let password = trimmedText(passwordField)
+  func egateLogin() {
+    let username = trimmed(username)
+    let password = trimmed(password)
     guard !username.isEmpty, !password.isEmpty else {
-      showFeedback("请输入学号和密码")
+      feedback = "请输入学号和密码"
       return
     }
 
-    setLoading(egateLoginButton, true)
+    isEgateLoggingIn = true
     channel.invokeMethod(
       "nativeLoginSheet.egateLogin",
       arguments: ["username": username, "password": password]
     ) { [weak self] response in
       DispatchQueue.main.async {
         guard let self else { return }
-        self.setLoading(self.egateLoginButton, false)
+        self.isEgateLoggingIn = false
         self.handleResponse(response) {
-          self.dismiss(animated: true)
+          self.dismiss?()
         }
       }
     }
@@ -482,40 +367,25 @@ private final class NativeLoginSheetViewController: UIViewController, UITextFiel
 
   private func handleResponse(_ response: Any?, success: () -> Void) {
     guard let payload = response as? [String: Any] else {
-      showFeedback("操作失败，请稍后重试")
+      feedback = "操作失败，请稍后重试"
       return
     }
 
     if payload["ok"] as? Bool == true {
-      clearFeedback()
+      feedback = nil
       success()
       return
     }
 
-    showFeedback(payload["message"] as? String ?? "操作失败，请稍后重试")
+    feedback = payload["message"] as? String ?? "操作失败，请稍后重试"
   }
 
-  private func setLoading(_ button: UIButton, _ loading: Bool) {
-    button.isEnabled = !loading
-  }
-
-  private func trimmedText(_ textField: UITextField) -> String {
-    (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-  }
-
-  private func showFeedback(_ message: String) {
-    feedbackLabel.text = message
-    feedbackLabel.isHidden = false
-  }
-
-  private func clearFeedback() {
-    feedbackLabel.text = nil
-    feedbackLabel.isHidden = true
+  private func trimmed(_ text: String) -> String {
+    text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   private func startCooldown() {
     cooldown = 60
-    updateSendButtonTitle()
     cooldownTimer?.invalidate()
     cooldownTimer = Timer.scheduledTimer(
       withTimeInterval: 1,
@@ -531,32 +401,141 @@ private final class NativeLoginSheetViewController: UIViewController, UITextFiel
         timer.invalidate()
         self.cooldown = 0
       }
-      self.updateSendButtonTitle()
+    }
+  }
+}
+
+@available(iOS 26.0, *)
+private struct NativeLoginSheetView: View {
+  @ObservedObject var model: NativeLoginSheetModel
+  @FocusState private var focusedField: Field?
+
+  private enum Field: Hashable {
+    case phone
+    case code
+    case username
+    case password
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section {
+          Picker("登录方式", selection: $model.mode) {
+            Text("短信").tag(NativeLoginMode.sms)
+            Text("统一认证").tag(NativeLoginMode.egate)
+          }
+        } footer: {
+          Text(model.subtitle)
+        }
+
+        switch model.mode {
+        case .sms:
+          smsFields
+          smsAction
+        case .egate:
+          egateFields
+          egateAction
+        }
+
+        if let feedback = model.feedback {
+          Section {
+            Text(feedback)
+              .foregroundStyle(.red)
+          }
+        }
+      }
+      .navigationTitle(model.title)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            model.dismiss?()
+          } label: {
+            Image(systemName: "xmark")
+          }
+          .accessibilityLabel("关闭")
+        }
+      }
     }
   }
 
-  private func updateSendButtonTitle() {
-    var configuration = sendCodeButton.configuration ?? .glass()
-    configuration.title = cooldown > 0 ? "\(cooldown)s" : "发送验证码"
-    sendCodeButton.configuration = configuration
-    sendCodeButton.isEnabled = cooldown == 0
+  private var smsFields: some View {
+    Section {
+      TextField("手机号码", text: $model.phone)
+        .keyboardType(.phonePad)
+        .textContentType(.telephoneNumber)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .focused($focusedField, equals: .phone)
+
+      HStack {
+        TextField("验证码", text: $model.code)
+          .keyboardType(.numberPad)
+          .textContentType(.oneTimeCode)
+          .textInputAutocapitalization(.never)
+          .autocorrectionDisabled()
+          .focused($focusedField, equals: .code)
+
+        Button(model.sendCodeTitle) {
+          model.sendSms()
+        }
+        .disabled(!model.canSendCode)
+      }
+    }
   }
 
-  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    switch textField {
-    case phoneField:
-      codeField.becomeFirstResponder()
-    case usernameField:
-      passwordField.becomeFirstResponder()
-    case codeField:
-      textField.resignFirstResponder()
-      handleSmsLogin()
-    case passwordField:
-      textField.resignFirstResponder()
-      handleEgateLogin()
-    default:
-      textField.resignFirstResponder()
+  private var smsAction: some View {
+    Section {
+      Button {
+        model.smsLogin()
+      } label: {
+        loginButtonLabel(isLoading: model.isSmsLoggingIn)
+      }
+      .disabled(model.isSmsLoggingIn)
     }
-    return true
+  }
+
+  private var egateFields: some View {
+    Section {
+      TextField("学号", text: $model.username)
+        .textContentType(.username)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .submitLabel(.next)
+        .focused($focusedField, equals: .username)
+        .onSubmit {
+          focusedField = .password
+        }
+
+      SecureField("密码", text: $model.password)
+        .textContentType(.password)
+        .submitLabel(.done)
+        .focused($focusedField, equals: .password)
+        .onSubmit {
+          model.egateLogin()
+        }
+    }
+  }
+
+  private var egateAction: some View {
+    Section {
+      Button {
+        model.egateLogin()
+      } label: {
+        loginButtonLabel(isLoading: model.isEgateLoggingIn)
+      }
+      .disabled(model.isEgateLoggingIn)
+    }
+  }
+
+  private func loginButtonLabel(isLoading: Bool) -> some View {
+    HStack {
+      Spacer()
+      if isLoading {
+        ProgressView()
+      }
+      Text(model.loginButtonTitle)
+      Spacer()
+    }
   }
 }
