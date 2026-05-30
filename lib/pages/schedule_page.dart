@@ -419,7 +419,10 @@ class _SchedulePageState extends State<SchedulePage> {
       bool launched = false;
       if (saved.filePath != null) {
         try {
-          final result = await OpenFilex.open(saved.filePath!);
+          final result = await OpenFilex.open(
+            saved.filePath!,
+            type: 'text/calendar',
+          );
           launched = result.type == ResultType.done;
         } catch (e) {
           launched = false;
