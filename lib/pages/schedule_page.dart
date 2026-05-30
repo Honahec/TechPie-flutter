@@ -549,16 +549,17 @@ class _SchedulePageState extends State<SchedulePage> {
               largeTitleMode: true,
               trailingItems: [
                 IosNativeNavigationBarItem(
+                  id: 'currentWeek',
+                  sfSymbol: 'calendar.badge.clock',
+                  hidden: isViewingCurrentWeek,
+                  accessibilityLabel: '回到本周',
+                  placementGroup: 'week-actions',
+                ),
+                IosNativeNavigationBarItem(
                   id: 'settings',
                   sfSymbol: 'ellipsis',
                   accessibilityLabel: '视图设置',
                   menuItems: [
-                    IosNativeNavigationBarMenuItem(
-                      value: 'currentWeek',
-                      title: '回到本周',
-                      sfSymbol: 'calendar.badge.clock',
-                      checked: isViewingCurrentWeek,
-                    ),
                     IosNativeNavigationBarMenuItem(
                       value: 'semester',
                       title: '切换学期',
@@ -604,6 +605,11 @@ class _SchedulePageState extends State<SchedulePage> {
                   ],
                 ),
               ],
+              onItemPressed: (id) {
+                if (id == 'currentWeek') {
+                  _goToCurrentWeek();
+                }
+              },
               onMenuSelected: (_, value) => _onMenuSelected(value),
             )
           : BlurredAppBar(

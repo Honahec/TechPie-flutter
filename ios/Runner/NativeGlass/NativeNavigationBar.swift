@@ -37,9 +37,6 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
 
   private var configuration = NativeNavigationBarConfiguration()
   private var didInstallNavigationItem = false
-  private var leadingGroupsByKey: [String: UIBarButtonItemGroup] = [:]
-  private var trailingGroupsByKey: [String: UIBarButtonItemGroup] = [:]
-  private var barButtonItemsByID: [String: UIBarButtonItem] = [:]
   private var itemIdByTag: [Int: String] = [:]
   private var nextTag = 1
 
@@ -119,26 +116,16 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
     }
 
     if #available(iOS 16.0, *) {
-      let leadingItems = configuration.leadingItems.map(makeBarButtonItem)
-      let trailingItems = configuration.trailingItems.map(makeBarButtonItem)
-      navigationItem.leadingItemGroups = makeGroups(
-        from: configuration.leadingItems,
-        barButtonItems: leadingItems,
-        existingGroups: &leadingGroupsByKey
-      )
-      navigationItem.trailingItemGroups = makeGroups(
-        from: configuration.trailingItems,
-        barButtonItems: trailingItems,
-        existingGroups: &trailingGroupsByKey
-      )
-    } else {
-      let leadingConfigurations = configuration.leadingItems.filter { !$0.hidden }
-      let trailingConfigurations = configuration.trailingItems.filter { !$0.hidden }
-      let leadingItems = leadingConfigurations.map(makeBarButtonItem)
-      let trailingItems = trailingConfigurations.map(makeBarButtonItem)
-      navigationItem.setLeftBarButtonItems(leadingItems, animated: animated)
-      navigationItem.setRightBarButtonItems(trailingItems, animated: animated)
+      navigationItem.leadingItemGroups = []
+      navigationItem.trailingItemGroups = []
     }
+
+    let leadingItems = makeVisibleBarButtonItems(configuration.leadingItems)
+    let trailingItems = makeVisibleBarButtonItems(
+      configuration.trailingItems
+    ).reversed()
+    navigationItem.setLeftBarButtonItems(leadingItems, animated: animated)
+    navigationItem.setRightBarButtonItems(Array(trailingItems), animated: animated)
 
     if !didInstallNavigationItem {
       didInstallNavigationItem = true
@@ -146,56 +133,17 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
     }
   }
 
-  @available(iOS 16.0, *)
-  private func makeGroups(
-    from items: [NativeNavigationBarItem],
-    barButtonItems: [UIBarButtonItem],
-    existingGroups: inout [String: UIBarButtonItemGroup]
-  ) -> [UIBarButtonItemGroup] {
-    var keyedItems: [(key: String, items: [UIBarButtonItem])] = []
-    var currentKey: String?
-    var currentItems: [UIBarButtonItem] = []
-
-    func flush() {
-      guard !currentItems.isEmpty else { return }
-      keyedItems.append((currentKey ?? "", currentItems))
-      currentItems.removeAll()
-    }
-
-    for index in items.indices {
-      let key = items[index].placementGroup ?? items[index].id
-      if currentKey != key {
-        flush()
-        currentKey = key
-      }
-      currentItems.append(barButtonItems[index])
-    }
-
-    flush()
-
-    let activeKeys = Set(keyedItems.map(\.key))
-    existingGroups = existingGroups.filter { activeKeys.contains($0.key) }
-
-    return keyedItems.map { keyedItem in
-      if let group = existingGroups[keyedItem.key] {
-        group.barButtonItems = keyedItem.items
-        group.isHidden = keyedItem.items.allSatisfy(\.isHidden)
-        return group
-      }
-
-      let group = UIBarButtonItemGroup(
-        barButtonItems: keyedItem.items,
-        representativeItem: nil
-      )
-      group.isHidden = keyedItem.items.allSatisfy(\.isHidden)
-      existingGroups[keyedItem.key] = group
-      return group
-    }
+  private func makeVisibleBarButtonItems(
+    _ items: [NativeNavigationBarItem]
+  ) -> [UIBarButtonItem] {
+    items
+      .filter { !$0.hidden }
+      .map(makeBarButtonItem)
   }
 
   private func makeBarButtonItem(_ item: NativeNavigationBarItem) -> UIBarButtonItem {
     if #available(iOS 14.0, *) {
-      let barButtonItem = barButtonItemsByID[item.id] ?? UIBarButtonItem()
+      let barButtonItem = UIBarButtonItem()
       let action: UIAction?
       if item.menuItems.isEmpty {
         action = UIAction(
@@ -209,7 +157,6 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
         action = nil
       }
 
-      barButtonItemsByID[item.id] = barButtonItem
       barButtonItem.title = item.title
       barButtonItem.image = symbolImage(named: item.sfSymbol)
       barButtonItem.primaryAction = action
@@ -227,14 +174,7 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
     }
 
     let barButtonItem: UIBarButtonItem
-    if let cachedItem = barButtonItemsByID[item.id] {
-      barButtonItem = cachedItem
-      barButtonItem.title = item.title
-      barButtonItem.image = symbolImage(named: item.sfSymbol)
-      barButtonItem.style = item.role == "done" ? .done : .plain
-      barButtonItem.target = self
-      barButtonItem.action = #selector(handleLegacyItem(_:))
-    } else if let title = item.title, !title.isEmpty {
+    if let title = item.title, !title.isEmpty {
       barButtonItem = UIBarButtonItem(
         title: title,
         style: item.role == "done" ? .done : .plain,
@@ -257,7 +197,6 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
       )
     }
 
-    barButtonItemsByID[item.id] = barButtonItem
     let tag = nextTag
     nextTag += 1
     itemIdByTag[tag] = item.id
