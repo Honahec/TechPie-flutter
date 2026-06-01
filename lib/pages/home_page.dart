@@ -370,17 +370,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         feature.nativeEntry?.call(context);
         break;
       case FeatureMode.webviewWithCookie:
-        final cookies = <WebViewCookie>[];
-        switch (feature.cookieType) {
-          case CookieType.ecourse:
-            break;
-          case CookieType.egate:
-            break;
-          case CookieType.eams:
-            break;
-          case null:
-            break;
-        }
+        final cookies = _buildCookiesForFeature(feature.cookieType);
         if (feature.url != null) {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -393,6 +383,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
         break;
     }
+  }
+
+  List<WebViewCookie> _buildCookiesForFeature(CookieType? cookieType) {
+    final cookies = <WebViewCookie>[];
+    if (cookieType == null) return cookies;
+
+    final session = ServiceProvider.of(context).authService.session;
+    if (session == null) return cookies;
+
+    final domain = 'ids.shanghaitech.edu.cn';
+
+    if (session.cookies.isNotEmpty) {
+      for (final part in session.cookies.split(';')) {
+        final idx = part.indexOf('=');
+        if (idx > 0) {
+          final key = part.substring(0, idx).trim();
+          final value = part.substring(idx + 1).trim();
+          if (key.isNotEmpty && value.isNotEmpty) {
+            cookies.add(WebViewCookie(
+              name: key,
+              value: value,
+              domain: domain,
+              path: '/',
+            ));
+          }
+        }
+      }
+    }
+
+    return cookies;
   }
 
   Widget _buildTodayClasses(ThemeData theme, bool isLoggedIn) {
