@@ -9,6 +9,10 @@ permissions:
   contents: write
   pull-requests: read
 
+concurrency:
+  group: auto-tag-ios-release
+  cancel-in-progress: false
+
 jobs:
   tag:
     name: Tag merged iOS release PR
@@ -28,6 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
 
       - name: Determine next release tag
         id: next-tag
@@ -52,10 +57,12 @@ jobs:
           git fetch --force --tags origin
 
           latest_tag="$(
-            git tag --list 'ios-v[0-9]*.[0-9]*.[0-9]*+[0-9]*' |
+            git tag --list 'ios-v*' |
+              grep -E '^ios-v[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$' |
               sed -E 's/^ios-v//' |
               sort -V |
-              tail -n 1
+              tail -n 1 ||
+              true
           )"
 
           if [[ -z "$latest_tag" ]]; then
@@ -107,15 +114,16 @@ jobs:
         shell: bash
         env:
           NEXT_TAG: ${{ steps.next-tag.outputs.tag }}
-          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          TARGET_SHA: ${{ github.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
 
-          if [[ -z "$MERGE_COMMIT_SHA" || "$MERGE_COMMIT_SHA" == "null" ]]; then
-            echo "Missing merge commit SHA for PR #$PR_NUMBER"
+          if [[ -z "$TARGET_SHA" || "$TARGET_SHA" == "null" ]]; then
+            echo "Missing target HEAD SHA for PR #$PR_NUMBER"
             exit 1
           fi
 
-          git tag "$NEXT_TAG" "$MERGE_COMMIT_SHA"
+          echo "Tagging $TARGET_SHA as $NEXT_TAG"
+          git tag "$NEXT_TAG" "$TARGET_SHA"
           git push origin "refs/tags/$NEXT_TAG"
