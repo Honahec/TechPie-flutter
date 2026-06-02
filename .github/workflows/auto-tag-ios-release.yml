@@ -1,0 +1,121 @@
+name: Auto Tag iOS Release
+
+on:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  tag:
+    name: Tag merged iOS release PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: >
+      github.event.pull_request.merged == true &&
+      (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'master') &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'ios:release:patch') ||
+        contains(github.event.pull_request.labels.*.name, 'ios:release:minor') ||
+        contains(github.event.pull_request.labels.*.name, 'ios:release:major')
+      )
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next release tag
+        id: next-tag
+        shell: bash
+        env:
+          PR_LABELS_JSON: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+
+          mapfile -t release_labels < <(jq -r '.[] | select(test("^ios:release:(patch|minor|major)$"))' <<< "$PR_LABELS_JSON")
+          release_label_count="${#release_labels[@]}"
+
+          if [[ "$release_label_count" -ne 1 ]]; then
+            echo "Expected exactly one iOS release label, found $release_label_count:"
+            printf '%s\n' "${release_labels[@]}"
+            exit 1
+          fi
+
+          bump="${release_labels[0]#ios:release:}"
+          echo "Selected iOS release bump: $bump"
+
+          git fetch --force --tags origin
+
+          latest_tag="$(
+            git tag --list 'ios-v[0-9]*.[0-9]*.[0-9]*+[0-9]*' |
+              sed -E 's/^ios-v//' |
+              sort -V |
+              tail -n 1
+          )"
+
+          if [[ -z "$latest_tag" ]]; then
+            major=0
+            minor=0
+            patch=0
+          elif [[ "$latest_tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+          else
+            echo "Could not parse latest iOS release tag: ios-v$latest_tag"
+            exit 1
+          fi
+
+          case "$bump" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+            *)
+              echo "Unsupported iOS release bump: $bump"
+              exit 1
+              ;;
+          esac
+
+          next_tag="ios-v${major}.${minor}.${patch}+1"
+          echo "Next iOS release tag: $next_tag"
+
+          if git rev-parse --verify --quiet "refs/tags/$next_tag" >/dev/null; then
+            echo "Tag already exists: $next_tag"
+            exit 1
+          fi
+
+          {
+            echo "bump=$bump"
+            echo "tag=$next_tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create and push release tag
+        shell: bash
+        env:
+          NEXT_TAG: ${{ steps.next-tag.outputs.tag }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$MERGE_COMMIT_SHA" || "$MERGE_COMMIT_SHA" == "null" ]]; then
+            echo "Missing merge commit SHA for PR #$PR_NUMBER"
+            exit 1
+          fi
+
+          git tag "$NEXT_TAG" "$MERGE_COMMIT_SHA"
+          git push origin "refs/tags/$NEXT_TAG"
