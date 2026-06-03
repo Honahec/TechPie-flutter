@@ -19,6 +19,7 @@ import '../widgets/app_card.dart';
 import '../widgets/blurred_app_bar.dart';
 import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 import 'generic_webview_page.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -370,17 +371,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         feature.nativeEntry?.call(context);
         break;
       case FeatureMode.webviewWithCookie:
-        final cookies = <WebViewCookie>[];
-        switch (feature.cookieType) {
-          case CookieType.ecourse:
-            break;
-          case CookieType.egate:
-            break;
-          case CookieType.eams:
-            break;
-          case null:
-            break;
-        }
+        final cookies = _buildCookiesForFeature(feature.cookieType);
         if (feature.url != null) {
           unawaited(
             Navigator.of(context).push(
@@ -398,6 +389,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  List<WebViewCookie> _buildCookiesForFeature(CookieType? cookieType) {
+    final cookies = <WebViewCookie>[];
+    if (cookieType == null) return cookies;
+
+    final session = ServiceProvider.of(context).authService.session;
+    if (session == null) return cookies;
+
+    final domain = 'ids.shanghaitech.edu.cn';
+
+    if (session.cookies.isNotEmpty) {
+      for (final part in session.cookies.split(';')) {
+        final idx = part.indexOf('=');
+        if (idx > 0) {
+          final key = part.substring(0, idx).trim();
+          final value = part.substring(idx + 1).trim();
+          if (key.isNotEmpty && value.isNotEmpty) {
+            cookies.add(WebViewCookie(
+              name: key,
+              value: value,
+              domain: domain,
+              path: '/',
+            ),);
+          }
+        }
+      }
+    }
+
+    return cookies;
+  }
+
   Widget _buildTodayClasses(ThemeData theme, bool isLoggedIn) {
     Widget content;
     if (!isLoggedIn) {
@@ -407,6 +428,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         icon: Icons.login_rounded,
         title: '登录以查看今日课程',
         subtitle: '连接你的教务系统账号',
+        onTap: () async {
+          await presentLoginPage(context);
+          if (!mounted) return;
+          setState(() {});
+        },
       );
     } else if (_todayCourses.isEmpty) {
       content = _buildEmptyContent(
@@ -649,37 +675,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     required IconData icon,
     required String title,
     required String subtitle,
+    VoidCallback? onTap,
   }) {
-    return Padding(
-      key: key,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 32,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+    final inner = SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+          child: Column(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
+        ),);
+
+    if (onTap != null) {
+      return InkWell(
+        key: key,
+        onTap: onTap,
+        child: inner,
+      );
+    }
+
+    return Container(key: key, child: inner);
   }
 
   Widget _buildCourseContent({required Key key, required ThemeData theme}) {

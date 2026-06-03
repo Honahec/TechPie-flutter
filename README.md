@@ -19,7 +19,7 @@
 理论支持多平台，实际测试如下平台：
 
 - [x] Linux
-- [ ] Windows
+- [x] Windows
 - [x] MacOS
 - [x] Android
 - [x] iOS
