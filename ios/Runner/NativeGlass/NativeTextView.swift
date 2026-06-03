@@ -86,9 +86,11 @@ final class NativeTextViewPlatformView: NSObject, FlutterPlatformView, UITextVie
     textView.addSubview(textViewPlaceholderLabel)
 
     NSLayoutConstraint.activate([
-      textViewPlaceholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 11),
-      textViewPlaceholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: textView.trailingAnchor, constant: -11),
-      textViewPlaceholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 8)
+      textViewPlaceholderLabel.leadingAnchor.constraint(
+        equalTo: textView.leadingAnchor, constant: 11),
+      textViewPlaceholderLabel.trailingAnchor.constraint(
+        lessThanOrEqualTo: textView.trailingAnchor, constant: -11),
+      textViewPlaceholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 8),
     ])
 
     textView.translatesAutoresizingMaskIntoConstraints = false
@@ -98,7 +100,7 @@ final class NativeTextViewPlatformView: NSObject, FlutterPlatformView, UITextVie
       textView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
       textView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
       textView.topAnchor.constraint(equalTo: rootView.topAnchor),
-      textView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      textView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
     ])
   }
 

@@ -1,11 +1,13 @@
-import 'dart:math' as math;
+import "dart:math" as math;
 
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 enum DesktopPopoverPlacement { rightTop, belowEnd }
 
-typedef DesktopPopoverBuilder =
-    Widget Function(BuildContext context, VoidCallback close);
+typedef DesktopPopoverBuilder = Widget Function(
+  BuildContext context,
+  VoidCallback close,
+);
 
 bool isDesktopLayout(BuildContext context) {
   return MediaQuery.sizeOf(context).width >= 600;
@@ -42,9 +44,8 @@ void showDesktopPopover({
   final left = rawLeft
       .clamp(16.0, math.max(16.0, screenSize.width - width - 24))
       .toDouble();
-  final top = rawTop
-      .clamp(16.0, math.max(16.0, screenSize.height - 160))
-      .toDouble();
+  final top =
+      rawTop.clamp(16.0, math.max(16.0, screenSize.height - 160)).toDouble();
 
   OverlayEntry? entry;
   void close() {

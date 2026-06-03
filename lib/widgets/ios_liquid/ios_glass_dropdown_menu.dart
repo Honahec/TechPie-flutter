@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:techpie/utils/platform.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:techpie/utils/platform.dart";
 
 class IosGlassDropdownMenuItem {
   const IosGlassDropdownMenuItem({
@@ -62,7 +62,7 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
       return _buildFallback();
     }
 
-    final signature = widget.items.map(_itemSignature).join(';');
+    final signature = widget.items.map(_itemSignature).join(";");
 
     return SizedBox(
       width: widget.width,
@@ -74,9 +74,9 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
         viewType: _viewType,
         layoutDirection: Directionality.of(context),
         creationParams: <String, Object?>{
-          'sfSymbol': widget.sfSymbol,
-          'label': widget.label,
-          'items': [for (final item in widget.items) _encodeItem(item)],
+          "sfSymbol": widget.sfSymbol,
+          "label": widget.label,
+          "items": [for (final item in widget.items) _encodeItem(item)],
         },
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
@@ -116,14 +116,14 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel('$_channelPrefix/$viewId');
+    final channel = MethodChannel("$_channelPrefix/$viewId");
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != 'onSelect') return null;
+      if (call.method != "onSelect") return null;
 
       final arguments = call.arguments;
-      final value = arguments is Map ? arguments['value'] : null;
+      final value = arguments is Map ? arguments["value"] : null;
 
       if (value is String && value.isNotEmpty) {
         widget.onSelected(value);
@@ -135,22 +135,22 @@ class _IosGlassDropdownMenuState extends State<IosGlassDropdownMenu> {
 
   Map<String, Object?> _encodeItem(IosGlassDropdownMenuItem item) {
     return <String, Object?>{
-      'value': item.value,
-      'title': item.label,
-      'checked': item.checked,
-      'destructive': item.destructive,
+      "value": item.value,
+      "title": item.label,
+      "checked": item.checked,
+      "destructive": item.destructive,
       if (item.children != null)
-        'children': [for (final child in item.children!) _encodeItem(child)],
+        "children": [for (final child in item.children!) _encodeItem(child)],
     };
   }
 
   String _itemSignature(IosGlassDropdownMenuItem item) {
     final childrenSignature = item.children == null
-        ? ''
-        : item.children!.map(_itemSignature).join(',');
-    return '${item.value}|${item.label}|${item.checked}|${item.destructive}|$childrenSignature';
+        ? ""
+        : item.children!.map(_itemSignature).join(",");
+    return "${item.value}|${item.label}|${item.checked}|${item.destructive}|$childrenSignature";
   }
 }
 
-const _viewType = 'techpie/native_glass_dropdown_menu';
-const _channelPrefix = 'techpie/native_glass_dropdown_menu';
+const _viewType = "techpie/native_glass_dropdown_menu";
+const _channelPrefix = "techpie/native_glass_dropdown_menu";

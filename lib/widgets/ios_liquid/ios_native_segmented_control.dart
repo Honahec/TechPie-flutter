@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import "dart:async";
 
-import '../../utils/platform.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+
+import "../../utils/platform.dart";
 
 class IosNativeSegmentedControl extends StatefulWidget {
   const IosNativeSegmentedControl({
@@ -29,7 +31,7 @@ class _IosNativeSegmentedControlState extends State<IosNativeSegmentedControl> {
     if (oldWidget.value != widget.value ||
         oldWidget.segments.length != widget.segments.length ||
         !_sameSegments(oldWidget.segments, widget.segments)) {
-      _sendConfigurationUpdate();
+      unawaited(_sendConfigurationUpdate());
     }
   }
 
@@ -71,19 +73,19 @@ class _IosNativeSegmentedControlState extends State<IosNativeSegmentedControl> {
   }
 
   Map<String, Object?> get _configuration => <String, Object?>{
-        'value': widget.value,
-        'segments': widget.segments,
+        "value": widget.value,
+        "segments": widget.segments,
       };
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel('$_channelPrefix/$viewId');
+    final channel = MethodChannel("$_channelPrefix/$viewId");
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != 'onChanged') return null;
+      if (call.method != "onChanged") return null;
 
       final arguments = call.arguments as Map<Object?, Object?>?;
-      final value = arguments?['value'];
+      final value = arguments?["value"];
       if (value is int) widget.onChanged(value);
       return null;
     });
@@ -94,7 +96,7 @@ class _IosNativeSegmentedControlState extends State<IosNativeSegmentedControl> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>('updateConfiguration', _configuration);
+      await channel.invokeMethod<void>("updateConfiguration", _configuration);
     } on PlatformException {
       // Platform view may be tearing down.
     } on MissingPluginException {
@@ -111,5 +113,5 @@ class _IosNativeSegmentedControlState extends State<IosNativeSegmentedControl> {
   }
 }
 
-const _viewType = 'techpie/native_segmented_control';
-const _channelPrefix = 'techpie/native_segmented_control';
+const _viewType = "techpie/native_segmented_control";
+const _channelPrefix = "techpie/native_segmented_control";

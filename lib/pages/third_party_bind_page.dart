@@ -1,17 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import "dart:async";
 
-import '../models/third_party_account.dart';
-import '../services/service_provider.dart';
-import '../services/third_party_auth_service.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_switch.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import '../widgets/ios_liquid/ios_native_text_field_group.dart';
-import '../widgets/ios_liquid/ios_native_text_view.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+
+import "../models/third_party_account.dart";
+import "../services/service_provider.dart";
+import "../services/third_party_auth_service.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_alert_dialog.dart";
+import "../widgets/adaptive_feedback.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_glass_switch.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "../widgets/ios_liquid/ios_native_text_field_group.dart";
+import "../widgets/ios_liquid/ios_native_text_view.dart";
 
 class ThirdPartyBindPage extends StatefulWidget {
   final ThirdPartyPlatform platform;
@@ -27,7 +29,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
   final _accountCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _hydroOriginCtrl = TextEditingController(
-    text: 'https://acm.shanghaitech.edu.cn',
+    text: "https://acm.shanghaitech.edu.cn",
   );
   final _hydroDomainsCtrl = TextEditingController();
   bool _busy = false;
@@ -41,7 +43,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
   Future<void> _dismissKeyboard() async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (isIos()) {
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+      await SystemChannels.textInput.invokeMethod<void>("TextInput.hide");
     }
   }
 
@@ -66,15 +68,15 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
     final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
-      title: '开启自动更新 Token',
-      message: '打开后，APP 将于本地加密存储你的账号和密码信息,'
-          '用于在过期前 48 小时内自动触发 Token 更新。\n\n'
-          '凭据仅存放在本设备的 Keychain / EncryptedSharedPreferences 中，'
-          '不会上传到服务器。',
+      title: "开启自动更新 Token",
+      message: "打开后，APP 将于本地加密存储你的账号和密码信息,"
+          "用于在过期前 48 小时内自动触发 Token 更新。\n\n"
+          "凭据仅存放在本设备的 Keychain / EncryptedSharedPreferences 中，"
+          "不会上传到服务器。",
       actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(label: "取消", value: false),
         AdaptiveAlertAction<bool>(
-          label: '我知道了,开启',
+          label: "我知道了,开启",
           value: true,
           isDefault: true,
         ),
@@ -100,7 +102,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
     List<String>? domains;
     if (_isHydro) {
       domains = _hydroDomainsCtrl.text
-          .split(RegExp(r'[\s,]+'))
+          .split(RegExp(r"[\s,]+"))
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
@@ -122,7 +124,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
       if (!isIos()) {
         showAdaptiveFeedback(
           context: context,
-          message: '${widget.platform.label} 绑定成功',
+          message: "${widget.platform.label} 绑定成功",
           style: AdaptiveFeedbackStyle.success,
         );
       }
@@ -163,14 +165,14 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
     if (_accountCtrl.text.trim().isEmpty) {
       message = '请填写${_isGradescope ? '邮箱' : '用户名'}';
     } else if (_passwordCtrl.text.isEmpty) {
-      message = '请填写密码';
+      message = "请填写密码";
     } else if (_isHydro && _hydroOriginCtrl.text.trim().isEmpty) {
-      message = '请填写 Hydro 站点 origin';
+      message = "请填写 Hydro 站点 origin";
     } else if (_isHydro) {
       final domains = _hydroDomainsCtrl.text
-          .split(RegExp(r'[\s,]+'))
+          .split(RegExp(r"[\s,]+"))
           .where((value) => value.trim().isNotEmpty);
-      if (domains.isEmpty) message = '至少填写一个课程 domain';
+      if (domains.isEmpty) message = "至少填写一个课程 domain";
     }
 
     setState(() => _inlineError = message);
@@ -190,7 +192,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: !useLegacyIosChrome,
-      appBar: BlurredAppBar(title: Text('Bind ${widget.platform.label}')),
+      appBar: BlurredAppBar(title: Text("Bind ${widget.platform.label}")),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -212,10 +214,10 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                   ? TextInputType.emailAddress
                   : TextInputType.text,
               decoration: InputDecoration(
-                labelText: _isGradescope ? '邮箱' : '用户名',
+                labelText: _isGradescope ? "邮箱" : "用户名",
                 border: const OutlineInputBorder(),
               ),
-              validator: (v) => (v == null || v.trim().isEmpty) ? '必填' : null,
+              validator: (v) => (v == null || v.trim().isEmpty) ? "必填" : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -223,7 +225,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               autofillHints: const [AutofillHints.password],
               obscureText: _obscure,
               decoration: InputDecoration(
-                labelText: '密码',
+                labelText: "密码",
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -232,35 +234,35 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? '必填' : null,
+              validator: (v) => (v == null || v.isEmpty) ? "必填" : null,
             ),
             if (_isHydro) ...[
               const SizedBox(height: 12),
               TextFormField(
                 controller: _hydroOriginCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Hydro 站点 origin',
-                  helperText: '默认 https://acm.shanghaitech.edu.cn',
-                  border: const OutlineInputBorder(),
+                decoration: const InputDecoration(
+                  labelText: "Hydro 站点 origin",
+                  helperText: "默认 https://acm.shanghaitech.edu.cn",
+                  border: OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty) ? '必填' : null,
+                validator: (v) => (v == null || v.trim().isEmpty) ? "必填" : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _hydroDomainsCtrl,
                 minLines: 2,
                 maxLines: 6,
-                decoration: InputDecoration(
-                  labelText: '课程 domain (每行一个,或用逗号分隔)',
-                  helperText: '例: SI100B_2025_Autumn',
-                  border: const OutlineInputBorder(),
+                decoration: const InputDecoration(
+                  labelText: "课程 domain (每行一个,或用逗号分隔)",
+                  helperText: "例: SI100B_2025_Autumn",
+                  border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
                 validator: (v) {
-                  final list = (v ?? '')
-                      .split(RegExp(r'[\s,]+'))
+                  final list = (v ?? "")
+                      .split(RegExp(r"[\s,]+"))
                       .where((e) => e.trim().isNotEmpty);
-                  return list.isEmpty ? '至少填一个 domain' : null;
+                  return list.isEmpty ? "至少填一个 domain" : null;
                 },
               ),
             ],
@@ -269,39 +271,39 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               MergeSemantics(
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('自动更新 Token'),
-                  subtitle: const Text('过期前 48 小时内自动重登,免去手动重绑'),
+                  title: const Text("自动更新 Token"),
+                  subtitle: const Text("过期前 48 小时内自动重登,免去手动重绑"),
                   trailing: IosGlassSwitch(
                     value: _autoRenew,
-                    onChanged: (v) => _onAutoRenewChanged(v),
+                    onChanged: (v) => unawaited(_onAutoRenewChanged(v)),
                   ),
-                  onTap: () => _onAutoRenewChanged(!_autoRenew),
+                  onTap: () => unawaited(_onAutoRenewChanged(!_autoRenew)),
                 ),
               )
             else
               CheckboxListTile(
                 value: _autoRenew,
-                onChanged: (v) => _onAutoRenewChanged(v ?? false),
-                title: const Text('自动更新 Token'),
-                subtitle: const Text('过期前 48 小时内自动重登,免去手动重绑'),
+                onChanged: (v) => unawaited(_onAutoRenewChanged(v ?? false)),
+                title: const Text("自动更新 Token"),
+                subtitle: const Text("过期前 48 小时内自动重登,免去手动重绑"),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: _busy ? null : _submit,
+              onPressed: _busy ? null : () => unawaited(_submit()),
               child: _busy
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('绑定'),
+                  : const Text("绑定"),
             ),
             const SizedBox(height: 12),
             Text(
-              '凭据将通过 HTTPS 发送到 techpie 后端,后端代为登录上游平台并返回 token。'
-              'token 与原始 payload 仅在本设备加密保存。',
+              "凭据将通过 HTTPS 发送到 techpie 后端,后端代为登录上游平台并返回 token。"
+              "token 与原始 payload 仅在本设备加密保存。",
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -317,19 +319,19 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: IosNativeNavigationBar(
-        title: 'Bind ${widget.platform.label}',
+        title: "Bind ${widget.platform.label}",
         leadingItems: [
           if (Navigator.canPop(context))
             const IosNativeNavigationBarItem(
-              id: 'back',
-              title: '返回',
-              sfSymbol: 'chevron.left',
-              accessibilityLabel: '返回',
+              id: "back",
+              title: "返回",
+              sfSymbol: "chevron.left",
+              accessibilityLabel: "返回",
             ),
         ],
         onItemPressed: (id) {
-          if (id == 'back') {
-            Navigator.maybePop(context);
+          if (id == "back") {
+            unawaited(Navigator.maybePop(context));
           }
         },
       ),
@@ -346,7 +348,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
             IosNativeTextFieldGroup(
               items: [
                 IosNativeTextFieldGroupItem(
-                  placeholder: _isGradescope ? '邮箱' : '用户名',
+                  placeholder: _isGradescope ? "邮箱" : "用户名",
                   controller: _accountCtrl,
                   keyboardType: _isGradescope
                       ? TextInputType.emailAddress
@@ -354,13 +356,13 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
                   textInputAction: TextInputAction.next,
                 ),
                 IosNativeTextFieldGroupItem(
-                  placeholder: '密码',
+                  placeholder: "密码",
                   controller: _passwordCtrl,
                   obscureText: _obscure,
                   textInputAction:
                       _isHydro ? TextInputAction.next : TextInputAction.done,
                   onSubmitted: (_) {
-                    if (!_isHydro) _submit();
+                    if (!_isHydro) unawaited(_submit());
                   },
                 ),
               ],
@@ -370,7 +372,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               IosNativeTextFieldGroup(
                 items: [
                   IosNativeTextFieldGroupItem(
-                    placeholder: 'Origin',
+                    placeholder: "Origin",
                     controller: _hydroOriginCtrl,
                     keyboardType: TextInputType.url,
                     textInputAction: TextInputAction.next,
@@ -379,14 +381,14 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                '默认 https://acm.shanghaitech.edu.cn',
+                "默认 https://acm.shanghaitech.edu.cn",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: secondaryLabel,
                 ),
               ),
               const SizedBox(height: 10),
               IosNativeTextView(
-                placeholder: 'Domain',
+                placeholder: "Domain",
                 controller: _hydroDomainsCtrl,
                 minLines: 2,
                 maxLines: 6,
@@ -394,7 +396,7 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                '每行一个,或用逗号分隔\n例: SI100B_2025_Autumn',
+                "每行一个,或用逗号分隔\n例: SI100B_2025_Autumn",
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: secondaryLabel,
                 ),
@@ -404,33 +406,33 @@ class _ThirdPartyBindPageState extends State<ThirdPartyBindPage> {
             MergeSemantics(
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('自动更新 Token'),
+                title: const Text("自动更新 Token"),
                 subtitle: Text(
-                  '过期前 48 小时内自动重登,免去手动重绑',
+                  "过期前 48 小时内自动重登,免去手动重绑",
                   style: TextStyle(color: secondaryLabel),
                 ),
                 trailing: IosGlassSwitch(
                   value: _autoRenew,
-                  onChanged: (value) => _onAutoRenewChanged(value),
+                  onChanged: (value) => unawaited(_onAutoRenewChanged(value)),
                 ),
-                onTap: () => _onAutoRenewChanged(!_autoRenew),
+                onTap: () => unawaited(_onAutoRenewChanged(!_autoRenew)),
               ),
             ),
             const SizedBox(height: 18),
             FilledButton(
-              onPressed: _busy ? null : _submit,
+              onPressed: _busy ? null : () => unawaited(_submit()),
               child: _busy
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('绑定'),
+                  : const Text("绑定"),
             ),
             const SizedBox(height: 12),
             Text(
-              '凭据将通过 HTTPS 发送到 techpie 后端,后端代为登录上游平台并返回 token。'
-              'token 与原始 payload 仅在本设备加密保存。',
+              "凭据将通过 HTTPS 发送到 techpie 后端,后端代为登录上游平台并返回 token。"
+              "token 与原始 payload 仅在本设备加密保存。",
               style: theme.textTheme.bodySmall?.copyWith(color: secondaryLabel),
             ),
           ],

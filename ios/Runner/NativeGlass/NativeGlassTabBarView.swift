@@ -129,7 +129,7 @@ final class NativeGlassTabBarPlatformView: NSObject, FlutterPlatformView, UITabB
           label: "Settings",
           sfSymbol: "gearshape",
           selectedSfSymbol: "gearshape.fill"
-        )
+        ),
       ]
     }
 
@@ -138,7 +138,7 @@ final class NativeGlassTabBarPlatformView: NSObject, FlutterPlatformView, UITabB
 
   private func configureTabBar() {
     tabBar.delegate = self
-    
+
     tabBar.itemPositioning = .fill
 
     tabBar.backgroundColor = .clear

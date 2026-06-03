@@ -79,7 +79,7 @@ final class NativeSegmentedControlPlatformView: NSObject, FlutterPlatformView {
     NSLayoutConstraint.activate([
       control.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
       control.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-      control.centerYAnchor.constraint(equalTo: rootView.centerYAnchor)
+      control.centerYAnchor.constraint(equalTo: rootView.centerYAnchor),
     ])
   }
 

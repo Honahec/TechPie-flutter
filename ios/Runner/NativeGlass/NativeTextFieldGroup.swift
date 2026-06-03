@@ -94,7 +94,7 @@ final class NativeTextFieldGroupPlatformView: NSObject, FlutterPlatformView, UIT
       stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
       stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
       stackView.topAnchor.constraint(equalTo: containerView.topAnchor),
-      stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+      stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
     ])
   }
 
@@ -132,7 +132,7 @@ final class NativeTextFieldGroupPlatformView: NSObject, FlutterPlatformView, UIT
           separator.leadingAnchor.constraint(equalTo: separatorRow.leadingAnchor, constant: 16),
           separator.trailingAnchor.constraint(equalTo: separatorRow.trailingAnchor),
           separator.topAnchor.constraint(equalTo: separatorRow.topAnchor),
-          separator.bottomAnchor.constraint(equalTo: separatorRow.bottomAnchor)
+          separator.bottomAnchor.constraint(equalTo: separatorRow.bottomAnchor),
         ])
         separators.append(separator)
         stackView.addArrangedSubview(separatorRow)
@@ -158,7 +158,7 @@ final class NativeTextFieldGroupPlatformView: NSObject, FlutterPlatformView, UIT
         field.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -16),
         field.topAnchor.constraint(equalTo: row.topAnchor),
         field.bottomAnchor.constraint(equalTo: row.bottomAnchor),
-        row.heightAnchor.constraint(equalToConstant: 56)
+        row.heightAnchor.constraint(equalToConstant: 56),
       ])
 
       fields.append(field)

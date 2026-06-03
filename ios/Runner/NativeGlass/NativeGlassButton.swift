@@ -93,7 +93,7 @@ final class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
       button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
       button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
       button.topAnchor.constraint(equalTo: rootView.topAnchor),
-      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
     ])
   }
 

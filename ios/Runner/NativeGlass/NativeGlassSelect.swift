@@ -109,7 +109,7 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
         button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
         button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
         button.topAnchor.constraint(equalTo: rootView.topAnchor),
-        button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+        button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
       ])
       return
     }
@@ -120,7 +120,7 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
       button.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
       button.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
       button.topAnchor.constraint(equalTo: rootView.topAnchor),
-      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      button.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
     ])
   }
 
@@ -259,7 +259,8 @@ final class NativeGlassSelectPlatformView: NSObject, FlutterPlatformView {
 
   private func nearestViewController() -> UIViewController? {
     if let nextResponder = sequence(first: rootView.next, next: { $0?.next })
-      .first(where: { $0 is UIViewController }) as? UIViewController {
+      .first(where: { $0 is UIViewController }) as? UIViewController
+    {
       return nextResponder
     }
 

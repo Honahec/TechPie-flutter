@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../utils/platform.dart';
-
-import '../services/debug_logger.dart';
-import '../services/service_provider.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_confirmation_button.dart';
+import "../services/debug_logger.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_glass_confirmation_button.dart";
 
 class DebugLogPage extends StatelessWidget {
   const DebugLogPage({super.key});
@@ -21,17 +20,17 @@ class DebugLogPage extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: !useLegacyIosChrome,
       appBar: BlurredAppBar(
-        title: const Text('Debug Logs'),
+        title: const Text("Debug Logs"),
         actions: [
           if (isIos())
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 8),
               child: Center(
                 child: IosGlassConfirmationButton(
-                  confirmTitle: '清空所有日志？',
-                  confirmLabel: '清空',
+                  confirmTitle: "清空所有日志？",
+                  confirmLabel: "清空",
                   icon: Icons.delete_outline,
-                  sfSymbol: 'trash',
+                  sfSymbol: "trash",
                   destructive: true,
                   onConfirmed: logger.clear,
                 ),
@@ -41,7 +40,7 @@ class DebugLogPage extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: logger.clear,
-              tooltip: 'Clear logs',
+              tooltip: "Clear logs",
             ),
         ],
       ),
@@ -52,7 +51,7 @@ class DebugLogPage extends StatelessWidget {
           if (entries.isEmpty) {
             return Padding(
               padding: EdgeInsets.only(top: topPad),
-              child: const Center(child: Text('No logs yet')),
+              child: const Center(child: Text("No logs yet")),
             );
           }
           return ListView.builder(
@@ -106,7 +105,7 @@ class _LogTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '${entry.statusCode}',
+                "${entry.statusCode}",
                 style: theme.textTheme.labelSmall?.copyWith(color: statusColor),
               ),
             ),
@@ -123,11 +122,11 @@ class _LogTile extends StatelessWidget {
       ),
       children: [
         if (entry.requestBody != null)
-          _DetailSection(title: 'Request', content: entry.requestBody!),
+          _DetailSection(title: "Request", content: entry.requestBody!),
         if (entry.responseBody != null)
-          _DetailSection(title: 'Response', content: entry.responseBody!),
+          _DetailSection(title: "Response", content: entry.responseBody!),
         if (entry.error != null)
-          _DetailSection(title: 'Error', content: entry.error!),
+          _DetailSection(title: "Error", content: entry.error!),
       ],
     );
   }
@@ -162,7 +161,7 @@ class _DetailSection extends StatelessWidget {
             child: SelectableText(
               content,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
+                fontFamily: "monospace",
               ),
             ),
           ),

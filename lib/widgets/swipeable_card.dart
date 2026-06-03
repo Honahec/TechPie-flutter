@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class SwipeAction {
   final IconData icon;
@@ -317,8 +317,7 @@ class _SwipeReveal extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Align(
-          alignment:
-              alignToEnd ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: alignToEnd ? Alignment.centerRight : Alignment.centerLeft,
           child: Opacity(
             opacity: opacity,
             child: Row(

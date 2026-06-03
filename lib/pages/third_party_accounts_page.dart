@@ -1,15 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import "dart:async";
 
-import '../models/third_party_account.dart';
-import '../services/service_provider.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_glass_confirmation_button.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import 'login_page.dart';
-import 'third_party_bind_page.dart';
-import '../utils/platform.dart';
+import "package:flutter/material.dart";
+import "package:intl/intl.dart";
+
+import "../models/third_party_account.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_alert_dialog.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_glass_confirmation_button.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "login_page.dart";
+import "third_party_bind_page.dart";
 
 class ThirdPartyAccountsPage extends StatelessWidget {
   const ThirdPartyAccountsPage({super.key});
@@ -30,23 +32,23 @@ class ThirdPartyAccountsPage extends StatelessWidget {
       extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
       appBar: useIosChrome
           ? IosNativeNavigationBar(
-              title: 'Linked Accounts',
+              title: "Linked Accounts",
               leadingItems: [
                 if (Navigator.canPop(context))
                   const IosNativeNavigationBarItem(
-                    id: 'back',
-                    title: '返回',
-                    sfSymbol: 'chevron.left',
-                    accessibilityLabel: '返回',
+                    id: "back",
+                    title: "返回",
+                    sfSymbol: "chevron.left",
+                    accessibilityLabel: "返回",
                   ),
               ],
               onItemPressed: (id) {
-                if (id == 'back') {
-                  Navigator.maybePop(context);
+                if (id == "back") {
+                  unawaited(Navigator.maybePop(context));
                 }
               },
             )
-          : const BlurredAppBar(title: Text('Linked Accounts')),
+          : const BlurredAppBar(title: Text("Linked Accounts")),
       body: ListenableBuilder(
         listenable: Listenable.merge([tpAuth, auth]),
         builder: (context, _) {
@@ -69,8 +71,8 @@ class ThirdPartyAccountsPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  '绑定信息加密存储于设备本地 Keychain / EncryptedSharedPreferences,'
-                  '不会上传到服务器。',
+                  "绑定信息加密存储于设备本地 Keychain / EncryptedSharedPreferences,"
+                  "不会上传到服务器。",
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -93,17 +95,17 @@ class _BlackboardTile extends StatelessWidget {
 
     return ListTile(
       leading: const Icon(Icons.school_outlined),
-      title: const Text('Blackboard'),
+      title: const Text("Blackboard"),
       subtitle: Text(
         loggedIn
-            ? '通过主账号自动启用 (CASTGC) · ${auth.session!.studentId.isNotEmpty ? auth.session!.studentId : auth.session!.userId}'
-            : '登录主账号后自动启用',
+            ? "通过主账号自动启用 (CASTGC) · ${auth.session!.studentId.isNotEmpty ? auth.session!.studentId : auth.session!.userId}"
+            : "登录主账号后自动启用",
         style: theme.textTheme.bodySmall,
       ),
       trailing: loggedIn
           ? Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20)
           : const Icon(Icons.chevron_right),
-      onTap: loggedIn ? null : () => presentLoginPage(context),
+      onTap: loggedIn ? null : () => unawaited(presentLoginPage(context)),
     );
   }
 }
@@ -128,12 +130,14 @@ class _ThirdPartyTile extends StatelessWidget {
       return ListTile(
         leading: Icon(_icon),
         title: Text(platform.label),
-        subtitle: const Text('未绑定'),
+        subtitle: const Text("未绑定"),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ThirdPartyBindPage(platform: platform),
+        onTap: () => unawaited(
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => ThirdPartyBindPage(platform: platform),
+            ),
           ),
         ),
       );
@@ -142,42 +146,42 @@ class _ThirdPartyTile extends StatelessWidget {
     final subtitleParts = <String>[
       acc.displayName,
       if (acc.expireAt != null) _expireLabel(acc.expireAt!),
-      if (acc.autoRenew) '自动更新 Token 已开启',
+      if (acc.autoRenew) "自动更新 Token 已开启",
     ];
     if (platform == ThirdPartyPlatform.hydro) {
-      final origin = acc.hydroOrigin ?? '';
-      final domains = (acc.hydroDomains ?? const []).join(', ');
-      subtitleParts.add('$origin · $domains');
+      final origin = acc.hydroOrigin ?? "";
+      final domains = (acc.hydroDomains ?? const []).join(", ");
+      subtitleParts.add("$origin · $domains");
     }
 
     return ListTile(
       leading: Icon(_icon, color: theme.colorScheme.primary),
       title: Text(platform.label),
-      subtitle: Text(subtitleParts.join('\n')),
+      subtitle: Text(subtitleParts.join("\n")),
       isThreeLine: subtitleParts.length > 1,
       trailing: isIos()
           ? IosGlassConfirmationButton(
-              label: 'Unbind',
-              confirmTitle: '解绑 ${platform.label}?',
-              confirmLabel: '解绑',
+              label: "Unbind",
+              confirmTitle: "解绑 ${platform.label}?",
+              confirmLabel: "解绑",
               destructive: true,
-              onConfirmed: () => _unbind(context, platform),
+              onConfirmed: () => unawaited(_unbind(context, platform)),
             )
           : TextButton.icon(
               icon: const Icon(Icons.link_off, size: 18),
-              label: const Text('Unbind'),
-              onPressed: () => _confirmUnbind(context, platform),
+              label: const Text("Unbind"),
+              onPressed: () => unawaited(_confirmUnbind(context, platform)),
             ),
     );
   }
 
   String _expireLabel(DateTime at) {
     final now = DateTime.now();
-    if (at.isBefore(now)) return '已过期';
+    if (at.isBefore(now)) return "已过期";
     final diff = at.difference(now);
-    if (diff.inDays >= 1) return '过期于 ${DateFormat('yyyy-MM-dd').format(at)}';
-    if (diff.inHours >= 1) return '${diff.inHours}h 后过期';
-    return '${diff.inMinutes}m 后过期';
+    if (diff.inDays >= 1) return "过期于 ${DateFormat("yyyy-MM-dd").format(at)}";
+    if (diff.inHours >= 1) return "${diff.inHours}h 后过期";
+    return "${diff.inMinutes}m 后过期";
   }
 
   Future<void> _confirmUnbind(
@@ -187,12 +191,12 @@ class _ThirdPartyTile extends StatelessWidget {
     final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
     final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
-      title: '解绑 ${platform.label}?',
-      message: '将清除本地保存的 token 与账号信息,不会注销远端账号。',
+      title: "解绑 ${platform.label}?",
+      message: "将清除本地保存的 token 与账号信息,不会注销远端账号。",
       actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(label: "取消", value: false),
         AdaptiveAlertAction<bool>(
-          label: '解绑',
+          label: "解绑",
           value: true,
           isDestructive: true,
         ),

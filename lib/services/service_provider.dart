@@ -1,13 +1,13 @@
-import 'package:flutter/widgets.dart';
+import "package:flutter/widgets.dart";
 
-import 'assignment_service.dart';
-import 'auth_service.dart';
-import 'debug_logger.dart';
-import 'oa_gym_service.dart';
-import 'schedule_service.dart';
-import 'storage_service.dart';
-import 'theme_service.dart';
-import 'third_party_auth_service.dart';
+import "assignment_service.dart";
+import "auth_service.dart";
+import "debug_logger.dart";
+import "oa_gym_service.dart";
+import "schedule_service.dart";
+import "storage_service.dart";
+import "theme_service.dart";
+import "third_party_auth_service.dart";
 
 class ServiceProvider extends InheritedWidget {
   final AuthService authService;
@@ -35,7 +35,7 @@ class ServiceProvider extends InheritedWidget {
   static ServiceProvider of(BuildContext context) {
     final result =
         context.dependOnInheritedWidgetOfExactType<ServiceProvider>();
-    assert(result != null, 'No ServiceProvider found in context');
+    assert(result != null, "No ServiceProvider found in context");
     return result!;
   }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class Course {
   final String name;
@@ -48,16 +48,16 @@ class Period {
     required this.endTime,
   });
 
-  String get label => '$startTime\n$endTime';
+  String get label => "$startTime\n$endTime";
 }
 
 const List<Period> defaultPeriods = [
-  Period(number: 1, startTime: '08:00', endTime: '08:45'),
-  Period(number: 2, startTime: '08:55', endTime: '09:40'),
-  Period(number: 3, startTime: '09:50', endTime: '10:35'),
-  Period(number: 4, startTime: '10:45', endTime: '11:30'),
-  Period(number: 5, startTime: '14:00', endTime: '14:45'),
-  Period(number: 6, startTime: '14:55', endTime: '15:40'),
+  Period(number: 1, startTime: "08:00", endTime: "08:45"),
+  Period(number: 2, startTime: "08:55", endTime: "09:40"),
+  Period(number: 3, startTime: "09:50", endTime: "10:35"),
+  Period(number: 4, startTime: "10:45", endTime: "11:30"),
+  Period(number: 5, startTime: "14:00", endTime: "14:45"),
+  Period(number: 6, startTime: "14:55", endTime: "15:40"),
 ];
 
 extension CourseColorScheme on CourseColor {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 abstract final class DesktopSidebarTokens {
   static const double collapsedWidth = 88;

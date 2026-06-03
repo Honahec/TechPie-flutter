@@ -1,13 +1,13 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
 
-import 'storage_service.dart';
+import "storage_service.dart";
 
 enum AppThemeMode {
-  system('System', Icons.brightness_auto_outlined),
-  light('Light', Icons.light_mode_outlined),
-  dark('Dark', Icons.dark_mode_outlined),
-  amoled('Dark AMOLED', Icons.brightness_2_outlined);
+  system("System", Icons.brightness_auto_outlined),
+  light("Light", Icons.light_mode_outlined),
+  dark("Dark", Icons.dark_mode_outlined),
+  amoled("Dark AMOLED", Icons.brightness_2_outlined);
 
   const AppThemeMode(this.label, this.icon);
   final String label;
@@ -15,8 +15,8 @@ enum AppThemeMode {
 }
 
 enum AppColorScheme {
-  system('System', Icons.colorize_outlined),
-  techRed('TechRed', Icons.palette_outlined);
+  system("System", Icons.colorize_outlined),
+  techRed("TechRed", Icons.palette_outlined);
 
   const AppColorScheme(this.label, this.icon);
   final String label;
@@ -47,14 +47,14 @@ class ThemeService extends ChangeNotifier {
   final StorageService _storage;
 
   ThemeService(this._storage)
-    : _mode = AppThemeMode.values.firstWhere(
-        (m) => m.name == _storage.themeMode,
-        orElse: () => AppThemeMode.system,
-      ),
-      _colorScheme = AppColorScheme.values.firstWhere(
-        (s) => s.name == _storage.colorScheme,
-        orElse: () => AppColorScheme.system,
-      );
+      : _mode = AppThemeMode.values.firstWhere(
+          (m) => m.name == _storage.themeMode,
+          orElse: () => AppThemeMode.system,
+        ),
+        _colorScheme = AppColorScheme.values.firstWhere(
+          (s) => s.name == _storage.colorScheme,
+          orElse: () => AppColorScheme.system,
+        );
 
   AppThemeMode _mode;
   AppThemeMode get mode => _mode;
@@ -106,9 +106,8 @@ class ThemeService extends ChangeNotifier {
 
   ColorScheme _resolveScheme(Brightness brightness) {
     if (_colorScheme == AppColorScheme.system) {
-      final system = brightness == Brightness.light
-          ? _systemLight
-          : _systemDark;
+      final system =
+          brightness == Brightness.light ? _systemLight : _systemDark;
       if (system != null) return system;
     }
     return ColorScheme.fromSeed(
@@ -193,41 +192,36 @@ class ThemeService extends ChangeNotifier {
     final surface = amoled
         ? Colors.black
         : isDark
-        ? _iosDarkSurface
-        : _iosLightSurface;
+            ? _iosDarkSurface
+            : _iosLightSurface;
     final surfaceHigh = amoled
         ? const Color(0xFF101012)
         : isDark
-        ? _iosDarkSurfaceHigh
-        : _iosLightSurfaceHigh;
+            ? _iosDarkSurfaceHigh
+            : _iosLightSurfaceHigh;
     final surfaceHighest = amoled
         ? const Color(0xFF1C1C1E)
         : isDark
-        ? _iosDarkSurfaceHighest
-        : _iosLightSurfaceHighest;
+            ? _iosDarkSurfaceHighest
+            : _iosLightSurfaceHighest;
     final scheme = base.colorScheme.copyWith(
       primary: isDark ? _iosDarkAccent : _iosLightAccent,
       onPrimary: Colors.white,
-      primaryContainer: isDark
-          ? _iosDarkPrimaryContainer
-          : _iosLightPrimaryContainer,
-      onPrimaryContainer: isDark
-          ? const Color(0xFFD7E8FF)
-          : const Color(0xFF001B3D),
+      primaryContainer:
+          isDark ? _iosDarkPrimaryContainer : _iosLightPrimaryContainer,
+      onPrimaryContainer:
+          isDark ? const Color(0xFFD7E8FF) : const Color(0xFF001B3D),
       secondary: isDark ? _iosDarkAccent : _iosLightAccent,
       onSecondary: Colors.white,
-      secondaryContainer: isDark
-          ? _iosDarkSecondaryContainer
-          : _iosLightSecondaryContainer,
+      secondaryContainer:
+          isDark ? _iosDarkSecondaryContainer : _iosLightSecondaryContainer,
       onSecondaryContainer: isDark ? Colors.white : Colors.black,
       tertiary: isDark ? _iosDarkTertiary : _iosLightTertiary,
       onTertiary: Colors.white,
-      tertiaryContainer: isDark
-          ? _iosDarkTertiaryContainer
-          : _iosLightTertiaryContainer,
-      onTertiaryContainer: isDark
-          ? const Color(0xFFD9F7E1)
-          : const Color(0xFF11361D),
+      tertiaryContainer:
+          isDark ? _iosDarkTertiaryContainer : _iosLightTertiaryContainer,
+      onTertiaryContainer:
+          isDark ? const Color(0xFFD9F7E1) : const Color(0xFF11361D),
       surface: background,
       onSurface: isDark ? Colors.white : Colors.black,
       surfaceDim: surface,
@@ -237,13 +231,11 @@ class ThemeService extends ChangeNotifier {
       surfaceContainer: surface,
       surfaceContainerHigh: surfaceHigh,
       surfaceContainerHighest: surfaceHighest,
-      onSurfaceVariant: isDark
-          ? const Color(0xFFAEAEB2)
-          : const Color(0xFF6C6C70),
+      onSurfaceVariant:
+          isDark ? const Color(0xFFAEAEB2) : const Color(0xFF6C6C70),
       outline: isDark ? const Color(0x3DEBEBF5) : const Color(0x4C3C3C43),
-      outlineVariant: isDark
-          ? const Color(0x24EBEBF5)
-          : const Color(0x1F3C3C43),
+      outlineVariant:
+          isDark ? const Color(0x24EBEBF5) : const Color(0x1F3C3C43),
       surfaceTint: Colors.transparent,
     );
 

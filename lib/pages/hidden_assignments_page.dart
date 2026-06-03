@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+import "dart:async";
 
-import '../models/assignment.dart';
-import '../models/assignment_overrides.dart';
-import '../services/assignment_service.dart';
-import '../services/service_provider.dart';
-import '../utils/platform.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
+import "package:flutter/material.dart";
+
+import "../models/assignment.dart";
+import "../models/assignment_overrides.dart";
+import "../services/assignment_service.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
 
 class HiddenAssignmentsPage extends StatefulWidget {
   const HiddenAssignmentsPage({super.key});
@@ -54,7 +56,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
   void _restoreSelected() {
     final service = ServiceProvider.of(context).assignmentService;
     for (final key in _selected.toList()) {
-      service.unhide(key);
+      unawaited(service.unhide(key));
     }
     _exitSelectionMode();
   }
@@ -80,59 +82,59 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
           appBar: isIos()
               ? IosNativeNavigationBar(
                   title:
-                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                      _selectionMode ? "已选择 ${_selected.length} 个" : "已忽略的作业",
                   selectionMode: _selectionMode,
                   leadingItems: [
                     IosNativeNavigationBarItem(
-                      id: 'back',
-                      title: 'Deadlines',
-                      sfSymbol: 'chevron.left',
+                      id: "back",
+                      title: "Deadlines",
+                      sfSymbol: "chevron.left",
                       hidden: _selectionMode,
-                      accessibilityLabel: '返回 Deadlines',
-                      placementGroup: 'leading-main',
+                      accessibilityLabel: "返回 Deadlines",
+                      placementGroup: "leading-main",
                     ),
                     IosNativeNavigationBarItem(
-                      id: 'toggleSelectAll',
-                      title: selectedAll ? 'Deselect All' : 'Select All',
+                      id: "toggleSelectAll",
+                      title: selectedAll ? "Deselect All" : "Select All",
                       enabled: hiddenKeys.isNotEmpty,
                       hidden: !_selectionMode,
-                      accessibilityLabel: selectedAll ? '全不选' : '全选',
-                      placementGroup: 'leading-main',
+                      accessibilityLabel: selectedAll ? "全不选" : "全选",
+                      placementGroup: "leading-main",
                     ),
                   ],
                   trailingItems: [
                     IosNativeNavigationBarItem(
-                      id: 'restore',
-                      sfSymbol: 'arrow.uturn.backward',
+                      id: "restore",
+                      sfSymbol: "arrow.uturn.backward",
                       enabled: _selected.isNotEmpty,
                       hidden: !_selectionMode,
-                      accessibilityLabel: '恢复',
-                      placementGroup: 'selection-actions',
+                      accessibilityLabel: "恢复",
+                      placementGroup: "selection-actions",
                     ),
                     IosNativeNavigationBarItem(
-                      id: 'toggleSelection',
-                      title: _selectionMode ? 'Done' : 'Select',
+                      id: "toggleSelection",
+                      title: _selectionMode ? "Done" : "Select",
                       role: _selectionMode
                           ? IosNativeNavigationBarItemRole.done
                           : IosNativeNavigationBarItemRole.normal,
                       enabled: _selectionMode || hiddenKeys.isNotEmpty,
-                      accessibilityLabel: _selectionMode ? '完成' : '选择',
-                      placementGroup: 'selection-actions',
+                      accessibilityLabel: _selectionMode ? "完成" : "选择",
+                      placementGroup: "selection-actions",
                     ),
                   ],
                   onItemPressed: (id) {
                     switch (id) {
-                      case 'back':
-                        Navigator.maybePop(context);
-                      case 'toggleSelectAll':
+                      case "back":
+                        unawaited(Navigator.maybePop(context));
+                      case "toggleSelectAll":
                         if (hiddenKeys.isNotEmpty) {
                           _toggleSelectAll(hiddenKeys);
                         }
-                      case 'restore':
+                      case "restore":
                         if (_selected.isNotEmpty) {
                           _restoreSelected();
                         }
-                      case 'toggleSelection':
+                      case "toggleSelection":
                         _selectionMode
                             ? _exitSelectionMode()
                             : _enterSelectionMode();
@@ -142,12 +144,12 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
               : BlurredAppBar(
                   centerTitle: false,
                   title: Text(
-                    _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                    _selectionMode ? "已选择 ${_selected.length} 个" : "已忽略的作业",
                   ),
                   actions: [
                     if (_selectionMode)
                       IconButton(
-                        tooltip: selectedAll ? '全不选' : '全选',
+                        tooltip: selectedAll ? "全不选" : "全选",
                         icon: Icon(
                           selectedAll ? Icons.deselect : Icons.select_all,
                         ),
@@ -157,14 +159,14 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
                       ),
                     if (_selectionMode)
                       IconButton(
-                        tooltip: '恢复',
+                        tooltip: "恢复",
                         onPressed:
                             _selected.isNotEmpty ? _restoreSelected : null,
                         icon: const Icon(Icons.restore),
                       ),
                     if (hiddenKeys.isNotEmpty)
                       IconButton(
-                        tooltip: _selectionMode ? '完成' : '选择',
+                        tooltip: _selectionMode ? "完成" : "选择",
                         icon: Icon(
                           _selectionMode
                               ? Icons.check
@@ -181,7 +183,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
                   padding: EdgeInsets.only(top: topPad),
                   child: Center(
                     child: Text(
-                      '没有被忽略的作业',
+                      "没有被忽略的作业",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -229,8 +231,8 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
           title: Text(a?.title ?? key),
           subtitle: Text(
             a == null
-                ? '(已无缓存数据)'
-                : '${a.platform.toUpperCase()} · ${a.course}',
+                ? "(已无缓存数据)"
+                : "${a.platform.toUpperCase()} · ${a.course}",
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

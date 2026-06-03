@@ -87,7 +87,7 @@ final class NativeGlassSwitchPlatformView: NSObject, FlutterPlatformView {
 
     NSLayoutConstraint.activate([
       toggle.centerXAnchor.constraint(equalTo: rootView.centerXAnchor),
-      toggle.centerYAnchor.constraint(equalTo: rootView.centerYAnchor)
+      toggle.centerYAnchor.constraint(equalTo: rootView.centerYAnchor),
     ])
   }
 

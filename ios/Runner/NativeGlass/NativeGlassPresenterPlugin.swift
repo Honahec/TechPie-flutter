@@ -91,9 +91,10 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
     }
 
     if alert.actions.isEmpty {
-      alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-        complete(nil)
-      })
+      alert.addAction(
+        UIAlertAction(title: "OK", style: .default) { _ in
+          complete(nil)
+        })
     }
 
     if let preferredAction {
@@ -164,7 +165,8 @@ final class NativeGlassPresenterPlugin: NSObject, FlutterPlugin {
       .compactMap { $0 as? UIWindowScene }
       .filter { $0.activationState == .foregroundActive }
 
-    let keyWindow = scenes
+    let keyWindow =
+      scenes
       .flatMap(\.windows)
       .first(where: \.isKeyWindow)
 

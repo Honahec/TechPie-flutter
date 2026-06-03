@@ -1,9 +1,9 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
-import '../../utils/platform.dart';
+import "../../utils/platform.dart";
 
 class IosNativeTextView extends StatefulWidget {
   const IosNativeTextView({
@@ -87,25 +87,25 @@ class _IosNativeTextViewState extends State<IosNativeTextView> {
 
   Map<String, Object?> get _configuration {
     return <String, Object?>{
-      'text': widget.controller.text,
-      'placeholder': widget.placeholder,
-      'keyboardType': _keyboardTypeName(widget.keyboardType),
-      'textInputAction': widget.textInputAction.name,
-      'minLines': widget.minLines,
-      'maxLines': widget.maxLines,
-      'enabled': widget.enabled,
+      "text": widget.controller.text,
+      "placeholder": widget.placeholder,
+      "keyboardType": _keyboardTypeName(widget.keyboardType),
+      "textInputAction": widget.textInputAction.name,
+      "minLines": widget.minLines,
+      "maxLines": widget.maxLines,
+      "enabled": widget.enabled,
     };
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel('$_channelPrefix/$viewId');
+    final channel = MethodChannel("$_channelPrefix/$viewId");
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
       final arguments = call.arguments as Map<Object?, Object?>?;
       switch (call.method) {
-        case 'onChanged':
-          final text = arguments?['text'] as String? ?? '';
+        case "onChanged":
+          final text = arguments?["text"] as String? ?? "";
           if (text == widget.controller.text) return null;
           _updatingFromNative = true;
           widget.controller.value = widget.controller.value.copyWith(
@@ -123,16 +123,18 @@ class _IosNativeTextViewState extends State<IosNativeTextView> {
     if (_updatingFromNative) return;
     final channel = _channel;
     if (channel == null) return;
-    unawaited(channel.invokeMethod<void>('updateText', <String, Object?>{
-      'text': widget.controller.text,
-    }));
+    unawaited(
+      channel.invokeMethod<void>("updateText", <String, Object?>{
+        "text": widget.controller.text,
+      }),
+    );
   }
 
   Future<void> _sendConfigurationUpdate() async {
     final channel = _channel;
     if (channel == null) return;
     try {
-      await channel.invokeMethod<void>('updateConfiguration', _configuration);
+      await channel.invokeMethod<void>("updateConfiguration", _configuration);
     } on PlatformException {
       // Platform view may be tearing down.
     } on MissingPluginException {
@@ -141,13 +143,13 @@ class _IosNativeTextViewState extends State<IosNativeTextView> {
   }
 
   String _keyboardTypeName(TextInputType keyboardType) {
-    if (keyboardType == TextInputType.emailAddress) return 'emailAddress';
-    if (keyboardType == TextInputType.phone) return 'phone';
-    if (keyboardType == TextInputType.url) return 'url';
-    if (keyboardType == TextInputType.number) return 'number';
-    return 'text';
+    if (keyboardType == TextInputType.emailAddress) return "emailAddress";
+    if (keyboardType == TextInputType.phone) return "phone";
+    if (keyboardType == TextInputType.url) return "url";
+    if (keyboardType == TextInputType.number) return "number";
+    return "text";
   }
 }
 
-const _viewType = 'techpie/native_text_view';
-const _channelPrefix = 'techpie/native_text_view';
+const _viewType = "techpie/native_text_view";
+const _channelPrefix = "techpie/native_text_view";

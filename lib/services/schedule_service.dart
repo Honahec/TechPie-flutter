@@ -1,14 +1,15 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:flutter/foundation.dart';
+import "package:flutter/foundation.dart";
+import "package:http/http.dart" as http;
 
-import '../models/course_table.dart';
-import 'auth_service.dart';
-import 'http_client.dart';
-import 'storage_service.dart';
+import "../models/course_table.dart";
+import "auth_service.dart";
+import "http_client.dart";
+import "storage_service.dart";
 
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
+const String _devBaseUrl = "http://localhost:3000/api";
+const String _prodBaseUrl = "https://techpie.geekpie.club/api";
 
 class ScheduleService extends ChangeNotifier {
   final StorageService _storage;
@@ -41,8 +42,8 @@ class ScheduleService extends ChangeNotifier {
   }
 
   Map<String, String> _jsonHeaders() => {
-    'Content-Type': 'application/json; charset=UTF-8',
-  };
+        "Content-Type": "application/json; charset=UTF-8",
+      };
 
   Map<String, dynamic> _authBody() {
     final session = _auth.session!;
@@ -50,9 +51,9 @@ class ScheduleService extends ChangeNotifier {
     final baseCookies = session.cookies;
     final tgc = session.tgc;
     final cookies = tgc.isNotEmpty
-        ? (baseCookies.isNotEmpty ? '$baseCookies; CASTGC=$tgc' : 'CASTGC=$tgc')
+        ? (baseCookies.isNotEmpty ? "$baseCookies; CASTGC=$tgc" : "CASTGC=$tgc")
         : baseCookies;
-    return {'studentId': session.studentId, 'cookies': cookies};
+    return {"studentId": session.studentId, "cookies": cookies};
   }
 
   Future<void> loadCachedData() async {
@@ -62,7 +63,7 @@ class ScheduleService extends ChangeNotifier {
     if (_selectedSemesterId != null) {
       _courseTable = _storage.loadCourseTable(_selectedSemesterId!);
     }
-    _termBegin = _storage.loadTermBegin(_selectedSemesterId ?? '');
+    _termBegin = _storage.loadTermBegin(_selectedSemesterId ?? "");
     notifyListeners();
   }
 
@@ -91,48 +92,44 @@ class ScheduleService extends ChangeNotifier {
 
   Future<void> fetchSemesters() async {
     final resp = await _postWithRetry(
-      '$_baseUrl/schedule/semesters',
+      "$_baseUrl/schedule/semesters",
       _authBody(),
-      'fetchSemesters',
+      "fetchSemesters",
     );
-    if (resp == null) return;
-
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    if (data['success'] != true) {
-      throw Exception(data['error'] as String? ?? 'Failed to fetch semesters');
+    if (data["success"] != true) {
+      throw Exception(data["error"] as String? ?? "Failed to fetch semesters");
     }
 
-    _semesterInfo = SemesterInfo.fromJson(data['data'] as Map<String, dynamic>);
-    _storage.saveSemesters(_semesterInfo!);
+    _semesterInfo = SemesterInfo.fromJson(data["data"] as Map<String, dynamic>);
+    await _storage.saveSemesters(_semesterInfo!);
     notifyListeners();
   }
 
   Future<void> fetchCourseTable(String semesterId) async {
     final body = {
       ..._authBody(),
-      'semester_id': semesterId,
+      "semester_id": semesterId,
       if (_semesterInfo?.tableId.isNotEmpty == true)
-        'table_id': _semesterInfo!.tableId,
+        "table_id": _semesterInfo!.tableId,
     };
 
     final resp = await _postWithRetry(
-      '$_baseUrl/schedule/course_table',
+      "$_baseUrl/schedule/course_table",
       body,
-      'fetchCourseTable',
+      "fetchCourseTable",
     );
-    if (resp == null) return;
-
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    if (data['success'] != true) {
+    if (data["success"] != true) {
       throw Exception(
-        data['error'] as String? ?? 'Failed to fetch course table',
+        data["error"] as String? ?? "Failed to fetch course table",
       );
     }
 
     _courseTable = CourseTable.fromApiResponse(
-      data['data'] as Map<String, dynamic>,
+      data["data"] as Map<String, dynamic>,
     );
-    _storage.saveCourseTable(semesterId, _courseTable!);
+    await _storage.saveCourseTable(semesterId, _courseTable!);
     notifyListeners();
   }
 
@@ -146,9 +143,9 @@ class ScheduleService extends ChangeNotifier {
       for (final semEntry in yearEntry.value.entries) {
         if (semEntry.value == semesterId) {
           // yearEntry.key is like "2024-2025"
-          year = yearEntry.key.split('-').first;
+          year = yearEntry.key.split("-").first;
           // Map label to number
-          semNum = semEntry.key.contains('春') ? '1' : '2';
+          semNum = semEntry.key.contains("春") ? "1" : "2";
           break;
         }
       }
@@ -164,31 +161,29 @@ class ScheduleService extends ChangeNotifier {
     String semester,
     String cacheKey,
   ) async {
-    final body = {..._authBody(), 'year': year, 'semester': semester};
+    final body = {..._authBody(), "year": year, "semester": semester};
 
     final resp = await _postWithRetry(
-      '$_baseUrl/schedule/term_begin',
+      "$_baseUrl/schedule/term_begin",
       body,
-      'fetchTermBegin',
+      "fetchTermBegin",
     );
-    if (resp == null) return;
-
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    if (data['success'] != true) {
-      throw Exception(data['error'] as String? ?? 'Failed to fetch term begin');
+    if (data["success"] != true) {
+      throw Exception(data["error"] as String? ?? "Failed to fetch term begin");
     }
 
-    final dateStr = data['data'] as String;
+    final dateStr = data["data"] as String;
     _termBegin = DateTime.tryParse(dateStr);
     if (_termBegin != null) {
-      _storage.saveTermBegin(cacheKey, _termBegin!);
+      await _storage.saveTermBegin(cacheKey, _termBegin!);
     }
     notifyListeners();
   }
 
   Future<void> selectSemester(String semesterId) async {
     _selectedSemesterId = semesterId;
-    _storage.setSelectedSemester(semesterId);
+    await _storage.setSelectedSemester(semesterId);
     notifyListeners();
 
     // Load cached data for new semester first
@@ -215,7 +210,7 @@ class ScheduleService extends ChangeNotifier {
     }
   }
 
-  Future<dynamic> _postWithRetry(
+  Future<http.Response> _postWithRetry(
     String url,
     Map<String, dynamic> body,
     String tag,
@@ -236,13 +231,13 @@ class ScheduleService extends ChangeNotifier {
           Uri.parse(url),
           headers: _jsonHeaders(),
           body: jsonEncode(newBody),
-          tag: '$tag-retry',
+          tag: "$tag-retry",
         );
       }
     }
 
     if (resp.statusCode != 200) {
-      throw Exception('Request failed with status ${resp.statusCode}');
+      throw Exception("Request failed with status ${resp.statusCode}");
     }
 
     return resp;

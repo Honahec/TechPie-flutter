@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+import "dart:async";
 
-import '../models/oa_gym.dart';
-import '../services/service_provider.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import 'login_page.dart';
+import "package:flutter/material.dart";
+
+import "../models/oa_gym.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_feedback.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "login_page.dart";
 
 class OaGymPage extends StatefulWidget {
   const OaGymPage({super.key});
@@ -50,24 +52,24 @@ class _OaGymPageState extends State<OaGymPage>
       extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
       appBar: useIosChrome
           ? IosNativeNavigationBar(
-              title: '场馆预约',
-              leadingItems: [
+              title: "场馆预约",
+              leadingItems: const [
                 IosNativeNavigationBarItem(
-                  id: 'back',
-                  title: 'Home',
-                  sfSymbol: 'chevron.left',
-                  accessibilityLabel: '返回 Home',
-                  placementGroup: 'leading-main',
-                )
+                  id: "back",
+                  title: "Home",
+                  sfSymbol: "chevron.left",
+                  accessibilityLabel: "返回 Home",
+                  placementGroup: "leading-main",
+                ),
               ],
               onItemPressed: (id) {
                 switch (id) {
-                  case 'back':
-                    Navigator.maybePop(context);
+                  case "back":
+                    unawaited(Navigator.maybePop(context));
                 }
               },
             )
-          : const BlurredAppBar(title: Text('场馆预约')),
+          : const BlurredAppBar(title: Text("场馆预约")),
       body: ListenableBuilder(
         listenable: auth,
         builder: (context, _) {
@@ -83,11 +85,11 @@ class _OaGymPageState extends State<OaGymPage>
                           controller: _tabController,
                           tabs: const [
                             Tab(
-                              text: '预约',
+                              text: "预约",
                               icon: Icon(Icons.event_available),
                             ),
-                            Tab(text: '查询', icon: Icon(Icons.search)),
-                            Tab(text: '个人', icon: Icon(Icons.person_outline)),
+                            Tab(text: "查询", icon: Icon(Icons.search)),
+                            Tab(text: "个人", icon: Icon(Icons.person_outline)),
                           ],
                         ),
                       ),
@@ -120,19 +122,19 @@ class _OaGymPageState extends State<OaGymPage>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              '需要先登录 TechPie',
+                              "需要先登录 TechPie",
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '场馆预约会复用你的主账号 CASTGC 登录态，不需要单独保存 OA 密码。',
+                              "场馆预约会复用你的主账号 CASTGC 登录态，不需要单独保存 OA 密码。",
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 16),
                             FilledButton.icon(
                               onPressed: _handleLogin,
                               icon: const Icon(Icons.login),
-                              label: const Text('去登录'),
+                              label: const Text("去登录"),
                             ),
                           ],
                         ),
@@ -174,7 +176,7 @@ class _BookingTabState extends State<_BookingTab> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_availability.isEmpty && !_checking) {
-      _refreshAvailability();
+      unawaited(_refreshAvailability());
     }
   }
 
@@ -202,7 +204,7 @@ class _BookingTabState extends State<_BookingTab> {
     if (_sports.isEmpty) return;
     if (_selectedSlots.isEmpty) {
       setState(() {
-        _error = '请选择有效时间段，例如 18:00 到 19:00';
+        _error = "请选择有效时间段，例如 18:00 到 19:00";
         _availability = [];
         _selectedCourts.clear();
       });
@@ -236,7 +238,7 @@ class _BookingTabState extends State<_BookingTab> {
   Future<void> _submit() async {
     if (_selectedCourts.isEmpty) {
       setState(
-        () => _error = _selectedSlots.isEmpty ? '请选择有效时间段' : '请先选择可预约场地',
+        () => _error = _selectedSlots.isEmpty ? "请选择有效时间段" : "请先选择可预约场地",
       );
       return;
     }
@@ -251,7 +253,7 @@ class _BookingTabState extends State<_BookingTab> {
     var allSuccess = true;
     try {
       for (final entry in _selectedCourts.entries) {
-        final parts = entry.key.split('|');
+        final parts = entry.key.split("|");
         final sport = OaSport.values.firstWhere((item) => item.id == parts[0]);
         final slot = int.parse(parts[1]);
         for (final court in entry.value) {
@@ -268,7 +270,7 @@ class _BookingTabState extends State<_BookingTab> {
       }
       if (!mounted) return;
       setState(() {
-        _result = messages.join('\n');
+        _result = messages.join("\n");
         if (allSuccess) _selectedCourts.clear();
       });
       await _refreshAvailability();
@@ -290,7 +292,7 @@ class _BookingTabState extends State<_BookingTab> {
       _selectedCourts.clear();
       _result = null;
     });
-    _refreshAvailability();
+    unawaited(_refreshAvailability());
   }
 
   void _toggleCourt(String key, int court) {
@@ -326,7 +328,7 @@ class _BookingTabState extends State<_BookingTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('预约条件', style: theme.textTheme.titleMedium),
+                Text("预约条件", style: theme.textTheme.titleMedium),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -345,20 +347,20 @@ class _BookingTabState extends State<_BookingTab> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today_outlined),
-                  title: const Text('预约日期'),
+                  title: const Text("预约日期"),
                   subtitle: Text(_dateString),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _pickDate,
                 ),
                 Text(
-                  '时间段 ${oaEndpointRangeLabel(_startHour, _endHour)}',
+                  "时间段 ${oaEndpointRangeLabel(_startHour, _endHour)}",
                   style: theme.textTheme.bodyMedium,
                 ),
                 if (_selectedSlots.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '左右端点不能重合。请至少选择 1 小时时段。',
+                      "左右端点不能重合。请至少选择 1 小时时段。",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.error,
                       ),
@@ -370,8 +372,8 @@ class _BookingTabState extends State<_BookingTab> {
                   max: oaTimeEndpointEnd.toDouble(),
                   divisions: oaTimeEndpointEnd - oaTimeEndpointStart,
                   labels: RangeLabels(
-                    '${_startHour.toString().padLeft(2, '0')}:00',
-                    '${_endHour.toString().padLeft(2, '0')}:00',
+                    "${_startHour.toString().padLeft(2, "0")}:00",
+                    "${_endHour.toString().padLeft(2, "0")}:00",
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -379,7 +381,7 @@ class _BookingTabState extends State<_BookingTab> {
                       _selectedCourts.clear();
                     });
                   },
-                  onChangeEnd: (_) => _refreshAvailability(),
+                  onChangeEnd: (_) => unawaited(_refreshAvailability()),
                 ),
                 Align(
                   alignment: Alignment.centerRight,
@@ -391,7 +393,7 @@ class _BookingTabState extends State<_BookingTab> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.refresh),
-                    label: const Text('刷新可用场地'),
+                    label: const Text("刷新可用场地"),
                   ),
                 ),
               ],
@@ -427,11 +429,11 @@ class _BookingTabState extends State<_BookingTab> {
                       _AvailabilitySlot(
                         sport: sport,
                         slot: slot,
-                        availability: grouped['${sport.id}|$slot'],
+                        availability: grouped["${sport.id}|$slot"],
                         selectedCourts:
-                            _selectedCourts['${sport.id}|$slot'] ?? const {},
+                            _selectedCourts["${sport.id}|$slot"] ?? const {},
                         onToggleCourt: (court) =>
-                            _toggleCourt('${sport.id}|$slot', court),
+                            _toggleCourt("${sport.id}|$slot", court),
                       ),
                   ],
                 ),
@@ -447,7 +449,7 @@ class _BookingTabState extends State<_BookingTab> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.send),
-          label: Text(_selectedCount == 0 ? '提交预约' : '提交预约 ($_selectedCount)'),
+          label: Text(_selectedCount == 0 ? "提交预约" : "提交预约 ($_selectedCount)"),
         ),
       ],
     );
@@ -488,8 +490,8 @@ class _AvailabilitySlot extends StatelessWidget {
               Chip(
                 label: Text(
                   availability == null
-                      ? '未加载'
-                      : '${available.length}/${config.courtCount} 可用',
+                      ? "未加载"
+                      : "${available.length}/${config.courtCount} 可用",
                 ),
                 visualDensity: VisualDensity.compact,
                 color: WidgetStatePropertyAll(
@@ -553,7 +555,7 @@ class _SearchTabState extends State<_SearchTab> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (ServiceProvider.of(context).oaGymService.venues.isEmpty) {
-      _ensureMetadata();
+      unawaited(_ensureMetadata());
     }
   }
 
@@ -583,7 +585,7 @@ class _SearchTabState extends State<_SearchTab> {
       _timeRange.end.round(),
     );
     if (selectedSlots.isEmpty) {
-      setState(() => _error = '请选择有效时间段，例如 18:00 到 19:00');
+      setState(() => _error = "请选择有效时间段，例如 18:00 到 19:00");
       return;
     }
 
@@ -634,14 +636,14 @@ class _SearchTabState extends State<_SearchTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('查询条件', style: Theme.of(context).textTheme.titleMedium),
+                Text("查询条件", style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('开始'),
+                        title: const Text("开始"),
                         subtitle: Text(_formatDate(_startDate)),
                         onTap: _pickStartDate,
                       ),
@@ -649,14 +651,14 @@ class _SearchTabState extends State<_SearchTab> {
                     Expanded(
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('结束'),
+                        title: const Text("结束"),
                         subtitle: Text(_formatDate(_endDate)),
                         onTap: _pickEndDate,
                       ),
                     ),
                   ],
                 ),
-                Text('项目分类', style: Theme.of(context).textTheme.titleSmall),
+                Text("项目分类", style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -664,7 +666,7 @@ class _SearchTabState extends State<_SearchTab> {
                   children: [
                     FilterChip(
                       selected: _sports.isEmpty && _venues.isEmpty,
-                      label: const Text('所有场地'),
+                      label: const Text("所有场地"),
                       avatar: const Icon(Icons.apps_rounded, size: 18),
                       showCheckmark: false,
                       visualDensity: VisualDensity.compact,
@@ -705,7 +707,7 @@ class _SearchTabState extends State<_SearchTab> {
                 const SizedBox(height: 8),
                 if (_sports.isEmpty)
                   Text(
-                    '未选择具体场地时默认查询全部场地',
+                    "未选择具体场地时默认查询全部场地",
                     style: Theme.of(context).textTheme.bodySmall,
                   )
                 else
@@ -746,13 +748,13 @@ class _SearchTabState extends State<_SearchTab> {
                     const SizedBox(height: 10),
                   ],
                 Text(
-                  '时间段 ${oaEndpointRangeLabel(_timeRange.start.round(), _timeRange.end.round())}',
+                  "时间段 ${oaEndpointRangeLabel(_timeRange.start.round(), _timeRange.end.round())}",
                 ),
                 if (_timeRange.start.round() == _timeRange.end.round())
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '左右端点不能重合。请至少选择 1 小时时段。',
+                      "左右端点不能重合。请至少选择 1 小时时段。",
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.error,
                           ),
@@ -768,7 +770,7 @@ class _SearchTabState extends State<_SearchTab> {
                 if (_sports.isNotEmpty && _venues.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    '已选 ${_venues.length} 个场地',
+                    "已选 ${_venues.length} 个场地",
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -781,7 +783,7 @@ class _SearchTabState extends State<_SearchTab> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.search),
-                  label: Text(_loading ? '查询中...' : '查询预约记录'),
+                  label: Text(_loading ? "查询中..." : "查询预约记录"),
                 ),
               ],
             ),
@@ -806,14 +808,14 @@ class _SearchTabState extends State<_SearchTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '查询结果 · $totalResults 条记录',
+                    "查询结果 · $totalResults 条记录",
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
                   for (final dateGroup in groupedResults) ...[
                     ExpansionTile(
                       title: Text(
-                        '${dateGroup.date}（${dateGroup.timeSlots.length} 个时段）',
+                        "${dateGroup.date}（${dateGroup.timeSlots.length} 个时段）",
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       tilePadding: EdgeInsets.zero,
@@ -826,7 +828,7 @@ class _SearchTabState extends State<_SearchTab> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${timeGroup.timeRange}（${timeGroup.items.length} 条）',
+                                  "${timeGroup.timeRange}（${timeGroup.items.length} 条）",
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -871,7 +873,7 @@ class _SearchTabState extends State<_SearchTab> {
                                           if (timeGroup
                                               .items[i].status.isNotEmpty)
                                             timeGroup.items[i].status,
-                                        ].join(' · '),
+                                        ].join(" · "),
                                       ),
                                     ),
                                   ),
@@ -887,7 +889,7 @@ class _SearchTabState extends State<_SearchTab> {
             ),
           )
         else if (!_loading && _error == null)
-          const _MessageCard(message: '暂无查询结果', isError: false),
+          const _MessageCard(message: "暂无查询结果", isError: false),
       ],
     );
   }
@@ -936,7 +938,7 @@ class _ProfileTabState extends State<_ProfileTab> {
     if (!mounted) return;
     showAdaptiveFeedback(
       context: context,
-      message: '预约信息已保存',
+      message: "预约信息已保存",
       style: AdaptiveFeedbackStyle.success,
     );
   }
@@ -946,7 +948,7 @@ class _ProfileTabState extends State<_ProfileTab> {
     final auth = ServiceProvider.of(context).authService;
     final studentId = auth.session?.studentId.isNotEmpty == true
         ? auth.session!.studentId
-        : auth.session?.userId ?? '';
+        : auth.session?.userId ?? "";
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
@@ -963,7 +965,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 : studentId)
                             .characters
                             .firstOrNull ??
-                        'U',
+                        "U",
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -974,7 +976,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       Text(
                         auth.session?.userName.isNotEmpty == true
                             ? auth.session!.userName
-                            : 'TechPie 用户',
+                            : "TechPie 用户",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(studentId),
@@ -992,17 +994,17 @@ class _ProfileTabState extends State<_ProfileTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('预约提交信息', style: Theme.of(context).textTheme.titleMedium),
+                Text("预约提交信息", style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
-                  '提交 OA 场馆预约时会使用以下信息。姓名和手机号必填，邮箱可选。',
+                  "提交 OA 场馆预约时会使用以下信息。姓名和手机号必填，邮箱可选。",
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _name,
                   decoration: const InputDecoration(
-                    labelText: '姓名',
+                    labelText: "姓名",
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -1010,7 +1012,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 TextField(
                   controller: _phone,
                   decoration: const InputDecoration(
-                    labelText: '手机号',
+                    labelText: "手机号",
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
@@ -1019,7 +1021,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 TextField(
                   controller: _email,
                   decoration: const InputDecoration(
-                    labelText: '邮箱',
+                    labelText: "邮箱",
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -1028,7 +1030,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                 FilledButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.save_outlined),
-                  label: const Text('保存'),
+                  label: const Text("保存"),
                 ),
               ],
             ),
@@ -1076,27 +1078,27 @@ Map<OaSport, List<String>> _venuesBySport(
   };
   for (final item in venues) {
     if (const {
-      '所有场地',
-      '室内羽毛球场',
-      '室内乒乓球场',
-      '网球场',
-      '匹克球场',
+      "所有场地",
+      "室内羽毛球场",
+      "室内乒乓球场",
+      "网球场",
+      "匹克球场",
     }.contains(item)) {
       continue;
     }
-    if (sports.contains(OaSport.badminton) && item.contains('羽毛球')) {
+    if (sports.contains(OaSport.badminton) && item.contains("羽毛球")) {
       result[OaSport.badminton]!.add(item);
       continue;
     }
-    if (sports.contains(OaSport.pingpong) && item.contains('乒乓球')) {
+    if (sports.contains(OaSport.pingpong) && item.contains("乒乓球")) {
       result[OaSport.pingpong]!.add(item);
       continue;
     }
-    if (sports.contains(OaSport.tennis) && item.contains('网球')) {
+    if (sports.contains(OaSport.tennis) && item.contains("网球")) {
       result[OaSport.tennis]!.add(item);
       continue;
     }
-    if (sports.contains(OaSport.pickleball) && item.contains('匹克球')) {
+    if (sports.contains(OaSport.pickleball) && item.contains("匹克球")) {
       result[OaSport.pickleball]!.add(item);
     }
   }
@@ -1106,24 +1108,24 @@ Map<OaSport, List<String>> _venuesBySport(
 List<String> _venuesForSports(Iterable<String> venues, Set<OaSport> sports) =>
     venues.where((item) {
       if (const {
-        '所有场地',
-        '室内羽毛球场',
-        '室内乒乓球场',
-        '网球场',
-        '匹克球场',
+        "所有场地",
+        "室内羽毛球场",
+        "室内乒乓球场",
+        "网球场",
+        "匹克球场",
       }.contains(item)) {
         return false;
       }
-      if (sports.contains(OaSport.badminton) && item.contains('羽毛球')) {
+      if (sports.contains(OaSport.badminton) && item.contains("羽毛球")) {
         return true;
       }
-      if (sports.contains(OaSport.pingpong) && item.contains('乒乓球')) {
+      if (sports.contains(OaSport.pingpong) && item.contains("乒乓球")) {
         return true;
       }
-      if (sports.contains(OaSport.tennis) && item.contains('网球')) {
+      if (sports.contains(OaSport.tennis) && item.contains("网球")) {
         return true;
       }
-      if (sports.contains(OaSport.pickleball) && item.contains('匹克球')) {
+      if (sports.contains(OaSport.pickleball) && item.contains("匹克球")) {
         return true;
       }
       return false;
@@ -1137,20 +1139,22 @@ List<_SearchDateGroup> _groupSearchResults(List<OaCourtSearchResult> results) {
     for (final row in result.rows) {
       final key = '${result.venue}|${result.timeRange}|${row.join('\u001f')}';
       if (!seen.add(key)) continue;
-      final useDate = row.length > 9 ? row[9].trim() : '';
+      final useDate = row.length > 9 ? row[9].trim() : "";
       if (useDate.isEmpty) continue;
-      final timeRange = result.timeRange.isEmpty ? '全部时间' : result.timeRange;
+      final timeRange = result.timeRange.isEmpty ? "全部时间" : result.timeRange;
       final itemsByTime = dateMap.putIfAbsent(
-          useDate, () => <String, List<_SearchResultItem>>{});
+        useDate,
+        () => <String, List<_SearchResultItem>>{},
+      );
       final items =
           itemsByTime.putIfAbsent(timeRange, () => <_SearchResultItem>[]);
       items.add(
         _SearchResultItem(
           venue: result.venue,
-          user: row.length > 7 ? row[7].trim() : '',
-          bookingDate: row.length > 2 ? row[2].trim() : '',
+          user: row.length > 7 ? row[7].trim() : "",
+          bookingDate: row.length > 2 ? row[2].trim() : "",
           useDate: useDate,
-          status: row.length > 6 ? row[6].trim() : '',
+          status: row.length > 6 ? row[6].trim() : "",
         ),
       );
     }
@@ -1163,8 +1167,8 @@ List<_SearchDateGroup> _groupSearchResults(List<OaCourtSearchResult> results) {
     final timeSlots = timeMap.keys.toList()
       ..sort((a, b) {
         if (a == b) return 0;
-        if (a == '全部时间') return -1;
-        if (b == '全部时间') return 1;
+        if (a == "全部时间") return -1;
+        if (b == "全部时间") return 1;
         return a.compareTo(b);
       });
     groups.add(
@@ -1188,9 +1192,9 @@ String _formatDate(DateTime date) => '${date.year.toString().padLeft(4, '0')}-'
     '${date.day.toString().padLeft(2, '0')}';
 
 String _courtLabel(OaSport sport, int court) {
-  if (sport == OaSport.pickleball) return '匹克球1号场地';
+  if (sport == OaSport.pickleball) return "匹克球1号场地";
   final config = oaSportConfigs[sport]!;
-  return '${config.courtNamePrefix}$court${config.courtNameSuffix}';
+  return "${config.courtNamePrefix}$court${config.courtNameSuffix}";
 }
 
 IconData _sportIcon(OaSport sport) => switch (sport) {

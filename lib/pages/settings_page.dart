@@ -1,19 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:techpie/services/auth_service.dart';
+import "dart:async";
 
-import '../services/service_provider.dart';
-import '../services/theme_service.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/desktop_popup.dart';
-import '../widgets/ios_liquid/ios_glass_select.dart';
-import '../widgets/ios_liquid/ios_glass_switch.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import 'debug_log_page.dart';
-import 'login_page.dart';
-import 'third_party_accounts_page.dart';
+import "package:flutter/material.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:techpie/services/auth_service.dart";
+
+import "../services/service_provider.dart";
+import "../services/theme_service.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_alert_dialog.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/desktop_popup.dart";
+import "../widgets/ios_liquid/ios_glass_select.dart";
+import "../widgets/ios_liquid/ios_glass_switch.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "debug_log_page.dart";
+import "login_page.dart";
+import "third_party_accounts_page.dart";
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -23,12 +25,12 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String _appVersion = '';
+  String _appVersion = "";
 
   @override
   void initState() {
     super.initState();
-    _loadAppVersion();
+    unawaited(_loadAppVersion());
   }
 
   Future<void> _loadAppVersion() async {
@@ -36,7 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     setState(() {
       _appVersion = info.buildNumber.isNotEmpty
-          ? '${info.version}+${info.buildNumber}'
+          ? "${info.version}+${info.buildNumber}"
           : info.version;
     });
   }
@@ -73,17 +75,17 @@ class _SettingsPageState extends State<SettingsPage> {
       extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
       appBar: useIosChrome
           ? const IosNativeNavigationBar(
-              title: 'Settings',
+              title: "Settings",
               largeTitleMode: true,
             )
-          : const BlurredAppBar(title: Text('Settings')),
+          : const BlurredAppBar(title: Text("Settings")),
       body: ListenableBuilder(
         listenable: Listenable.merge([auth, logger, themeService, tpAuth]),
         builder: (context, _) => ListView(
           padding: EdgeInsets.only(top: topInset, bottom: 120),
           children: [
             // Account section
-            _sectionHeader(theme, 'Account'),
+            _sectionHeader(theme, "Account"),
             if (auth.isLoggedIn) ...[
               ListTile(
                 leading: const Icon(Icons.person),
@@ -99,48 +101,50 @@ class _SettingsPageState extends State<SettingsPage> {
                       auth.session!.phoneNumber,
                     auth.session!.studentId.isNotEmpty
                         ? auth.session!.studentId
-                        : '未知学号',
-                  ].join(' | '),
+                        : "未知学号",
+                  ].join(" | "),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.account_tree_outlined),
-                title: const Text('Linked accounts'),
+                title: const Text("Linked accounts"),
                 subtitle: Text(
-                  '${tpAuth.boundPlatforms.length} bound · Gradescope / Hydro / Blackboard',
+                  "${tpAuth.boundPlatforms.length} bound · Gradescope / Hydro / Blackboard",
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ThirdPartyAccountsPage(),
+                onTap: () => unawaited(
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ThirdPartyAccountsPage(),
+                    ),
                   ),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.logout),
-                title: const Text('Logout'),
-                onTap: () => _confirmLogout(auth),
+                title: const Text("Logout"),
+                onTap: () => unawaited(_confirmLogout(auth)),
               ),
             ] else
               ListTile(
                 leading: const Icon(Icons.login),
-                title: const Text('Login'),
-                subtitle: const Text('Sign in to your campus account'),
-                onTap: () => presentLoginPage(context),
+                title: const Text("Login"),
+                subtitle: const Text("Sign in to your campus account"),
+                onTap: () => unawaited(presentLoginPage(context)),
               ),
             const Divider(),
 
             // Appearance section
-            _sectionHeader(theme, 'Appearance'),
+            _sectionHeader(theme, "Appearance"),
             if (useIosChrome)
               ListTile(
                 leading: Icon(themeService.mode.icon),
-                title: const Text('Theme'),
+                title: const Text("Theme"),
                 subtitle: Text(themeService.mode.label),
                 trailing: IosGlassSelect(
                   value: themeService.mode.name,
-                  placeholder: 'Choose theme',
+                  placeholder: "Choose theme",
                   width: 156,
                   options: [
                     for (final mode in AppThemeMode.values)
@@ -151,7 +155,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (item) => item.name == value,
                       orElse: () => AppThemeMode.system,
                     );
-                    themeService.setMode(mode);
+                    unawaited(themeService.setMode(mode));
                   },
                 ),
               )
@@ -159,7 +163,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Builder(
                 builder: (tileContext) => ListTile(
                   leading: Icon(themeService.mode.icon),
-                  title: const Text('Theme'),
+                  title: const Text("Theme"),
                   subtitle: Text(themeService.mode.label),
                   onTap: () => _showThemePicker(tileContext, themeService),
                 ),
@@ -167,11 +171,11 @@ class _SettingsPageState extends State<SettingsPage> {
             if (useIosChrome)
               ListTile(
                 leading: Icon(themeService.colorScheme.icon),
-                title: const Text('Color'),
+                title: const Text("Color"),
                 subtitle: Text(_colorSubtitle(themeService)),
                 trailing: IosGlassSelect(
                   value: themeService.colorScheme.name,
-                  placeholder: 'Choose color',
+                  placeholder: "Choose color",
                   width: 156,
                   options: [
                     for (final scheme in AppColorScheme.values)
@@ -185,7 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (item) => item.name == value,
                       orElse: () => AppColorScheme.system,
                     );
-                    themeService.setColorScheme(scheme);
+                    unawaited(themeService.setColorScheme(scheme));
                   },
                 ),
               )
@@ -193,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Builder(
                 builder: (tileContext) => ListTile(
                   leading: Icon(themeService.colorScheme.icon),
-                  title: const Text('Color'),
+                  title: const Text("Color"),
                   subtitle: Text(_colorSubtitle(themeService)),
                   onTap: () => _showColorPicker(tileContext, themeService),
                 ),
@@ -201,56 +205,61 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
 
             // General section
-            _sectionHeader(theme, 'General'),
+            _sectionHeader(theme, "General"),
             ListTile(
-                leading: const Icon(Icons.notifications_outlined),
-                title: const Text('Notifications'),
-                subtitle: const Text('Manage notification preferences'),
-                onTap: () {}),
+              leading: const Icon(Icons.notifications_outlined),
+              title: const Text("Notifications"),
+              subtitle: const Text("Manage notification preferences"),
+              onTap: () {},
+            ),
             ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
+              title: const Text("About"),
               subtitle: Text(
                 _appVersion.isEmpty
-                    ? 'Version Unknown'
-                    : 'Version $_appVersion',
+                    ? "Version Unknown"
+                    : "Version $_appVersion",
               ),
               onTap: () {},
             ),
             const Divider(),
 
             // Developer section
-            _sectionHeader(theme, 'Developer'),
+            _sectionHeader(theme, "Developer"),
             _AdaptiveSwitchTile(
               usesIosLiquidGlass: useIosChrome,
               secondary: const Icon(Icons.bug_report_outlined),
-              title: 'Debug mode',
-              subtitle: 'Log all API requests',
+              title: "Debug mode",
+              subtitle: "Log all API requests",
               value: logger.enabled,
               onChanged: (value) {
                 logger.enabled = value;
-                storage.setDebugMode(value);
+                unawaited(storage.setDebugMode(value));
               },
             ),
             _AdaptiveSwitchTile(
               usesIosLiquidGlass: useIosChrome,
               secondary: const Icon(Icons.dns_outlined),
-              title: 'Use localhost',
-              subtitle: 'Connect to local development server',
+              title: "Use localhost",
+              subtitle: "Connect to local development server",
               value: storage.useLocalhost,
               onChanged: (value) {
-                storage.setUseLocalhost(value);
+                unawaited(storage.setUseLocalhost(value));
                 setState(() {});
               },
             ),
             if (logger.enabled)
               ListTile(
                 leading: const Icon(Icons.list_alt),
-                title: const Text('View Logs'),
-                subtitle: Text('${logger.entries.length} entries'),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DebugLogPage()),
+                title: const Text("View Logs"),
+                subtitle: Text("${logger.entries.length} entries"),
+                onTap: () => unawaited(
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DebugLogPage(),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -262,12 +271,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _confirmLogout(AuthService auth) async {
     final ok = await showAdaptiveAlertDialog<bool>(
       context: context,
-      title: '退出登录',
-      message: '将清除当前设备上的登录状态和相关缓存数据。',
+      title: "退出登录",
+      message: "将清除当前设备上的登录状态和相关缓存数据。",
       actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
+        AdaptiveAlertAction<bool>(label: "取消", value: false),
         AdaptiveAlertAction<bool>(
-          label: '退出登录',
+          label: "退出登录",
           value: true,
           isDestructive: true,
         ),
@@ -275,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (ok == true) {
-      auth.logout();
+      await auth.logout();
     }
   }
 
@@ -296,7 +305,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
                   child: Text(
-                    'Choose theme',
+                    "Choose theme",
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -321,7 +330,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ],
                     ),
                     onTap: () {
-                      themeService.setMode(mode);
+                      unawaited(themeService.setMode(mode));
                       close();
                     },
                   ),
@@ -333,36 +342,38 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Choose theme',
-                style: Theme.of(context).textTheme.titleMedium,
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  "Choose theme",
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-            ),
-            for (final mode in AppThemeMode.values)
-              ListTile(
-                leading: Icon(mode.icon),
-                title: Text(mode.label),
-                trailing: themeService.mode == mode
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  themeService.setMode(mode);
-                  Navigator.pop(context);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
+              for (final mode in AppThemeMode.values)
+                ListTile(
+                  leading: Icon(mode.icon),
+                  title: Text(mode.label),
+                  trailing: themeService.mode == mode
+                      ? Icon(
+                          Icons.check,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    unawaited(themeService.setMode(mode));
+                    Navigator.pop(context);
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -371,7 +382,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _colorSubtitle(ThemeService themeService) {
     if (themeService.colorScheme == AppColorScheme.system &&
         !themeService.systemDynamicColorAvailable) {
-      return '${themeService.colorScheme.label} (unavailable, using TechRed)';
+      return "${themeService.colorScheme.label} (unavailable, using TechRed)";
     }
     return themeService.colorScheme.label;
   }
@@ -393,7 +404,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
                   child: Text(
-                    'Choose color',
+                    "Choose color",
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -418,7 +429,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ],
                     ),
                     onTap: () {
-                      themeService.setColorScheme(scheme);
+                      unawaited(themeService.setColorScheme(scheme));
                       close();
                     },
                   ),
@@ -430,36 +441,38 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Choose color',
-                style: Theme.of(context).textTheme.titleMedium,
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  "Choose color",
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-            ),
-            for (final scheme in AppColorScheme.values)
-              ListTile(
-                leading: Icon(scheme.icon),
-                title: Text(scheme.label),
-                trailing: themeService.colorScheme == scheme
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  themeService.setColorScheme(scheme);
-                  Navigator.pop(context);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
+              for (final scheme in AppColorScheme.values)
+                ListTile(
+                  leading: Icon(scheme.icon),
+                  title: Text(scheme.label),
+                  trailing: themeService.colorScheme == scheme
+                      ? Icon(
+                          Icons.check,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    unawaited(themeService.setColorScheme(scheme));
+                    Navigator.pop(context);
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

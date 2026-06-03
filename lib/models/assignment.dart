@@ -19,7 +19,7 @@ class Assignment {
     this.url,
   });
 
-  bool get submitted => status == 'Submitted' || status == 'Graded';
+  bool get submitted => status == "Submitted" || status == "Graded";
 
   factory Assignment.fromJson(Map<String, dynamic> json) {
     DateTime parseEpoch(dynamic v) {
@@ -30,25 +30,25 @@ class Assignment {
     }
 
     return Assignment(
-      id: json['id'] as String? ?? '',
-      platform: json['platform'] as String? ?? 'unknown',
-      title: json['title'] as String? ?? '',
-      course: json['course'] as String? ?? '',
-      due: json['due'] != null ? parseEpoch(json['due']) : DateTime.now(),
-      lateDue: json['lateDue'] != null ? parseEpoch(json['lateDue']) : null,
-      status: json['status'] as String?,
-      url: json['url'] as String?,
+      id: json["id"] as String? ?? "",
+      platform: json["platform"] as String? ?? "unknown",
+      title: json["title"] as String? ?? "",
+      course: json["course"] as String? ?? "",
+      due: json["due"] != null ? parseEpoch(json["due"]) : DateTime.now(),
+      lateDue: json["lateDue"] != null ? parseEpoch(json["lateDue"]) : null,
+      status: json["status"] as String?,
+      url: json["url"] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'platform': platform,
-    'title': title,
-    'course': course,
-    'due': due.millisecondsSinceEpoch ~/ 1000,
-    if (lateDue != null) 'lateDue': lateDue!.millisecondsSinceEpoch ~/ 1000,
-    'status': status,
-    'url': url,
-  };
+        "id": id,
+        "platform": platform,
+        "title": title,
+        "course": course,
+        "due": due.millisecondsSinceEpoch ~/ 1000,
+        if (lateDue != null) "lateDue": lateDue!.millisecondsSinceEpoch ~/ 1000,
+        "status": status,
+        "url": url,
+      };
 }

@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../models/feature.dart';
+import "../models/feature.dart";
 
 class AppCard extends StatelessWidget {
   final List<Feature> features;
@@ -25,7 +25,7 @@ class AppCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         const itemWidth = 72.0;
-        final rawPerRow = (( constraints.maxWidth - 16 )/ itemWidth).floor();
+        final rawPerRow = ((constraints.maxWidth - 16) / itemWidth).floor();
         final effectivePerRow = rawPerRow < 1 ? 1 : rawPerRow;
         final visibleFeatures = features.take(effectivePerRow * rows - 1);
         return Material(
@@ -37,7 +37,7 @@ class AppCard extends StatelessWidget {
               children: [
                 for (final feature in [
                   ...visibleFeatures,
-                  if (features.length > effectivePerRow * rows - 1) moreFeature
+                  if (features.length > effectivePerRow * rows - 1) moreFeature,
                 ])
                   SizedBox(
                     width: itemWidth,

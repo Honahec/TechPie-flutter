@@ -1,7 +1,7 @@
-import 'dart:ui';
+import "dart:ui";
 
-import 'package:flutter/material.dart';
-import 'package:techpie/utils/platform.dart';
+import "package:flutter/material.dart";
+import "package:techpie/utils/platform.dart";
 
 /// AppBar with a fixed elevation and a Gaussian blur backdrop where supported.
 ///
@@ -40,7 +40,8 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-      adaptiveTopBarHeight() + (bottom?.preferredSize.height ?? 0));
+        adaptiveTopBarHeight() + (bottom?.preferredSize.height ?? 0),
+      );
 
   @override
   Widget build(BuildContext context) {

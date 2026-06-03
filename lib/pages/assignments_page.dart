@@ -1,18 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import "dart:async";
 
-import '../models/assignment.dart';
-import '../models/assignment_overrides.dart';
-import '../services/assignment_service.dart';
-import '../services/service_provider.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import '../widgets/swipeable_card.dart';
-import 'hidden_assignments_page.dart';
+import "package:flutter/material.dart";
+import "package:intl/intl.dart";
+import "package:url_launcher/url_launcher.dart";
+
+import "../models/assignment.dart";
+import "../models/assignment_overrides.dart";
+import "../services/assignment_service.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_alert_dialog.dart";
+import "../widgets/adaptive_feedback.dart";
+import "../widgets/blurred_app_bar.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "../widgets/swipeable_card.dart";
+import "hidden_assignments_page.dart";
 
 class AssignmentsPage extends StatefulWidget {
   const AssignmentsPage({super.key});
@@ -116,26 +118,30 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   ) {
     if (isIos()) {
       return IosNativeNavigationBar(
-        title: 'Deadlines',
+        title: "Deadlines",
         largeTitleMode: true,
         trailingItems: [
           IosNativeNavigationBarItem(
-            id: 'more',
-            sfSymbol: 'ellipsis',
-            accessibilityLabel: '更多操作',
+            id: "more",
+            sfSymbol: "ellipsis",
+            accessibilityLabel: "更多操作",
             menuItems: [
               IosNativeNavigationBarMenuItem(
-                value: 'hidden',
-                title: '查看已忽略 (${service.overrides.hidden.length})',
+                value: "hidden",
+                title: "查看已忽略 (${service.overrides.hidden.length})",
               ),
             ],
           ),
         ],
         onMenuSelected: (_, value) {
-          if (value == 'hidden') {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HiddenAssignmentsPage()),
+          if (value == "hidden") {
+            unawaited(
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const HiddenAssignmentsPage(),
+                ),
+              ),
             );
           }
         },
@@ -143,26 +149,30 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     }
 
     return BlurredAppBar(
-      title: const Text('Deadlines'),
+      title: const Text("Deadlines"),
       actions: [
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
           onSelected: (v) {
-            if (v == 'hidden') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HiddenAssignmentsPage()),
+            if (v == "hidden") {
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HiddenAssignmentsPage(),
+                  ),
+                ),
               );
             }
           },
           itemBuilder: (_) => [
             PopupMenuItem(
-              value: 'hidden',
+              value: "hidden",
               child: Row(
                 children: [
                   const Icon(Icons.visibility_off_outlined, size: 20),
                   const SizedBox(width: 12),
-                  Text('查看已忽略 (${service.overrides.hidden.length})'),
+                  Text("查看已忽略 (${service.overrides.hidden.length})"),
                 ],
               ),
             ),
@@ -183,24 +193,26 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       leading: IconButton(
         icon: const Icon(Icons.close),
         onPressed: _exitSelection,
-        tooltip: '退出多选',
+        tooltip: "退出多选",
       ),
-      title: Text('已选择 ${_selected.length} 个'),
+      title: Text("已选择 ${_selected.length} 个"),
       actions: [
         IconButton(
           icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
-          tooltip: allSelected ? '全不选' : '全选',
+          tooltip: allSelected ? "全不选" : "全选",
           onPressed: () => _selectAll(visible),
         ),
         IconButton(
           icon: const Icon(Icons.flip_to_front),
-          tooltip: '反选',
+          tooltip: "反选",
           onPressed: () => _invertSelection(visible),
         ),
         IconButton(
           icon: const Icon(Icons.restart_alt),
-          tooltip: '重置状态',
-          onPressed: _selected.isEmpty ? null : () => _resetSelected(service),
+          tooltip: "重置状态",
+          onPressed: _selected.isEmpty
+              ? null
+              : () => unawaited(_resetSelected(service)),
         ),
       ],
     );
@@ -231,7 +243,9 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
           banner,
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => service.fetchAssignments(),
+              onRefresh: () async {
+                await service.fetchAssignments();
+              },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
@@ -268,7 +282,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
-          Text('No upcoming assignments', style: theme.textTheme.titleMedium),
+          Text("No upcoming assignments", style: theme.textTheme.titleMedium),
           if (service.error != null) ...[
             const SizedBox(height: 8),
             Padding(
@@ -296,10 +310,12 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     final now = DateTime.now();
     final past = sorted.where((a) => a.due.isBefore(now)).toList();
     final upcoming = sorted.where((a) => !a.due.isBefore(now)).toList();
-    final todayLabel = DateFormat('yyyy-MM-dd EEE').format(now);
+    final todayLabel = DateFormat("yyyy-MM-dd EEE").format(now);
 
     return RefreshIndicator(
-      onRefresh: () => service.fetchAssignments(),
+      onRefresh: () async {
+        await service.fetchAssignments();
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         children: [
@@ -318,14 +334,14 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '已过期 (${past.length})',
+                      "已过期 (${past.length})",
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const Spacer(),
                     Text(
-                      _pastCollapsed ? '展开' : '折叠',
+                      _pastCollapsed ? "展开" : "折叠",
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -346,7 +362,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
-                    '今天 · $todayLabel',
+                    "今天 · $todayLabel",
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -362,7 +378,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: Text(
-                  '没有未来的 ddl',
+                  "没有未来的 ddl",
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -392,7 +408,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       hasOverride: service.hasCompletionOverride(a),
       selected: selected,
       selectionMode: _selectionMode,
-      onTap: () => _onTapItem(context, service, a, key),
+      onTap: () => unawaited(_onTapItem(context, service, a, key)),
       onLongPress: _selectionMode ? null : () => _enterSelectionWith(key),
     );
 
@@ -403,17 +419,17 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
               icon: completed
                   ? Icons.cancel_outlined
                   : Icons.check_circle_outline,
-              label: completed ? '取消完成' : '标记完成',
+              label: completed ? "取消完成" : "标记完成",
               background: scheme.primaryContainer,
               foreground: scheme.onPrimaryContainer,
             ),
             endAction: SwipeAction(
               icon: Icons.delete_outline,
-              label: '删除',
+              label: "删除",
               background: scheme.errorContainer,
               foreground: scheme.onErrorContainer,
             ),
-            onStartSwipe: () => service.toggleCompleted(a),
+            onStartSwipe: () => unawaited(service.toggleCompleted(a)),
             onDismissed: () => _onDismiss(context, service, a, key),
             child: card,
           );
@@ -431,15 +447,15 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     Assignment a,
     String key,
   ) {
-    service.hide(a);
+    unawaited(service.hide(a));
 
     showAdaptiveFeedback(
       context: context,
-      message: '已忽略「${a.title}」',
+      message: "已忽略「${a.title}」",
       style: AdaptiveFeedbackStyle.info,
       duration: const Duration(seconds: 4),
-      actionLabel: '撤销',
-      onAction: () => service.unhide(key),
+      actionLabel: "撤销",
+      onAction: () => unawaited(service.unhide(key)),
     );
   }
 
@@ -459,16 +475,16 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       if (usesIosContextualFeedback) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: '无法打开作业',
-          message: '这个作业没有可打开的链接。',
+          title: "无法打开作业",
+          message: "这个作业没有可打开的链接。",
           actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
+            AdaptiveAlertAction<void>(label: "Done", isDefault: true),
           ],
         );
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: '该作业没有链接',
+          message: "该作业没有链接",
           style: AdaptiveFeedbackStyle.info,
         );
       }
@@ -479,16 +495,16 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       if (usesIosContextualFeedback) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: '无法打开作业',
-          message: '链接格式无效。',
+          title: "无法打开作业",
+          message: "链接格式无效。",
           actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
+            AdaptiveAlertAction<void>(label: "Done", isDefault: true),
           ],
         );
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: '链接无法解析',
+          message: "链接无法解析",
           style: AdaptiveFeedbackStyle.error,
         );
       }
@@ -499,16 +515,16 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       if (usesIosContextualFeedback) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: '无法打开作业',
-          message: '目前无法打开这个链接。',
+          title: "无法打开作业",
+          message: "目前无法打开这个链接。",
           actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
+            AdaptiveAlertAction<void>(label: "Done", isDefault: true),
           ],
         );
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: '无法打开链接',
+          message: "无法打开链接",
           style: AdaptiveFeedbackStyle.error,
         );
       }
@@ -544,7 +560,7 @@ class _PlatformErrorsBanner extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '${entry.key}: ${entry.value}',
+                    "${entry.key}: ${entry.value}",
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onErrorContainer,
                     ),
@@ -552,9 +568,9 @@ class _PlatformErrorsBanner extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 20),
-                  onPressed: () => service.fetchPlatform(entry.key),
+                  onPressed: () => unawaited(service.fetchPlatform(entry.key)),
                   color: theme.colorScheme.onErrorContainer,
-                  tooltip: '重试 ${entry.key}',
+                  tooltip: "重试 ${entry.key}",
                 ),
               ],
             ),
@@ -590,7 +606,7 @@ class _AssignmentCard extends StatelessWidget {
     final now = DateTime.now();
     final isPast = assignment.due.isBefore(now);
 
-    final formatter = DateFormat('MM/dd HH:mm');
+    final formatter = DateFormat("MM/dd HH:mm");
     final dueString = formatter.format(assignment.due);
 
     Color statusColor() {
@@ -602,7 +618,7 @@ class _AssignmentCard extends StatelessWidget {
     }
 
     final statusLabel = completed
-        ? (assignment.status == 'Graded' ? 'Graded' : 'Submitted')
+        ? (assignment.status == "Graded" ? "Graded" : "Submitted")
         : assignment.status;
 
     return Card(
@@ -657,7 +673,7 @@ class _AssignmentCard extends StatelessWidget {
                   if (hasOverride) ...[
                     const SizedBox(width: 6),
                     Tooltip(
-                      message: '本地标记',
+                      message: "本地标记",
                       child: Icon(
                         Icons.edit_note,
                         size: 18,
@@ -713,7 +729,7 @@ class _AssignmentCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Due: $dueString',
+                    "Due: $dueString",
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isPast && !completed
                           ? Colors.red
@@ -734,7 +750,7 @@ class _AssignmentCard extends StatelessWidget {
                     ),
                     child: completed
                         ? Row(
-                            key: const ValueKey('completed'),
+                            key: const ValueKey("completed"),
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
@@ -744,7 +760,7 @@ class _AssignmentCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '已完成',
+                                "已完成",
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: Colors.green,
                                   fontWeight: FontWeight.bold,
@@ -752,7 +768,7 @@ class _AssignmentCard extends StatelessWidget {
                               ),
                             ],
                           )
-                        : const SizedBox.shrink(key: ValueKey('not')),
+                        : const SizedBox.shrink(key: ValueKey("not")),
                   ),
                 ],
               ),

@@ -1,9 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
+import "dart:async";
+import "dart:convert";
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:techpie/utils/platform.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:techpie/utils/platform.dart";
 
 enum IosNativeNavigationBarItemRole { normal, done, destructive }
 
@@ -32,15 +32,15 @@ class IosNativeNavigationBarItem {
 
   Map<String, Object?> toMap() {
     return <String, Object?>{
-      'id': id,
-      'title': title,
-      'sfSymbol': sfSymbol,
-      'role': role.name,
-      'enabled': enabled,
-      'hidden': hidden,
-      'accessibilityLabel': accessibilityLabel,
-      'placementGroup': placementGroup,
-      'menuItems': menuItems.map((item) => item.toMap()).toList(),
+      "id": id,
+      "title": title,
+      "sfSymbol": sfSymbol,
+      "role": role.name,
+      "enabled": enabled,
+      "hidden": hidden,
+      "accessibilityLabel": accessibilityLabel,
+      "placementGroup": placementGroup,
+      "menuItems": menuItems.map((item) => item.toMap()).toList(),
     };
   }
 }
@@ -66,13 +66,13 @@ class IosNativeNavigationBarMenuItem {
 
   Map<String, Object?> toMap() {
     return <String, Object?>{
-      'value': value,
-      'title': title,
-      'sfSymbol': sfSymbol,
-      'checked': checked,
-      'destructive': destructive,
-      'displayInline': displayInline,
-      'children': children.map((item) => item.toMap()).toList(),
+      "value": value,
+      "title": title,
+      "sfSymbol": sfSymbol,
+      "checked": checked,
+      "destructive": destructive,
+      "displayInline": displayInline,
+      "children": children.map((item) => item.toMap()).toList(),
     };
   }
 }
@@ -160,31 +160,31 @@ class _IosNativeNavigationBarState extends State<IosNativeNavigationBar> {
 
   Object _signature(IosNativeNavigationBar widget) {
     return jsonEncode(<String, Object?>{
-      'title': widget.title,
-      'subtitle': widget.subtitle,
-      'leadingItems': widget.leadingItems.map((item) => item.toMap()).toList(),
-      'trailingItems':
+      "title": widget.title,
+      "subtitle": widget.subtitle,
+      "leadingItems": widget.leadingItems.map((item) => item.toMap()).toList(),
+      "trailingItems":
           widget.trailingItems.map((item) => item.toMap()).toList(),
-      'selectionMode': widget.selectionMode,
-      'largeTitleMode': widget.largeTitleMode,
+      "selectionMode": widget.selectionMode,
+      "largeTitleMode": widget.largeTitleMode,
     });
   }
 
   Map<String, Object?> get _configuration {
     return <String, Object?>{
-      'title': widget.title,
-      'subtitle': widget.subtitle,
-      'leadingItems': widget.leadingItems.map((item) => item.toMap()).toList(),
-      'trailingItems':
+      "title": widget.title,
+      "subtitle": widget.subtitle,
+      "leadingItems": widget.leadingItems.map((item) => item.toMap()).toList(),
+      "trailingItems":
           widget.trailingItems.map((item) => item.toMap()).toList(),
-      'selectionMode': widget.selectionMode,
-      'largeTitleMode': widget.largeTitleMode,
+      "selectionMode": widget.selectionMode,
+      "largeTitleMode": widget.largeTitleMode,
     };
   }
 
   Future<void> _sendConfigurationUpdate(MethodChannel channel) async {
     try {
-      await channel.invokeMethod<void>('updateConfiguration', _configuration);
+      await channel.invokeMethod<void>("updateConfiguration", _configuration);
     } on PlatformException {
       // Platform view may be tearing down.
     } on MissingPluginException {
@@ -193,19 +193,19 @@ class _IosNativeNavigationBarState extends State<IosNativeNavigationBar> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel('$_channelPrefix/$viewId');
+    final channel = MethodChannel("$_channelPrefix/$viewId");
     _channel?.setMethodCallHandler(null);
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
       final arguments = call.arguments as Map<Object?, Object?>?;
       switch (call.method) {
-        case 'onItemPressed':
-          final id = arguments?['id'] as String?;
+        case "onItemPressed":
+          final id = arguments?["id"] as String?;
           if (id != null) widget.onItemPressed?.call(id);
-        case 'onMenuSelected':
-          final id = arguments?['id'] as String?;
-          final value = arguments?['value'] as String?;
+        case "onMenuSelected":
+          final id = arguments?["id"] as String?;
+          final value = arguments?["value"] as String?;
           if (id != null && value != null) {
             widget.onMenuSelected?.call(id, value);
           }
@@ -215,5 +215,5 @@ class _IosNativeNavigationBarState extends State<IosNativeNavigationBar> {
   }
 }
 
-const _viewType = 'techpie/native_navigation_bar';
-const _channelPrefix = 'techpie/native_navigation_bar';
+const _viewType = "techpie/native_navigation_bar";
+const _channelPrefix = "techpie/native_navigation_bar";

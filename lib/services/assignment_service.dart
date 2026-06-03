@@ -1,18 +1,20 @@
-import 'dart:convert';
+import "dart:async";
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import "dart:convert";
 
-import '../models/assignment.dart';
-import '../models/assignment_overrides.dart';
-import '../models/third_party_account.dart';
-import 'auth_service.dart';
-import 'http_client.dart';
-import 'storage_service.dart';
-import 'third_party_auth_service.dart';
+import "package:flutter/foundation.dart";
+import "package:http/http.dart" as http;
 
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
+import "../models/assignment.dart";
+import "../models/assignment_overrides.dart";
+import "../models/third_party_account.dart";
+import "auth_service.dart";
+import "http_client.dart";
+import "storage_service.dart";
+import "third_party_auth_service.dart";
+
+const String _devBaseUrl = "http://localhost:3000/api";
+const String _prodBaseUrl = "https://techpie.geekpie.club/api";
 
 class AssignmentService extends ChangeNotifier {
   final StorageService _storage;
@@ -64,7 +66,7 @@ class AssignmentService extends ChangeNotifier {
 
   void _onDepsChanged() {
     if (!_autoRefetchEnabled) return;
-    fetchAssignments();
+    unawaited(fetchAssignments());
   }
 
   @override
@@ -156,8 +158,8 @@ class AssignmentService extends ChangeNotifier {
   }
 
   Map<String, String> _jsonHeaders() => {
-    'Content-Type': 'application/json; charset=UTF-8',
-  };
+        "Content-Type": "application/json; charset=UTF-8",
+      };
 
   Future<void> fetchAssignments() async {
     _loading = true;
@@ -172,7 +174,7 @@ class AssignmentService extends ChangeNotifier {
     if (_auth.isLoggedIn) {
       futures.add(
         _fetchBlackboard().then((items) {
-          if (items != null) successfulResults['blackboard'] = items;
+          if (items != null) successfulResults["blackboard"] = items;
         }),
       );
     }
@@ -207,7 +209,7 @@ class AssignmentService extends ChangeNotifier {
         merged.map((a) => a.toJson()).toList(),
       );
     } catch (e) {
-      _error = '同步失败，请检查网络或稍后重试';
+      _error = "同步失败，请检查网络或稍后重试";
     } finally {
       _loading = false;
       notifyListeners();
@@ -217,9 +219,8 @@ class AssignmentService extends ChangeNotifier {
   List<Assignment> _mergeAssignments({
     required Map<String, List<Assignment>> successfulResults,
   }) {
-    final successfulPlatforms = successfulResults.keys
-        .map((p) => p.toLowerCase())
-        .toSet();
+    final successfulPlatforms =
+        successfulResults.keys.map((p) => p.toLowerCase()).toSet();
 
     final merged = <Assignment>[
       for (final a in _assignments)
@@ -239,9 +240,9 @@ class AssignmentService extends ChangeNotifier {
     final successfulResults = <String, List<Assignment>>{};
     Future<void>? future;
 
-    if (platformId == 'blackboard' && _auth.isLoggedIn) {
+    if (platformId == "blackboard" && _auth.isLoggedIn) {
       future = _fetchBlackboard().then((items) {
-        if (items != null) successfulResults['blackboard'] = items;
+        if (items != null) successfulResults["blackboard"] = items;
       });
     } else {
       for (final acc in _tpAuth.accounts) {
@@ -275,7 +276,7 @@ class AssignmentService extends ChangeNotifier {
         _error = e.toString();
       }
     }
-    
+
     _loading = false;
     notifyListeners();
   }
@@ -287,27 +288,27 @@ class AssignmentService extends ChangeNotifier {
     if (session == null || session.tgc.isEmpty) return null;
 
     Future<http.Response> doFetch() => _http.post(
-      Uri.parse('$_baseUrl/deadlines/blackboard'),
-      headers: _jsonHeaders(),
-      body: jsonEncode({'token': session.tgc}),
-      tag: 'deadlines:blackboard',
-    );
+          Uri.parse("$_baseUrl/deadlines/blackboard"),
+          headers: _jsonHeaders(),
+          body: jsonEncode({"token": session.tgc}),
+          tag: "deadlines:blackboard",
+        );
 
     try {
       var resp = await doFetch();
       if (resp.statusCode == 401) {
         if (await _auth.tryRenewSession()) {
           resp = await _http.post(
-            Uri.parse('$_baseUrl/deadlines/blackboard'),
+            Uri.parse("$_baseUrl/deadlines/blackboard"),
             headers: _jsonHeaders(),
-            body: jsonEncode({'token': _auth.session!.tgc}),
-            tag: 'deadlines:blackboard:retry',
+            body: jsonEncode({"token": _auth.session!.tgc}),
+            tag: "deadlines:blackboard:retry",
           );
         }
       }
-      return _parseDeadlinesResponse(resp, 'blackboard');
+      return _parseDeadlinesResponse(resp, "blackboard");
     } catch (e) {
-      _platformErrors['blackboard'] = '同步失败，请检查网络或稍后重试';
+      _platformErrors["blackboard"] = "同步失败，请检查网络或稍后重试";
       return null;
     }
   }
@@ -315,28 +316,28 @@ class AssignmentService extends ChangeNotifier {
   Future<List<Assignment>?> _fetchGradescope(ThirdPartyAccount acc) async {
     try {
       final resp = await _http.post(
-        Uri.parse('$_baseUrl/deadlines/gradescope'),
+        Uri.parse("$_baseUrl/deadlines/gradescope"),
         headers: _jsonHeaders(),
-        body: jsonEncode({'token': acc.token}),
-        tag: 'deadlines:gradescope',
+        body: jsonEncode({"token": acc.token}),
+        tag: "deadlines:gradescope",
       );
       if (resp.statusCode == 401) {
         await _tpAuth.unbind(ThirdPartyPlatform.gradescope);
-        _platformErrors['gradescope'] = 'token 已失效,请重新绑定';
+        _platformErrors["gradescope"] = "token 已失效,请重新绑定";
         return null;
       }
-      return _parseDeadlinesResponse(resp, 'gradescope');
+      return _parseDeadlinesResponse(resp, "gradescope");
     } catch (e) {
-      _platformErrors['gradescope'] = '同步失败，请检查网络或稍后重试';
+      _platformErrors["gradescope"] = "同步失败，请检查网络或稍后重试";
       return null;
     }
   }
 
   Future<List<Assignment>?> _fetchHydro(ThirdPartyAccount acc) async {
-    final origin = acc.hydroOrigin ?? 'https://acm.shanghaitech.edu.cn';
+    final origin = acc.hydroOrigin ?? "https://acm.shanghaitech.edu.cn";
     final domains = acc.hydroDomains ?? const <String>[];
     if (domains.isEmpty) {
-      _platformErrors['hydro'] = '未配置 Hydro 课程域 (domain),前往设置补全';
+      _platformErrors["hydro"] = "未配置 Hydro 课程域 (domain),前往设置补全";
       return null;
     }
 
@@ -346,27 +347,27 @@ class AssignmentService extends ChangeNotifier {
       final url = '${origin.replaceAll(RegExp(r'/+$'), '')}/d/$domain';
       try {
         final resp = await _http.post(
-          Uri.parse('$_baseUrl/deadlines/hydro'),
+          Uri.parse("$_baseUrl/deadlines/hydro"),
           headers: _jsonHeaders(),
           body: jsonEncode({
-            'token': acc.token,
-            'args': {'url': url},
+            "token": acc.token,
+            "args": {"url": url},
           }),
-          tag: 'deadlines:hydro:$domain',
+          tag: "deadlines:hydro:$domain",
         );
         if (resp.statusCode == 401) {
           await _tpAuth.unbind(ThirdPartyPlatform.hydro);
-          _platformErrors['hydro'] = 'token 已失效,请重新绑定';
+          _platformErrors["hydro"] = "token 已失效,请重新绑定";
           return null;
         }
-        final items = _parseDeadlinesResponse(resp, 'hydro');
+        final items = _parseDeadlinesResponse(resp, "hydro");
         if (items != null) {
           all.addAll(items);
         } else {
           hadError = true;
         }
       } catch (e) {
-        _platformErrors['hydro'] = '同步失败，请检查网络或稍后重试';
+        _platformErrors["hydro"] = "同步失败，请检查网络或稍后重试";
         hadError = true;
       }
     }
@@ -382,17 +383,17 @@ class AssignmentService extends ChangeNotifier {
     try {
       data = jsonDecode(resp.body) as Map<String, dynamic>;
     } catch (_) {
-      _platformErrors[platformKey] = '同步失败，服务器返回异常数据';
+      _platformErrors[platformKey] = "同步失败，服务器返回异常数据";
       return null;
     }
 
-    if (resp.statusCode != 200 || data['success'] != true) {
+    if (resp.statusCode != 200 || data["success"] != true) {
       _platformErrors[platformKey] =
-          (data['error'] as String?) ?? '同步失败 (HTTP ${resp.statusCode})';
+          (data["error"] as String?) ?? "同步失败 (HTTP ${resp.statusCode})";
       return null;
     }
 
-    final raw = data['data'] as List<dynamic>? ?? const [];
+    final raw = data["data"] as List<dynamic>? ?? const [];
     return raw
         .map((e) => Assignment.fromJson(e as Map<String, dynamic>))
         .toList();

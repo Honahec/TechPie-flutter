@@ -87,7 +87,7 @@ final class NativeNavigationBarPlatformView: NSObject, FlutterPlatformView {
       navigationBar.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
       navigationBar.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
       navigationBar.topAnchor.constraint(equalTo: rootView.topAnchor),
-      navigationBar.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+      navigationBar.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
     ])
   }
 

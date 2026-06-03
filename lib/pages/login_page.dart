@@ -1,16 +1,16 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
-import '../services/auth_service.dart';
-import '../services/schedule_service.dart';
-import '../services/service_provider.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
-import '../widgets/ios_liquid/ios_native_segmented_control.dart';
-import '../widgets/ios_liquid/ios_native_text_field_group.dart';
+import "../services/auth_service.dart";
+import "../services/schedule_service.dart";
+import "../services/service_provider.dart";
+import "../utils/platform.dart";
+import "../widgets/adaptive_feedback.dart";
+import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import "../widgets/ios_liquid/ios_native_segmented_control.dart";
+import "../widgets/ios_liquid/ios_native_text_field_group.dart";
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,13 +32,13 @@ class _LoginPageCopy {
 }
 
 const _loginPageCopy = _LoginPageCopy(
-  pageTitle: '登录',
-  brandName: 'TechPie',
-  subtitle: '登录以访问校园服务',
+  pageTitle: "登录",
+  brandName: "TechPie",
+  subtitle: "登录以访问校园服务",
 );
 
 const MethodChannel _nativeGlassPresenterChannel = MethodChannel(
-  'techpie/native_glass_presenter',
+  "techpie/native_glass_presenter",
 );
 
 Future<void> presentLoginPage(BuildContext context) async {
@@ -53,7 +53,7 @@ Future<void> presentLoginPage(BuildContext context) async {
 
   if (context.mounted) {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      MaterialPageRoute<void>(builder: (_) => const LoginPage()),
     );
   }
 }
@@ -66,46 +66,48 @@ Future<void> _presentNativeLoginSheet({
     final arguments = (call.arguments as Map<Object?, Object?>?) ?? const {};
 
     Future<Map<String, Object?>> runAction(
-        Future<void> Function() action) async {
+      Future<void> Function() action,
+    ) async {
       try {
         await action();
-        return const <String, Object?>{'ok': true};
+        return const <String, Object?>{"ok": true};
       } catch (error) {
-        return <String, Object?>{'ok': false, 'message': '$error'};
+        return <String, Object?>{"ok": false, "message": "$error"};
       }
     }
 
     switch (call.method) {
-      case 'nativeLoginSheet.sendSms':
-        final phone = (arguments['phone'] as String? ?? '').trim();
+      case "nativeLoginSheet.sendSms":
+        final phone = (arguments["phone"] as String? ?? "").trim();
         return runAction(() => authService.sendSmsCode(phone));
-      case 'nativeLoginSheet.smsLogin':
-        final phone = (arguments['phone'] as String? ?? '').trim();
-        final code = (arguments['code'] as String? ?? '').trim();
+      case "nativeLoginSheet.smsLogin":
+        final phone = (arguments["phone"] as String? ?? "").trim();
+        final code = (arguments["code"] as String? ?? "").trim();
         return runAction(() async {
           await authService.smsLogin(phone, code);
           unawaited(scheduleService.fetchAll());
         });
-      case 'nativeLoginSheet.egateLogin':
-        final username = (arguments['username'] as String? ?? '').trim();
-        final password = (arguments['password'] as String? ?? '').trim();
+      case "nativeLoginSheet.egateLogin":
+        final username = (arguments["username"] as String? ?? "").trim();
+        final password = (arguments["password"] as String? ?? "").trim();
         return runAction(() async {
           await authService.egateLogin(username, password);
           unawaited(scheduleService.fetchAll());
         });
       default:
         throw MissingPluginException(
-            'Unknown login sheet action ${call.method}');
+          "Unknown login sheet action ${call.method}",
+        );
     }
   });
 
   try {
     await _nativeGlassPresenterChannel.invokeMethod<void>(
-      'presentLoginSheet',
+      "presentLoginSheet",
       <String, Object?>{
-        'pageTitle': _loginPageCopy.pageTitle,
-        'brandName': _loginPageCopy.brandName,
-        'subtitle': _loginPageCopy.subtitle,
+        "pageTitle": _loginPageCopy.pageTitle,
+        "brandName": _loginPageCopy.brandName,
+        "subtitle": _loginPageCopy.subtitle,
       },
     );
   } finally {
@@ -137,7 +139,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   Future<void> _dismissKeyboard() async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (isIos()) {
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+      await SystemChannels.textInput.invokeMethod<void>("TextInput.hide");
     }
   }
 
@@ -151,7 +153,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       if (mounted && !isIos()) {
         showAdaptiveFeedback(
           context: context,
-          message: '验证码已发送',
+          message: "验证码已发送",
           style: AdaptiveFeedbackStyle.success,
         );
       }
@@ -162,11 +164,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         if (isIos()) {
-          setState(() => _smsInlineMessage = '发送失败：$e');
+          setState(() => _smsInlineMessage = "发送失败：$e");
         } else {
           showAdaptiveFeedback(
             context: context,
-            message: '发送失败: $e',
+            message: "发送失败: $e",
             style: AdaptiveFeedbackStyle.error,
           );
         }
@@ -271,7 +273,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       await ServiceProvider.of(context).authService.smsLogin(phone, code);
       if (mounted) {
         setState(() => _smsInlineMessage = null);
-        ServiceProvider.of(context).scheduleService.fetchAll();
+        unawaited(ServiceProvider.of(context).scheduleService.fetchAll());
         await _dismissKeyboard();
         if (!mounted) return;
         Navigator.pop(context);
@@ -279,11 +281,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         if (isIos()) {
-          setState(() => _smsInlineMessage = '登录失败：$e');
+          setState(() => _smsInlineMessage = "登录失败：$e");
         } else {
           showAdaptiveFeedback(
             context: context,
-            message: '登录失败: $e',
+            message: "登录失败: $e",
             style: AdaptiveFeedbackStyle.error,
           );
         }
@@ -305,7 +307,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       ).authService.egateLogin(username, password);
       if (mounted) {
         setState(() => _egateInlineMessage = null);
-        ServiceProvider.of(context).scheduleService.fetchAll();
+        unawaited(ServiceProvider.of(context).scheduleService.fetchAll());
         await _dismissKeyboard();
         if (!mounted) return;
         Navigator.pop(context);
@@ -313,11 +315,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         if (isIos()) {
-          setState(() => _egateInlineMessage = '登录失败：$e');
+          setState(() => _egateInlineMessage = "登录失败：$e");
         } else {
           showAdaptiveFeedback(
             context: context,
-            message: '登录失败: $e',
+            message: "登录失败: $e",
             style: AdaptiveFeedbackStyle.error,
           );
         }
@@ -418,8 +420,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                         unselectedLabelColor: colorScheme.onSurfaceVariant,
                         labelStyle: theme.textTheme.labelLarge,
                         tabs: const [
-                          Tab(text: '短信登录'),
-                          Tab(text: '统一身份认证'),
+                          Tab(text: "短信登录"),
+                          Tab(text: "统一身份认证"),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -474,15 +476,15 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
         leadingItems: [
           if (canPop)
             const IosNativeNavigationBarItem(
-              id: 'back',
-              title: '返回',
-              sfSymbol: 'chevron.left',
-              accessibilityLabel: '返回',
+              id: "back",
+              title: "返回",
+              sfSymbol: "chevron.left",
+              accessibilityLabel: "返回",
             ),
         ],
         onItemPressed: (id) {
-          if (id == 'back') {
-            Navigator.maybePop(context);
+          if (id == "back") {
+            unawaited(Navigator.maybePop(context));
           }
         },
       ),
@@ -496,7 +498,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             SizedBox(height: liquidGlass ? 20 : 18),
             IosNativeSegmentedControl(
               value: _selectedLoginMethod,
-              segments: const ['短信', '统一认证'],
+              segments: const ["短信", "统一认证"],
               onChanged: (value) {
                 setState(() => _selectedLoginMethod = value);
               },
@@ -508,7 +510,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               switchOutCurve: Curves.easeInCubic,
               child: _selectedLoginMethod == 0
                   ? _IosSmsLoginForm(
-                      key: const ValueKey<String>('sms'),
+                      key: const ValueKey<String>("sms"),
                       phoneController: _phoneController,
                       codeController: _codeController,
                       cooldown: _cooldown,
@@ -519,7 +521,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                       liquidGlass: liquidGlass,
                     )
                   : _IosEgateLoginForm(
-                      key: const ValueKey<String>('egate'),
+                      key: const ValueKey<String>("egate"),
                       usernameController: _usernameController,
                       passwordController: _passwordController,
                       obscurePassword: _obscurePassword,
@@ -618,7 +620,7 @@ class _IosSmsLoginForm extends StatelessWidget {
                 IosNativeTextFieldGroup(
                   items: [
                     IosNativeTextFieldGroupItem(
-                      placeholder: '手机号码',
+                      placeholder: "手机号码",
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
@@ -631,7 +633,7 @@ class _IosSmsLoginForm extends StatelessWidget {
                       child: IosNativeTextFieldGroup(
                         items: [
                           IosNativeTextFieldGroupItem(
-                            placeholder: '验证码',
+                            placeholder: "验证码",
                             controller: codeController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
@@ -656,7 +658,7 @@ class _IosSmsLoginForm extends StatelessWidget {
             ],
             const SizedBox(height: 18),
             _IosPrimaryButton(
-              label: '登录',
+              label: "登录",
               loading: auth.loading,
               onPressed: auth.loading ? null : onLogin,
               liquidGlass: liquidGlass,
@@ -701,12 +703,12 @@ class _IosEgateLoginForm extends StatelessWidget {
                 IosNativeTextFieldGroup(
                   items: [
                     IosNativeTextFieldGroupItem(
-                      placeholder: '学号',
+                      placeholder: "学号",
                       controller: usernameController,
                       textInputAction: TextInputAction.next,
                     ),
                     IosNativeTextFieldGroupItem(
-                      placeholder: '密码',
+                      placeholder: "密码",
                       controller: passwordController,
                       obscureText: obscurePassword,
                       textInputAction: TextInputAction.done,
@@ -722,7 +724,7 @@ class _IosEgateLoginForm extends StatelessWidget {
             ],
             const SizedBox(height: 18),
             _IosPrimaryButton(
-              label: '登录',
+              label: "登录",
               loading: auth.loading,
               onPressed: auth.loading ? null : onLogin,
               liquidGlass: liquidGlass,
@@ -777,7 +779,7 @@ class _IosCodeButton extends StatelessWidget {
               height: 18,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : Text(cooldown > 0 ? '${cooldown}s' : '发送'),
+          : Text(cooldown > 0 ? "${cooldown}s" : "发送"),
     );
   }
 }
@@ -892,7 +894,7 @@ class _SmsLoginForm extends StatelessWidget {
           TextField(
             controller: phoneController,
             decoration: const InputDecoration(
-              labelText: '手机号码',
+              labelText: "手机号码",
               prefixIcon: Icon(Icons.phone_outlined),
               filled: true,
               border: UnderlineInputBorder(),
@@ -906,7 +908,7 @@ class _SmsLoginForm extends StatelessWidget {
                 child: TextField(
                   controller: codeController,
                   decoration: const InputDecoration(
-                    labelText: '验证码',
+                    labelText: "验证码",
                     prefixIcon: Icon(Icons.pin_outlined),
                     filled: true,
                     border: UnderlineInputBorder(),
@@ -924,7 +926,7 @@ class _SmsLoginForm extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(cooldown > 0 ? '${cooldown}s' : '发送验证码'),
+                    : Text(cooldown > 0 ? "${cooldown}s" : "发送验证码"),
               ),
             ],
           ),
@@ -942,7 +944,7 @@ class _SmsLoginForm extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.login),
-            label: const Text('登录'),
+            label: const Text("登录"),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
             ),
@@ -982,7 +984,7 @@ class _EgateLoginForm extends StatelessWidget {
           TextField(
             controller: usernameController,
             decoration: const InputDecoration(
-              labelText: '学号',
+              labelText: "学号",
               prefixIcon: Icon(Icons.badge_outlined),
               filled: true,
               border: UnderlineInputBorder(),
@@ -992,7 +994,7 @@ class _EgateLoginForm extends StatelessWidget {
           TextField(
             controller: passwordController,
             decoration: InputDecoration(
-              labelText: '密码',
+              labelText: "密码",
               prefixIcon: const Icon(Icons.lock_outline),
               filled: true,
               border: const UnderlineInputBorder(),
@@ -1021,7 +1023,7 @@ class _EgateLoginForm extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.login),
-            label: const Text('登录'),
+            label: const Text("登录"),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
             ),

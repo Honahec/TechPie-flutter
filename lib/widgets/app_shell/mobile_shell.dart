@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../../utils/platform.dart';
-import '../ios_liquid/ios_glass_button.dart';
-import '../ios_liquid/ios_glass_tab_bar.dart';
-import 'app_destination.dart';
+import "../../utils/platform.dart";
+import "../ios_liquid/ios_glass_button.dart";
+import "../ios_liquid/ios_glass_tab_bar.dart";
+import "app_destination.dart";
 
 class MobileShell extends StatelessWidget {
   final List<AppDestination> destinations;
@@ -33,7 +33,7 @@ class MobileShell extends StatelessWidget {
               ? IosGlassButton(
                   onPressed: () {},
                   icon: Icons.add,
-                  sfSymbol: 'plus',
+                  sfSymbol: "plus",
                 )
               : FloatingActionButton(
                   onPressed: () {},

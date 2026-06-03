@@ -1,8 +1,8 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:path_provider/path_provider.dart';
+import "package:path_provider/path_provider.dart";
 
-import 'ics_file_saver.dart';
+import "ics_file_saver.dart";
 
 Future<SavedIcsFile> saveIcsFileImpl(
   String fileName,
@@ -14,10 +14,10 @@ Future<SavedIcsFile> saveIcsFileImpl(
     IcsSaveLocation.downloads => await getDownloadsDirectory(),
   };
   if (directory == null) {
-    throw FileSystemException('$location directory is unavailable');
+    throw FileSystemException("$location directory is unavailable");
   }
 
-  final file = File('${directory.path}${Platform.pathSeparator}$fileName');
+  final file = File("${directory.path}${Platform.pathSeparator}$fileName");
   await file.writeAsString(content);
   return SavedIcsFileResult(
     fileName: fileName,

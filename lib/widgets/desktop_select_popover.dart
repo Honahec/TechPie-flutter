@@ -1,16 +1,22 @@
-import 'dart:math' as math;
+import "dart:math" as math;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
 
-import 'desktop_popup.dart';
+import "desktop_popup.dart";
 
-typedef DesktopSelectAnchorBuilder =
-    Widget Function(BuildContext context, bool isOpen, VoidCallback toggle);
+typedef DesktopSelectAnchorBuilder = Widget Function(
+  BuildContext context,
+  bool isOpen,
+  VoidCallback toggle,
+);
 
 typedef DesktopSelectLabelBuilder<T> = String Function(T item);
-typedef DesktopSelectLeadingBuilder<T> =
-    Widget Function(BuildContext context, T item, bool selected);
+typedef DesktopSelectLeadingBuilder<T> = Widget Function(
+  BuildContext context,
+  T item,
+  bool selected,
+);
 
 class DesktopSelectPopover<T> extends StatefulWidget {
   final List<T> items;
@@ -94,8 +100,7 @@ class _DesktopSelectPopoverState<T> extends State<DesktopSelectPopover<T>> {
     final anchorSize = anchorBox.size;
     final screenSize = MediaQuery.sizeOf(anchorContext);
     final theme = Theme.of(anchorContext);
-    final menuHeight =
-        widget.itemHeight *
+    final menuHeight = widget.itemHeight *
         math.min(widget.visibleItemCount, widget.items.length);
 
     final rawLeft = anchorOffset.dx + anchorSize.width + widget.offset.dx;
@@ -223,7 +228,7 @@ class _DesktopSelectMenu<T> extends StatelessWidget {
                 leadingBuilder: leadingBuilder == null
                     ? null
                     : (context, selected) =>
-                          leadingBuilder!(context, item, selected),
+                        leadingBuilder!(context, item, selected),
                 onTap: () => onSelected(item),
               );
             },
@@ -255,16 +260,14 @@ class _DesktopSelectMenuRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: ColoredBox(
-        color: selected
-            ? colorScheme.surfaceContainerHighest
-            : Colors.transparent,
+        color:
+            selected ? colorScheme.surfaceContainerHighest : Colors.transparent,
         child: Row(
           children: [
             SizedBox(
               width: 48,
               child: Center(
-                child:
-                    leadingBuilder?.call(context, selected) ??
+                child: leadingBuilder?.call(context, selected) ??
                     (selected
                         ? Icon(
                             Icons.check_rounded,

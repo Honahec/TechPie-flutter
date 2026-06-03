@@ -1,10 +1,10 @@
-import 'dart:math' as math;
+import "dart:math" as math;
 
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../app_destination.dart';
-import 'desktop_sidebar.dart';
-import 'desktop_sidebar_tokens.dart';
+import "../app_destination.dart";
+import "desktop_sidebar.dart";
+import "desktop_sidebar_tokens.dart";
 
 class DesktopShell extends StatelessWidget {
   final List<AppDestination> destinations;
@@ -45,13 +45,13 @@ class DesktopShell extends StatelessWidget {
                 curve: DesktopSidebarTokens.widthAnimationCurve,
                 width: sidebarWidth,
                 child: DesktopSidebar(
-                    destinations: destinations,
-                    selectedIndex: selectedIndex,
-                    collapsed: sidebarCollapsed,
-                    showToggleButton: showToggleButton,
-                    onSelected: onDestinationSelected,
-                    onToggleCollapsed: onToggleSidebarCollapsed,
-                  ),
+                  destinations: destinations,
+                  selectedIndex: selectedIndex,
+                  collapsed: sidebarCollapsed,
+                  showToggleButton: showToggleButton,
+                  onSelected: onDestinationSelected,
+                  onToggleCollapsed: onToggleSidebarCollapsed,
+                ),
               ),
               Expanded(child: SizedBox.expand(child: child)),
             ],

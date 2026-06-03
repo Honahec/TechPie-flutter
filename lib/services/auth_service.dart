@@ -1,13 +1,13 @@
-import 'dart:convert';
+import "dart:convert";
 
-import 'package:flutter/foundation.dart';
+import "package:flutter/foundation.dart";
 
-import '../models/user_session.dart';
-import 'http_client.dart';
-import 'storage_service.dart';
+import "../models/user_session.dart";
+import "http_client.dart";
+import "storage_service.dart";
 
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
+const String _devBaseUrl = "http://localhost:3000/api";
+const String _prodBaseUrl = "https://techpie.geekpie.club/api";
 
 class AuthService extends ChangeNotifier {
   final StorageService _storage;
@@ -50,30 +50,30 @@ class AuthService extends ChangeNotifier {
     if (_session == null) return false;
     try {
       final resp = await _http.post(
-        Uri.parse('$_baseUrl/auth/renew'),
+        Uri.parse("$_baseUrl/auth/renew"),
         headers: _jsonHeaders(),
         body: jsonEncode({
-          'sessionToken': _session!.sessionToken,
-          'tgc': _session!.tgc,
-          'userId': _session!.userId,
-          'tenantId': _session!.tenantId,
+          "sessionToken": _session!.sessionToken,
+          "tgc": _session!.tgc,
+          "userId": _session!.userId,
+          "tenantId": _session!.tenantId,
         }),
-        tag: 'tokenRenew',
+        tag: "tokenRenew",
       );
 
       if (resp.statusCode != 200) return false;
 
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      if (data['success'] != true) return false;
+      if (data["success"] != true) return false;
 
       _session = _session!.copyWith(
-        sessionToken: data['sessionToken'] as String? ?? _session!.sessionToken,
-        tgc: data['tgc'] as String? ?? _session!.tgc,
-        userId: data['userId'] as String? ?? _session!.userId,
-        userName: data['name'] as String? ?? _session!.userName,
-        tenantId: data['tenantId'] as String? ?? _session!.tenantId,
-        cookies: data['cookies'] as String? ?? _session!.cookies,
-        studentId: data['openId'] as String? ?? _session!.studentId,
+        sessionToken: data["sessionToken"] as String? ?? _session!.sessionToken,
+        tgc: data["tgc"] as String? ?? _session!.tgc,
+        userId: data["userId"] as String? ?? _session!.userId,
+        userName: data["name"] as String? ?? _session!.userName,
+        tenantId: data["tenantId"] as String? ?? _session!.tenantId,
+        cookies: data["cookies"] as String? ?? _session!.cookies,
+        studentId: data["openId"] as String? ?? _session!.studentId,
       );
       await _storage.saveSession(_session!);
       notifyListeners();
@@ -87,58 +87,58 @@ class AuthService extends ChangeNotifier {
 
   Future<void> sendSmsCode(String phone) async {
     final resp = await _http.post(
-      Uri.parse('$_baseUrl/auth/mobile/send-sms'),
+      Uri.parse("$_baseUrl/auth/mobile/send-sms"),
       headers: _jsonHeaders(),
-      body: jsonEncode({'phone': phone}),
-      tag: 'sendSms',
+      body: jsonEncode({"phone": phone}),
+      tag: "sendSms",
     );
 
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    if (data['success'] != true) {
-      throw Exception(data['error'] as String? ?? 'Failed to send SMS');
+    if (data["success"] != true) {
+      throw Exception(data["error"] as String? ?? "Failed to send SMS");
     }
 
     // Store context for the login step
-    _smsContext = data['context'] as Map<String, dynamic>?;
+    _smsContext = data["context"] as Map<String, dynamic>?;
   }
 
   Future<UserSession> smsLogin(String phone, String code) async {
     if (_smsContext == null) {
-      throw Exception('Send SMS code first');
+      throw Exception("Send SMS code first");
     }
 
     _loading = true;
     notifyListeners();
     try {
       final resp = await _http.post(
-        Uri.parse('$_baseUrl/auth/mobile/login'),
+        Uri.parse("$_baseUrl/auth/mobile/login"),
         headers: _jsonHeaders(),
         body: jsonEncode({
-          'phone': phone,
-          'code': code,
-          'context': _smsContext,
+          "phone": phone,
+          "code": code,
+          "context": _smsContext,
         }),
-        tag: 'smsLogin',
+        tag: "smsLogin",
       );
 
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      if (data['success'] != true) {
-        throw Exception(data['error'] as String? ?? 'Login failed');
+      if (data["success"] != true) {
+        throw Exception(data["error"] as String? ?? "Login failed");
       }
 
       final loginResult =
-          data['loginResult'] as Map<String, dynamic>? ?? const {};
+          data["loginResult"] as Map<String, dynamic>? ?? const {};
 
       _session = UserSession(
-        sessionToken: data['sessionToken'] as String? ?? '',
-        tgc: data['tgc'] as String? ?? '',
-        userId: data['userId'] as String? ?? '',
-        userName: loginResult['name'] as String? ?? '',
-        schoolName: '上海科技大学',
-        tenantId: data['tenantId'] as String? ?? '',
+        sessionToken: data["sessionToken"] as String? ?? "",
+        tgc: data["tgc"] as String? ?? "",
+        userId: data["userId"] as String? ?? "",
+        userName: loginResult["name"] as String? ?? "",
+        schoolName: "上海科技大学",
+        tenantId: data["tenantId"] as String? ?? "",
         phoneNumber: phone,
-        cookies: data['cookies'] as String? ?? '',
-        studentId: loginResult['openId'] as String? ?? '',
+        cookies: data["cookies"] as String? ?? "",
+        studentId: loginResult["openId"] as String? ?? "",
         createdAt: DateTime.now(),
       );
 
@@ -160,31 +160,31 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
     try {
       final resp = await _http.post(
-        Uri.parse('$_baseUrl/auth/egate'),
+        Uri.parse("$_baseUrl/auth/egate"),
         headers: _jsonHeaders(),
-        body: jsonEncode({'username': username, 'password': password}),
-        tag: 'egateLogin',
+        body: jsonEncode({"username": username, "password": password}),
+        tag: "egateLogin",
       );
 
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      if (data['success'] != true) {
-        throw Exception(data['error'] as String? ?? 'Login failed');
+      if (data["success"] != true) {
+        throw Exception(data["error"] as String? ?? "Login failed");
       }
 
       final loginResult =
-          data['loginResult'] as Map<String, dynamic>? ?? const {};
+          data["loginResult"] as Map<String, dynamic>? ?? const {};
 
       _session = UserSession(
-        sessionToken: data['sessionToken'] as String? ?? '',
-        tgc: data['tgc'] as String? ?? '',
-        userId: data['userId'] as String? ?? username,
-        userName: loginResult['name'] as String? ?? '',
-        schoolName: '上海科技大学',
-        tenantId: data['tenantId'] as String? ?? '',
-        phoneNumber: '',
-        cookies: data['cookies'] as String? ?? '',
+        sessionToken: data["sessionToken"] as String? ?? "",
+        tgc: data["tgc"] as String? ?? "",
+        userId: data["userId"] as String? ?? username,
+        userName: loginResult["name"] as String? ?? "",
+        schoolName: "上海科技大学",
+        tenantId: data["tenantId"] as String? ?? "",
+        phoneNumber: "",
+        cookies: data["cookies"] as String? ?? "",
         createdAt: DateTime.now(),
-        studentId: loginResult['openId'] as String? ?? '',
+        studentId: loginResult["openId"] as String? ?? "",
       );
 
       await _storage.saveSession(_session!);
@@ -212,6 +212,6 @@ class AuthService extends ChangeNotifier {
   // -- Private helpers --
 
   Map<String, String> _jsonHeaders() => {
-    'Content-Type': 'application/json; charset=UTF-8',
-  };
+        "Content-Type": "application/json; charset=UTF-8",
+      };
 }

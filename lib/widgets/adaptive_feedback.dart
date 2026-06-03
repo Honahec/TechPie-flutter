@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 final GlobalKey<ScaffoldMessengerState> rootMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -64,20 +64,20 @@ class _FeedbackStyle {
 
     return switch (style) {
       AdaptiveFeedbackStyle.success => _FeedbackStyle(
-        backgroundColor: colors.primaryContainer,
-        foregroundColor: colors.onPrimaryContainer,
-        icon: Icons.check_circle_outline,
-      ),
+          backgroundColor: colors.primaryContainer,
+          foregroundColor: colors.onPrimaryContainer,
+          icon: Icons.check_circle_outline,
+        ),
       AdaptiveFeedbackStyle.error => _FeedbackStyle(
-        backgroundColor: colors.errorContainer,
-        foregroundColor: colors.onErrorContainer,
-        icon: Icons.error_outline,
-      ),
+          backgroundColor: colors.errorContainer,
+          foregroundColor: colors.onErrorContainer,
+          icon: Icons.error_outline,
+        ),
       AdaptiveFeedbackStyle.info => _FeedbackStyle(
-        backgroundColor: colors.inverseSurface,
-        foregroundColor: colors.onInverseSurface,
-        icon: Icons.info_outline,
-      ),
+          backgroundColor: colors.inverseSurface,
+          foregroundColor: colors.onInverseSurface,
+          icon: Icons.info_outline,
+        ),
     };
   }
 }

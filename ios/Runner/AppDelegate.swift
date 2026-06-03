@@ -9,9 +9,11 @@ import UIKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    guard let registrar = self.registrar(
-      forPlugin: "TechPieNativeGlassRegistry"
-    ) else {
+    guard
+      let registrar = self.registrar(
+        forPlugin: "TechPieNativeGlassRegistry"
+      )
+    else {
       assertionFailure("Failed to create registrar for TechPieNativeGlassRegistry")
       return false
     }
