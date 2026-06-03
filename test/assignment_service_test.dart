@@ -4,12 +4,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:techpie/models/assignment.dart';
 import 'package:techpie/models/third_party_account.dart';
 import 'package:techpie/models/user_session.dart';
 import 'package:techpie/services/assignment_service.dart';
 import 'package:techpie/services/auth_service.dart';
 import 'package:techpie/services/debug_logger.dart';
 import 'package:techpie/services/http_client.dart';
+import 'package:techpie/services/schedule_service.dart';
 import 'package:techpie/services/storage_service.dart';
 import 'package:techpie/services/third_party_auth_service.dart';
 
@@ -55,7 +57,7 @@ void main() {
       ),
     );
 
-    final httpClient = _AssignmentHttpClient((url) {
+    final httpClient = _AssignmentHttpClient((url, _) {
       if (url.path.endsWith('/deadlines/blackboard')) {
         return http.Response(
           jsonEncode({
@@ -81,11 +83,13 @@ void main() {
     });
     final auth = AuthService(storage, httpClient);
     final tpAuth = ThirdPartyAuthService(storage, httpClient);
+    final schedule = ScheduleService(storage, httpClient, auth);
     await auth.loadSession();
     await tpAuth.initialize();
 
-    final service = AssignmentService(storage, httpClient, auth, tpAuth)
-      ..loadCached();
+    final service =
+        AssignmentService(storage, httpClient, auth, tpAuth, schedule)
+          ..loadCached();
 
     await service.fetchAssignments();
 
@@ -103,6 +107,105 @@ void main() {
         storage.loadCachedAssignments().map((a) => a['id']).toList();
     expect(cachedIds, containsAll(['blackboard-new', 'gradescope-old']));
     expect(cachedIds, isNot(contains('blackboard-old')));
+  });
+
+  test('fetches exam table as exam deadlines', () async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final storage = StorageService(prefs);
+    await storage.setSelectedSemester('263');
+    await storage.saveSession(
+      UserSession(
+        sessionToken: 'session',
+        tgc: 'tgc',
+        userId: 'user',
+        userName: 'User',
+        schoolName: 'School',
+        tenantId: 'tenant',
+        phoneNumber: '',
+        cookies: 'SESSION=abc',
+        studentId: 'student',
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+
+    final seenBodies = <Map<String, dynamic>>[];
+    final httpClient = _AssignmentHttpClient((url, body) {
+      seenBodies.add(body);
+      if (url.path.endsWith('/deadlines/blackboard')) {
+        return http.Response(
+          jsonEncode({'success': true, 'data': <Object?>[]}),
+          200,
+        );
+      }
+      if (url.path.endsWith('/schedule/exam_table')) {
+        return http.Response.bytes(
+          utf8.encode(
+            jsonEncode({
+              'success': true,
+              'data': {
+                'examBatchId': '1222',
+                'examBatchName': '2025-2026学年春季学期期中考试',
+                'semesterId': '263',
+                'studentId': '26192',
+                'exams': [
+                  {
+                    'courseCode': 'CS130.01',
+                    'courseName': '操作系统I',
+                    'examType': '期中考试',
+                    'examDate': '2026-04-23',
+                    'examTimeRange': '15:00~16:40',
+                    'examPlace': '教学中心204',
+                    'examStatus': '正常',
+                    'seatUrl': 'https://eams.example/seat',
+                    'examRoomId': '7987',
+                  },
+                ],
+              },
+            }),
+          ),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      }
+      return http.Response('not found', 404);
+    });
+    final auth = AuthService(storage, httpClient);
+    final tpAuth = ThirdPartyAuthService(storage, httpClient);
+    final schedule = ScheduleService(storage, httpClient, auth);
+    await auth.loadSession();
+    await schedule.loadCachedData();
+
+    final service =
+        AssignmentService(storage, httpClient, auth, tpAuth, schedule);
+
+    await service.fetchAssignments();
+
+    expect(
+      service.assignments,
+      hasLength(1),
+      reason: 'errors=${service.platformErrors}, bodies=$seenBodies',
+    );
+    final exam = service.assignments.single;
+    expect(exam.platform, 'exam');
+    expect(exam.kind, DeadlineKind.exam);
+    expect(exam.title, '操作系统I 期中考试');
+    expect(exam.course, contains('教学中心204'));
+    expect(exam.due, DateTime(2026, 4, 23, 15));
+    expect(exam.lateDue, DateTime(2026, 4, 23, 16, 40));
+    expect(exam.status, '正常');
+    expect(exam.url, 'https://eams.example/seat');
+    expect(
+      seenBodies,
+      contains(
+        predicate<Map<String, dynamic>>((body) {
+          return body['semester_id'] == '263' &&
+              body['cookies'] == 'SESSION=abc; CASTGC=tgc';
+        }),
+      ),
+    );
+    expect(storage.loadCachedAssignments().single['kind'], 'exam');
   });
 }
 
@@ -122,7 +225,7 @@ Map<String, dynamic> _assignmentJson({
 class _AssignmentHttpClient extends LoggingHttpClient {
   _AssignmentHttpClient(this._handler) : super(DebugLogger());
 
-  final http.Response Function(Uri url) _handler;
+  final http.Response Function(Uri url, Map<String, dynamic> body) _handler;
 
   @override
   Future<http.Response> post(
@@ -131,6 +234,10 @@ class _AssignmentHttpClient extends LoggingHttpClient {
     Object? body,
     Encoding? encoding,
     String? tag,
-  }) async =>
-      _handler(url);
+  }) async {
+    final decodedBody = body is String
+        ? jsonDecode(body) as Map<String, dynamic>
+        : <String, dynamic>{};
+    return _handler(url, decodedBody);
+  }
 }

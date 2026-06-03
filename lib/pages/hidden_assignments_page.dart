@@ -82,7 +82,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
           appBar: isIos()
               ? IosNativeNavigationBar(
                   title:
-                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
                   selectionMode: _selectionMode,
                   leadingItems: [
                     IosNativeNavigationBarItem(
@@ -144,7 +144,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
               : BlurredAppBar(
                   centerTitle: false,
                   title: Text(
-                    _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的作业',
+                    _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
                   ),
                   actions: [
                     if (_selectionMode)
@@ -183,7 +183,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
                   padding: EdgeInsets.only(top: topPad),
                   child: Center(
                     child: Text(
-                      '没有被忽略的作业',
+                      '没有被忽略的事项',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -232,7 +232,7 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
           subtitle: Text(
             a == null
                 ? '(已无缓存数据)'
-                : '${a.platform.toUpperCase()} · ${a.course}',
+                : '${a.kind.label} · ${a.platform.toUpperCase()} · ${a.course}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

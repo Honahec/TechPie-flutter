@@ -405,12 +405,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           final key = part.substring(0, idx).trim();
           final value = part.substring(idx + 1).trim();
           if (key.isNotEmpty && value.isNotEmpty) {
-            cookies.add(WebViewCookie(
-              name: key,
-              value: value,
-              domain: domain,
-              path: '/',
-            ),);
+            cookies.add(
+              WebViewCookie(
+                name: key,
+                value: value,
+                domain: domain,
+                path: '/',
+              ),
+            );
           }
         }
       }
@@ -493,7 +495,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         key: const ValueKey('no-pending'),
         theme: theme,
         icon: Icons.assignment_turned_in_outlined,
-        title: '没有待办作业',
+        title: '没有待办事项',
         subtitle: 'All caught up!',
       );
     } else {
@@ -506,12 +508,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: Row(
               children: [
                 Icon(
-                  Icons.assignment_outlined,
+                  Icons.event_note_outlined,
                   size: 18,
                   color: theme.colorScheme.tertiary,
                 ),
                 const SizedBox(width: 8),
-                Text('待办作业', style: theme.textTheme.titleSmall),
+                Text('待办事项', style: theme.textTheme.titleSmall),
                 const Spacer(),
                 Text(
                   '${pending.length} 项',
@@ -646,11 +648,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _openAssignmentUrl(Assignment a) async {
     final url = a.url;
     if (url == null || url.isEmpty) {
+      final itemLabel = a.kind == DeadlineKind.exam ? '考试' : '作业';
       if (isIos()) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: '无法打开作业',
-          message: '这个作业没有可打开的链接。',
+          title: '无法打开$itemLabel',
+          message: '这个$itemLabel没有可打开的链接。',
           actions: const [
             AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
           ],
@@ -658,7 +661,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: '该作业没有链接',
+          message: '该$itemLabel没有链接',
           style: AdaptiveFeedbackStyle.info,
         );
       }
@@ -678,36 +681,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     VoidCallback? onTap,
   }) {
     final inner = SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-          child: Column(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              Text(title, style: theme.textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-            ],
-          ),
-        ),);
+            ),
+            const SizedBox(height: 16),
+            Text(title, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     if (onTap != null) {
       return InkWell(

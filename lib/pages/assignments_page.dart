@@ -26,6 +26,8 @@ class AssignmentsPage extends StatefulWidget {
 class _AssignmentsPageState extends State<AssignmentsPage> {
   bool _pastCollapsed = true;
   bool _selectionMode = false;
+  bool _showAssignments = true;
+  bool _showExams = true;
   final Set<String> _selected = {};
 
   void _exitSelection() {
@@ -94,7 +96,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     return ListenableBuilder(
       listenable: assignmentService,
       builder: (context, _) {
-        final visible = assignmentService.visibleAssignments;
+        final allVisible = assignmentService.visibleAssignments;
+        final visible = _filterAssignments(allVisible);
         return Scaffold(
           extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
           appBar: _selectionMode
@@ -105,7 +108,13 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
             onPopInvokedWithResult: (didPop, _) {
               if (!didPop && _selectionMode) _exitSelection();
             },
-            child: _buildBody(context, assignmentService, visible, topInset),
+            child: _buildBody(
+              context,
+              assignmentService,
+              allVisible,
+              visible,
+              topInset,
+            ),
           ),
         );
       },
@@ -127,22 +136,46 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
             accessibilityLabel: '更多操作',
             menuItems: [
               IosNativeNavigationBarMenuItem(
-                value: 'hidden',
-                title: '查看已忽略 (${service.overrides.hidden.length})',
+                value: 'toggleAssignments',
+                title: '显示作业',
+                sfSymbol: 'checklist',
+                checked: _showAssignments,
+              ),
+              IosNativeNavigationBarMenuItem(
+                value: 'toggleExams',
+                title: '显示考试',
+                sfSymbol: 'calendar.badge.clock',
+                checked: _showExams,
+              ),
+              IosNativeNavigationBarMenuItem(
+                value: '__hidden_section__',
+                title: '',
+                displayInline: true,
+                children: [
+                  IosNativeNavigationBarMenuItem(
+                    value: 'hidden',
+                    title: '查看已忽略 (${service.overrides.hidden.length})',
+                  ),
+                ],
               ),
             ],
           ),
         ],
         onMenuSelected: (_, value) {
-          if (value == 'hidden') {
-            unawaited(
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const HiddenAssignmentsPage(),
+          switch (value) {
+            case 'toggleAssignments':
+              _toggleAssignmentsVisibility();
+            case 'toggleExams':
+              _toggleExamsVisibility();
+            case 'hidden':
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HiddenAssignmentsPage(),
+                  ),
                 ),
-              ),
-            );
+              );
           }
         },
       );
@@ -154,18 +187,34 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
           onSelected: (v) {
-            if (v == 'hidden') {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HiddenAssignmentsPage(),
+            switch (v) {
+              case 'toggleAssignments':
+                _toggleAssignmentsVisibility();
+              case 'toggleExams':
+                _toggleExamsVisibility();
+              case 'hidden':
+                unawaited(
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HiddenAssignmentsPage(),
+                    ),
                   ),
-                ),
-              );
+                );
             }
           },
           itemBuilder: (_) => [
+            CheckedPopupMenuItem(
+              value: 'toggleAssignments',
+              checked: _showAssignments,
+              child: const Text('显示作业'),
+            ),
+            CheckedPopupMenuItem(
+              value: 'toggleExams',
+              checked: _showExams,
+              child: const Text('显示考试'),
+            ),
+            const PopupMenuDivider(),
             PopupMenuItem(
               value: 'hidden',
               child: Row(
@@ -180,6 +229,37 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
         ),
       ],
     );
+  }
+
+  List<Assignment> _filterAssignments(List<Assignment> items) {
+    return items.where((item) {
+      return switch (item.kind) {
+        DeadlineKind.assignment => _showAssignments,
+        DeadlineKind.exam => _showExams,
+      };
+    }).toList();
+  }
+
+  String get _filteredItemLabel {
+    if (_showAssignments && !_showExams) return '作业';
+    if (!_showAssignments && _showExams) return '考试';
+    return 'ddl';
+  }
+
+  void _toggleAssignmentsVisibility() {
+    setState(() {
+      _showAssignments = !_showAssignments;
+      _selectionMode = false;
+      _selected.clear();
+    });
+  }
+
+  void _toggleExamsVisibility() {
+    setState(() {
+      _showExams = !_showExams;
+      _selectionMode = false;
+      _selected.clear();
+    });
   }
 
   PreferredSizeWidget _buildSelectionAppBar(
@@ -221,12 +301,13 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   Widget _buildBody(
     BuildContext context,
     AssignmentService service,
-    List<Assignment> visible,
+    List<Assignment> allVisible,
+    List<Assignment> filtered,
     double topInset,
   ) {
     final banner = _PlatformErrorsBanner(service: service);
 
-    if (service.loading && visible.isEmpty) {
+    if (service.loading && allVisible.isEmpty) {
       return Column(
         children: [
           SizedBox(height: topInset),
@@ -236,7 +317,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       );
     }
 
-    if (visible.isEmpty) {
+    if (allVisible.isEmpty) {
       return Column(
         children: [
           SizedBox(height: topInset),
@@ -265,7 +346,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       children: [
         SizedBox(height: topInset),
         banner,
-        Expanded(child: _buildList(context, service, visible)),
+        Expanded(child: _buildList(context, service, filtered)),
       ],
     );
   }
@@ -282,7 +363,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
-          Text('No upcoming assignments', style: theme.textTheme.titleMedium),
+          Text('No upcoming deadlines', style: theme.textTheme.titleMedium),
           if (service.error != null) ...[
             const SizedBox(height: 8),
             Padding(
@@ -311,6 +392,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     final past = sorted.where((a) => a.due.isBefore(now)).toList();
     final upcoming = sorted.where((a) => !a.due.isBefore(now)).toList();
     final todayLabel = DateFormat('yyyy-MM-dd EEE').format(now);
+    final itemLabel = _filteredItemLabel;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -319,41 +401,53 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         children: [
-          if (past.isNotEmpty) ...[
-            InkWell(
-              onTap: () => setState(() => _pastCollapsed = !_pastCollapsed),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      _pastCollapsed ? Icons.chevron_right : Icons.expand_more,
-                      size: 20,
+          InkWell(
+            onTap: () => setState(() => _pastCollapsed = !_pastCollapsed),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _pastCollapsed ? Icons.chevron_right : Icons.expand_more,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '已过期 (${past.length})',
+                    style: theme.textTheme.labelLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '已过期 (${past.length})',
-                      style: theme.textTheme.labelLarge?.copyWith(
+                  ),
+                  const Spacer(),
+                  Text(
+                    _pastCollapsed ? '展开' : '折叠',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!_pastCollapsed)
+            past.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(32, 8, 16, 16),
+                    child: Text(
+                      '没有已过期的 $itemLabel',
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      _pastCollapsed ? '展开' : '折叠',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (!_pastCollapsed)
-              ...past.map((a) => _buildItem(context, service, a)),
-            const SizedBox(height: 4),
-          ],
+                  )
+                : Column(
+                    children: past
+                        .map((a) => _buildItem(context, service, a))
+                        .toList(),
+                  ),
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
@@ -378,7 +472,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: Text(
-                  '没有未来的 ddl',
+                  '没有未来的 $itemLabel',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -472,11 +566,12 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     }
     final url = a.url;
     if (url == null || url.isEmpty) {
+      final itemLabel = a.kind == DeadlineKind.exam ? '考试' : '作业';
       if (usesIosContextualFeedback) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: '无法打开作业',
-          message: '这个作业没有可打开的链接。',
+          title: '无法打开$itemLabel',
+          message: '这个$itemLabel没有可打开的链接。',
           actions: const [
             AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
           ],
@@ -484,7 +579,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: '该作业没有链接',
+          message: '该$itemLabel没有链接',
           style: AdaptiveFeedbackStyle.info,
         );
       }
@@ -581,6 +676,39 @@ class _PlatformErrorsBanner extends StatelessWidget {
   }
 }
 
+class _DeadlineKindChip extends StatelessWidget {
+  final DeadlineKind kind;
+
+  const _DeadlineKindChip({required this.kind});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isExam = kind == DeadlineKind.exam;
+    final background = isExam
+        ? theme.colorScheme.tertiaryContainer
+        : theme.colorScheme.primaryContainer;
+    final foreground = isExam
+        ? theme.colorScheme.onTertiaryContainer
+        : theme.colorScheme.onPrimaryContainer;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        kind.label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
 class _AssignmentCard extends StatelessWidget {
   final Assignment assignment;
   final bool completed;
@@ -653,6 +781,8 @@ class _AssignmentCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
+                  _DeadlineKindChip(kind: assignment.kind),
+                  const SizedBox(width: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

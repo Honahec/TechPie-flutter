@@ -4,12 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/course_table.dart';
+import 'api_base_url.dart';
 import 'auth_service.dart';
 import 'http_client.dart';
 import 'storage_service.dart';
-
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
 class ScheduleService extends ChangeNotifier {
   final StorageService _storage;
@@ -23,7 +21,7 @@ class ScheduleService extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
-  String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
+  String get _baseUrl => apiBaseUrl(_storage);
 
   SemesterInfo? get semesterInfo => _semesterInfo;
   CourseTable? get courseTable => _courseTable;

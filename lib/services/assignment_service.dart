@@ -8,19 +8,19 @@ import 'package:http/http.dart' as http;
 import '../models/assignment.dart';
 import '../models/assignment_overrides.dart';
 import '../models/third_party_account.dart';
+import 'api_base_url.dart';
 import 'auth_service.dart';
 import 'http_client.dart';
+import 'schedule_service.dart';
 import 'storage_service.dart';
 import 'third_party_auth_service.dart';
-
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
 class AssignmentService extends ChangeNotifier {
   final StorageService _storage;
   final LoggingHttpClient _http;
   final AuthService _auth;
   final ThirdPartyAuthService _tpAuth;
+  final ScheduleService _schedule;
 
   List<Assignment> _assignments = [];
   AssignmentOverrides _overrides = AssignmentOverrides();
@@ -29,7 +29,7 @@ class AssignmentService extends ChangeNotifier {
   // Per-platform error messages (keyed by lowercase platform id).
   final Map<String, String> _platformErrors = {};
 
-  String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
+  String get _baseUrl => apiBaseUrl(_storage);
 
   List<Assignment> get assignments => _assignments;
 
@@ -50,12 +50,19 @@ class AssignmentService extends ChangeNotifier {
       _overrides.hasCompletionOverride(a);
   bool isHidden(Assignment a) => _overrides.isHidden(a);
 
-  AssignmentService(this._storage, this._http, this._auth, this._tpAuth) {
+  AssignmentService(
+    this._storage,
+    this._http,
+    this._auth,
+    this._tpAuth,
+    this._schedule,
+  ) {
     // Refetch when bindings or auth change *after* initial app boot.
     // The initial fetch is kicked off explicitly from main.dart so we
     // don't double-fire during service initialization.
     _tpAuth.addListener(_onDepsChanged);
     _auth.addListener(_onDepsChanged);
+    _schedule.addListener(_onDepsChanged);
   }
 
   bool _autoRefetchEnabled = false;
@@ -73,6 +80,7 @@ class AssignmentService extends ChangeNotifier {
   void dispose() {
     _tpAuth.removeListener(_onDepsChanged);
     _auth.removeListener(_onDepsChanged);
+    _schedule.removeListener(_onDepsChanged);
     super.dispose();
   }
 
@@ -177,6 +185,11 @@ class AssignmentService extends ChangeNotifier {
           if (items != null) successfulResults['blackboard'] = items;
         }),
       );
+      futures.add(
+        _fetchExamTable().then((items) {
+          if (items != null) successfulResults['exam'] = items;
+        }),
+      );
     }
 
     for (final acc in _tpAuth.accounts) {
@@ -244,6 +257,10 @@ class AssignmentService extends ChangeNotifier {
       future = _fetchBlackboard().then((items) {
         if (items != null) successfulResults['blackboard'] = items;
       });
+    } else if (platformId == 'exam' && _auth.isLoggedIn) {
+      future = _fetchExamTable().then((items) {
+        if (items != null) successfulResults['exam'] = items;
+      });
     } else {
       for (final acc in _tpAuth.accounts) {
         if (acc.platform.id == platformId) {
@@ -309,6 +326,42 @@ class AssignmentService extends ChangeNotifier {
       return _parseDeadlinesResponse(resp, 'blackboard');
     } catch (e) {
       _platformErrors['blackboard'] = '同步失败，请检查网络或稍后重试';
+      return null;
+    }
+  }
+
+  Future<List<Assignment>?> _fetchExamTable() async {
+    final session = _auth.session;
+    final semesterId = _selectedSemesterId();
+    if (session == null || semesterId == null || semesterId.isEmpty) {
+      return null;
+    }
+
+    Map<String, dynamic> buildBody() => {
+          'semester_id': semesterId,
+          'cookies': _eamsCookies(),
+        };
+
+    try {
+      var resp = await _http.post(
+        Uri.parse('$_baseUrl/schedule/exam_table'),
+        headers: _jsonHeaders(),
+        body: jsonEncode(buildBody()),
+        tag: 'schedule:exam_table',
+      );
+      if (resp.statusCode == 401) {
+        if (await _auth.tryRenewSession()) {
+          resp = await _http.post(
+            Uri.parse('$_baseUrl/schedule/exam_table'),
+            headers: _jsonHeaders(),
+            body: jsonEncode(buildBody()),
+            tag: 'schedule:exam_table:retry',
+          );
+        }
+      }
+      return _parseExamTableResponse(resp);
+    } catch (e) {
+      _platformErrors['exam'] = '同步失败，请检查网络或稍后重试';
       return null;
     }
   }
@@ -397,5 +450,121 @@ class AssignmentService extends ChangeNotifier {
     return raw
         .map((e) => Assignment.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  List<Assignment>? _parseExamTableResponse(http.Response resp) {
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(resp.body) as Map<String, dynamic>;
+    } catch (_) {
+      _platformErrors['exam'] = '同步失败，服务器返回异常数据';
+      return null;
+    }
+
+    if (resp.statusCode != 200 || data['success'] != true) {
+      _platformErrors['exam'] =
+          (data['error'] as String?) ?? '同步失败 (HTTP ${resp.statusCode})';
+      return null;
+    }
+
+    final payload = data['data'] is Map
+        ? (data['data'] as Map).cast<String, dynamic>()
+        : const <String, dynamic>{};
+    final batchId = payload['examBatchId']?.toString() ?? '';
+    final batchName = payload['examBatchName']?.toString() ?? '考试';
+    final semesterId =
+        payload['semesterId']?.toString() ?? _selectedSemesterId() ?? '';
+    final raw = payload['exams'] as List<dynamic>? ?? const [];
+
+    return raw
+        .map((exam) => exam is Map ? exam.cast<String, dynamic>() : null)
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (exam) => _assignmentFromExam(
+            exam,
+            batchId: batchId,
+            batchName: batchName,
+            semesterId: semesterId,
+          ),
+        )
+        .whereType<Assignment>()
+        .toList();
+  }
+
+  Assignment? _assignmentFromExam(
+    Map<String, dynamic> exam, {
+    required String batchId,
+    required String batchName,
+    required String semesterId,
+  }) {
+    final courseCode = _stringField(exam, 'courseCode');
+    final courseName = _stringField(exam, 'courseName');
+    final examType = _stringField(exam, 'examType');
+    final examDate = _stringField(exam, 'examDate');
+    final examTimeRange = _stringField(exam, 'examTimeRange');
+    final examPlace = _stringField(exam, 'examPlace');
+    final examStatus = _stringField(exam, 'examStatus');
+    final seatUrl = _stringField(exam, 'seatUrl');
+    final examRoomId = _stringField(exam, 'examRoomId');
+
+    final due = _examDateTime(examDate, examTimeRange, pickEnd: false);
+    if (due == null) return null;
+    final end = _examDateTime(examDate, examTimeRange, pickEnd: true);
+
+    final detailParts = [
+      if (examPlace.isNotEmpty) examPlace,
+      if (batchName.isNotEmpty) batchName,
+    ];
+
+    return Assignment(
+      id: '$semesterId:$batchId:$courseCode:$examRoomId',
+      platform: 'exam',
+      kind: DeadlineKind.exam,
+      title: '$courseName $examType'.trim(),
+      course: detailParts.isEmpty
+          ? courseName
+          : '$courseName · ${detailParts.join(' · ')}',
+      due: due,
+      lateDue: end,
+      status: examStatus.isEmpty ? null : examStatus,
+      url: seatUrl.isEmpty ? null : seatUrl,
+    );
+  }
+
+  String _stringField(Map<String, dynamic> data, String key) =>
+      data[key]?.toString().trim() ?? '';
+
+  DateTime? _examDateTime(
+    String examDate,
+    String examTimeRange, {
+    required bool pickEnd,
+  }) {
+    final dateMatch = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(examDate);
+    final timeMatches =
+        RegExp(r'(\d{1,2}):(\d{2})').allMatches(examTimeRange).toList();
+    if (dateMatch == null || timeMatches.length < 2) return null;
+
+    final timeMatch = pickEnd ? timeMatches.last : timeMatches.first;
+    return DateTime(
+      int.parse(dateMatch.group(1)!),
+      int.parse(dateMatch.group(2)!),
+      int.parse(dateMatch.group(3)!),
+      int.parse(timeMatch.group(1)!),
+      int.parse(timeMatch.group(2)!),
+    );
+  }
+
+  String? _selectedSemesterId() =>
+      _schedule.selectedSemesterId ??
+      _storage.selectedSemester ??
+      _schedule.semesterInfo?.defaultSemester;
+
+  String _eamsCookies() {
+    final session = _auth.session!;
+    final baseCookies = session.cookies;
+    final tgc = session.tgc;
+    return tgc.isNotEmpty
+        ? (baseCookies.isNotEmpty ? '$baseCookies; CASTGC=$tgc' : 'CASTGC=$tgc')
+        : baseCookies;
   }
 }

@@ -64,6 +64,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
     httpClient,
     authService,
     thirdPartyAuthService,
+    scheduleService,
   );
 
   authService.onLogout = () async {
@@ -123,7 +124,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
     }
 
     if (authService.isLoggedIn) {
-      unawaited(scheduleService.fetchAll());
+      await scheduleService.fetchAll();
     }
     if (authService.isLoggedIn ||
         thirdPartyAuthService.boundPlatforms.isNotEmpty) {

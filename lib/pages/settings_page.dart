@@ -241,7 +241,9 @@ class _SettingsPageState extends State<SettingsPage> {
               usesIosLiquidGlass: useIosChrome,
               secondary: const Icon(Icons.dns_outlined),
               title: 'Use localhost',
-              subtitle: 'Connect to local development server',
+              subtitle: isAndroid()
+                  ? 'Connect to local server via 10.0.2.2:3000'
+                  : 'Connect to local development server',
               value: storage.useLocalhost,
               onChanged: (value) {
                 unawaited(storage.setUseLocalhost(value));

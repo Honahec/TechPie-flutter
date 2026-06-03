@@ -31,7 +31,8 @@ void main() {
     final theme = ThemeService(storage);
     final schedule = ScheduleService(storage, http, auth);
     final tpAuth = ThirdPartyAuthService(storage, http);
-    final assignments = AssignmentService(storage, http, auth, tpAuth);
+    final assignments =
+        AssignmentService(storage, http, auth, tpAuth, schedule);
     final oaGym = OaGymService(auth, storage);
 
     await tester.pumpWidget(
@@ -68,7 +69,8 @@ void main() {
     final auth = AuthService(storage, http);
     final schedule = ScheduleService(storage, http, auth);
     final tpAuth = ThirdPartyAuthService(storage, http);
-    final assignments = AssignmentService(storage, http, auth, tpAuth);
+    final assignments =
+        AssignmentService(storage, http, auth, tpAuth, schedule);
     final oaGym = OaGymService(auth, storage);
 
     await tester.pumpWidget(
@@ -96,7 +98,7 @@ void main() {
     // Tap Deadlines
     await tester.tap(find.text('Deadlines'));
     await tester.pumpAndSettle();
-    expect(find.text('No upcoming assignments'), findsOneWidget);
+    expect(find.text('No upcoming deadlines'), findsOneWidget);
 
     // Tap Settings
     await tester.tap(find.text('Settings'));
