@@ -1,6 +1,6 @@
-import "dart:convert";
+import 'dart:convert';
 
-import "package:flutter/foundation.dart";
+import 'package:flutter/foundation.dart';
 
 class LogEntry {
   final DateTime timestamp;
@@ -67,17 +67,17 @@ class DebugLogger extends ChangeNotifier {
   }
 
   static const _sensitiveKeys = {
-    "password",
-    "token",
-    "tgc",
-    "sessionToken",
-    "api_token",
-    "sid",
-    "sid.sig",
-    "CASTGC",
-    "castgc",
-    "cookies",
-    "cookie",
+    'password',
+    'token',
+    'tgc',
+    'sessionToken',
+    'api_token',
+    'sid',
+    'sid.sig',
+    'CASTGC',
+    'castgc',
+    'cookies',
+    'cookie',
   };
 
   // Best-effort redaction: parse as JSON and walk the tree replacing
@@ -104,7 +104,7 @@ class DebugLogger extends ChangeNotifier {
       return {
         for (final entry in node.entries)
           entry.key: _sensitiveKeys.contains(entry.key)
-              ? (entry.value == null ? null : "***")
+              ? (entry.value == null ? null : '***')
               : _redactNode(entry.value),
       };
     }

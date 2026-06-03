@@ -1,23 +1,23 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:dynamic_color/dynamic_color.dart";
-import "package:flutter/material.dart";
-import "package:shared_preferences/shared_preferences.dart";
-import "package:techpie/utils/platform.dart";
+import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:techpie/utils/platform.dart';
 
-import "models/third_party_account.dart";
-import "services/assignment_service.dart";
-import "services/auth_service.dart";
-import "services/debug_logger.dart";
-import "services/http_client.dart";
-import "services/oa_gym_service.dart";
-import "services/schedule_service.dart";
-import "services/service_provider.dart";
-import "services/storage_service.dart";
-import "services/theme_service.dart";
-import "services/third_party_auth_service.dart";
-import "widgets/adaptive_feedback.dart";
-import "widgets/app_shell/app_shell.dart";
+import 'models/third_party_account.dart';
+import 'services/assignment_service.dart';
+import 'services/auth_service.dart';
+import 'services/debug_logger.dart';
+import 'services/http_client.dart';
+import 'services/oa_gym_service.dart';
+import 'services/schedule_service.dart';
+import 'services/service_provider.dart';
+import 'services/storage_service.dart';
+import 'services/theme_service.dart';
+import 'services/third_party_auth_service.dart';
+import 'widgets/adaptive_feedback.dart';
+import 'widgets/app_shell/app_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -109,7 +109,7 @@ Future<void> _realMain(SharedPreferences prefs) async {
 
     if (!mainOk && !isIos()) {
       showAdaptiveFeedback(
-        message: "登录已过期，请重新登录",
+        message: '登录已过期，请重新登录',
         style: AdaptiveFeedbackStyle.error,
         duration: const Duration(seconds: 4),
       );
@@ -214,7 +214,7 @@ class _TechPieAppState extends State<TechPieApp> {
         oaGymService: widget.oaGymService,
         child: MaterialApp(
           scaffoldMessengerKey: rootMessengerKey,
-          title: "TechPie",
+          title: 'TechPie',
           theme: widget.themeService.lightTheme,
           darkTheme: widget.themeService.darkTheme,
           themeMode: widget.themeService.themeMode,

@@ -1,8 +1,8 @@
-import "dart:convert";
+import 'dart:convert';
 
-import "package:http/http.dart" as http;
+import 'package:http/http.dart' as http;
 
-import "debug_logger.dart";
+import 'debug_logger.dart';
 
 class LoggingHttpClient {
   final http.Client _inner;
@@ -15,11 +15,11 @@ class LoggingHttpClient {
     Map<String, String>? headers,
     String? tag,
   }) async {
-    _logger.log(method: "GET", url: url.toString(), tag: tag);
+    _logger.log(method: 'GET', url: url.toString(), tag: tag);
     try {
       final response = await _inner.get(url, headers: headers);
       _logger.log(
-        method: "GET",
+        method: 'GET',
         url: url.toString(),
         statusCode: response.statusCode,
         responseBody: _truncate(response.body),
@@ -28,7 +28,7 @@ class LoggingHttpClient {
       return response;
     } catch (e) {
       _logger.log(
-        method: "GET",
+        method: 'GET',
         url: url.toString(),
         error: e.toString(),
         tag: tag,
@@ -47,7 +47,7 @@ class LoggingHttpClient {
     final bodyStr =
         body is String ? body : (body != null ? jsonEncode(body) : null);
     _logger.log(
-      method: "POST",
+      method: 'POST',
       url: url.toString(),
       requestBody: bodyStr,
       tag: tag,
@@ -60,7 +60,7 @@ class LoggingHttpClient {
         encoding: encoding,
       );
       _logger.log(
-        method: "POST",
+        method: 'POST',
         url: url.toString(),
         statusCode: response.statusCode,
         responseBody: _truncate(response.body),
@@ -69,7 +69,7 @@ class LoggingHttpClient {
       return response;
     } catch (e) {
       _logger.log(
-        method: "POST",
+        method: 'POST',
         url: url.toString(),
         error: e.toString(),
         tag: tag,
@@ -79,7 +79,7 @@ class LoggingHttpClient {
   }
 
   String _truncate(String s, [int maxLen = 2000]) =>
-      s.length > maxLen ? "${s.substring(0, maxLen)}..." : s;
+      s.length > maxLen ? '${s.substring(0, maxLen)}...' : s;
 
   void close() => _inner.close();
 }

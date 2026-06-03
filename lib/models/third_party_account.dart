@@ -4,8 +4,8 @@ enum ThirdPartyPlatform {
 
   String get id => name;
   String get label => switch (this) {
-        ThirdPartyPlatform.gradescope => "Gradescope",
-        ThirdPartyPlatform.hydro => "Hydro",
+        ThirdPartyPlatform.gradescope => 'Gradescope',
+        ThirdPartyPlatform.hydro => 'Hydro',
       };
 
   static ThirdPartyPlatform? fromId(String id) {
@@ -67,39 +67,39 @@ class ThirdPartyAccount {
   }
 
   Map<String, dynamic> toJson() => {
-        "platform": platform.id,
-        "account": account,
-        if (sid != null) "sid": sid,
-        if (name != null) "name": name,
-        if (email != null) "email": email,
-        "token": token,
-        if (expire != null) "expire": expire,
-        "raw": raw,
-        if (hydroOrigin != null) "hydroOrigin": hydroOrigin,
-        if (hydroDomains != null) "hydroDomains": hydroDomains,
-        "boundAt": boundAt.toIso8601String(),
-        "autoRenew": autoRenew,
-        if (password != null) "password": password,
+        'platform': platform.id,
+        'account': account,
+        if (sid != null) 'sid': sid,
+        if (name != null) 'name': name,
+        if (email != null) 'email': email,
+        'token': token,
+        if (expire != null) 'expire': expire,
+        'raw': raw,
+        if (hydroOrigin != null) 'hydroOrigin': hydroOrigin,
+        if (hydroDomains != null) 'hydroDomains': hydroDomains,
+        'boundAt': boundAt.toIso8601String(),
+        'autoRenew': autoRenew,
+        if (password != null) 'password': password,
       };
 
   factory ThirdPartyAccount.fromJson(Map<String, dynamic> json) {
     return ThirdPartyAccount(
-      platform: ThirdPartyPlatform.fromId(json["platform"] as String? ?? "") ??
+      platform: ThirdPartyPlatform.fromId(json['platform'] as String? ?? '') ??
           ThirdPartyPlatform.gradescope,
-      account: json["account"] as String? ?? "",
-      sid: json["sid"] as String?,
-      name: json["name"] as String?,
-      email: json["email"] as String?,
-      token: json["token"] as String? ?? "",
-      expire: (json["expire"] as num?)?.toInt(),
-      raw: (json["raw"] as Map?)?.cast<String, dynamic>() ?? const {},
-      hydroOrigin: json["hydroOrigin"] as String?,
+      account: json['account'] as String? ?? '',
+      sid: json['sid'] as String?,
+      name: json['name'] as String?,
+      email: json['email'] as String?,
+      token: json['token'] as String? ?? '',
+      expire: (json['expire'] as num?)?.toInt(),
+      raw: (json['raw'] as Map?)?.cast<String, dynamic>() ?? const {},
+      hydroOrigin: json['hydroOrigin'] as String?,
       hydroDomains:
-          (json["hydroDomains"] as List?)?.map((e) => e as String).toList(),
+          (json['hydroDomains'] as List?)?.map((e) => e as String).toList(),
       boundAt:
-          DateTime.tryParse(json["boundAt"] as String? ?? "") ?? DateTime.now(),
-      autoRenew: json["autoRenew"] as bool? ?? false,
-      password: json["password"] as String?,
+          DateTime.tryParse(json['boundAt'] as String? ?? '') ?? DateTime.now(),
+      autoRenew: json['autoRenew'] as bool? ?? false,
+      password: json['password'] as String?,
     );
   }
 

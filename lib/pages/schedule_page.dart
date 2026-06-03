@@ -1,24 +1,24 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:open_filex/open_filex.dart";
-import "package:url_launcher/url_launcher.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import "../models/course.dart";
-import "../models/course_table.dart";
-import "../services/calendar/calendar_importer.dart";
-import "../services/ics/ics_export_service.dart";
-import "../services/ics/ics_file_saver.dart";
-import "../services/schedule_service.dart";
-import "../services/service_provider.dart";
-import "../utils/platform.dart";
-import "../widgets/adaptive_feedback.dart";
-import "../widgets/blurred_app_bar.dart";
-import "../widgets/course_detail_panel.dart";
-import "../widgets/desktop_popup.dart";
-import "../widgets/desktop_select_popover.dart";
-import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
+import '../models/course.dart';
+import '../models/course_table.dart';
+import '../services/calendar/calendar_importer.dart';
+import '../services/ics/ics_export_service.dart';
+import '../services/ics/ics_file_saver.dart';
+import '../services/schedule_service.dart';
+import '../services/service_provider.dart';
+import '../utils/platform.dart';
+import '../widgets/adaptive_feedback.dart';
+import '../widgets/blurred_app_bar.dart';
+import '../widgets/course_detail_panel.dart';
+import '../widgets/desktop_popup.dart';
+import '../widgets/desktop_select_popover.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -86,7 +86,7 @@ class _SchedulePageState extends State<SchedulePage> {
   Future<void> _dismissKeyboard() async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (isIos()) {
-      await SystemChannels.textInput.invokeMethod<void>("TextInput.hide");
+      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     }
   }
 
@@ -201,7 +201,7 @@ class _SchedulePageState extends State<SchedulePage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                 child: Text(
-                  "选择学期",
+                  '选择学期',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
@@ -271,7 +271,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         children: [
                           Expanded(
                             child: Text(
-                              "选择周数",
+                              '选择周数',
                               style: sheetTheme.textTheme.titleLarge,
                             ),
                           ),
@@ -279,7 +279,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             FilledButton.tonalIcon(
                               onPressed: goToCurrentWeek,
                               icon: const Icon(Icons.today_outlined, size: 18),
-                              label: const Text("回到本周"),
+                              label: const Text('回到本周'),
                             ),
                         ],
                       ),
@@ -301,9 +301,9 @@ class _SchedulePageState extends State<SchedulePage> {
                                       color: sheetTheme.colorScheme.primary,
                                     )
                                   : const SizedBox(width: 24),
-                              title: Text("第 $week 周"),
+                              title: Text('第 $week 周'),
                               subtitle:
-                                  isActualCurrentWeek ? const Text("本周") : null,
+                                  isActualCurrentWeek ? const Text('本周') : null,
                               onTap: () => selectWeek(week),
                             );
                           },
@@ -331,19 +331,19 @@ class _SchedulePageState extends State<SchedulePage> {
     final info = _schedule.semesterInfo;
     final id = _schedule.selectedSemesterId;
     if (info != null && id != null) {
-      return info.findSemesterLabel(id) ?? "";
+      return info.findSemesterLabel(id) ?? '';
     }
-    return "";
+    return '';
   }
 
   String get _icsFileName {
-    final semesterId = _schedule.selectedSemesterId ?? "schedule";
-    final safe = semesterId.replaceAll(RegExp(r"[^a-zA-Z0-9_-]"), "_");
-    return "course_table_$safe.ics";
+    final semesterId = _schedule.selectedSemesterId ?? 'schedule';
+    final safe = semesterId.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    return 'course_table_$safe.ics';
   }
 
   String get _defaultCalendarName =>
-      _semesterLabel.isEmpty ? "课程表" : _semesterLabel;
+      _semesterLabel.isEmpty ? '课程表' : _semesterLabel;
 
   void _startExportCalendar() {
     if (_exportingCalendar) return;
@@ -395,7 +395,7 @@ class _SchedulePageState extends State<SchedulePage> {
           showAdaptiveFeedback(
             context: context,
             message:
-                imported > 0 ? "已导入 $imported 个日程到“$calendarName”" : "没有可导入的日程",
+                imported > 0 ? '已导入 $imported 个日程到“$calendarName”' : '没有可导入的日程',
             style: imported > 0
                 ? AdaptiveFeedbackStyle.success
                 : AdaptiveFeedbackStyle.info,
@@ -410,8 +410,8 @@ class _SchedulePageState extends State<SchedulePage> {
           showAdaptiveFeedback(
             context: context,
             message: fallbackFile.filePath != null
-                ? "导入失败，已导出到下载目录: ${fallbackFile.filePath}"
-                : "导入失败，ICS 文件已创建。",
+                ? '导入失败，已导出到下载目录: ${fallbackFile.filePath}'
+                : '导入失败，ICS 文件已创建。',
             style: AdaptiveFeedbackStyle.info,
           );
           return;
@@ -428,7 +428,7 @@ class _SchedulePageState extends State<SchedulePage> {
         try {
           final result = await OpenFilex.open(
             saved.filePath!,
-            type: "text/calendar",
+            type: 'text/calendar',
           );
           launched = result.type == ResultType.done;
         } catch (e) {
@@ -462,8 +462,8 @@ class _SchedulePageState extends State<SchedulePage> {
         showAdaptiveFeedback(
           context: context,
           message: fallbackFile.filePath != null
-              ? "已导出到下载目录: ${fallbackFile.filePath}"
-              : "ICS 文件已创建。",
+              ? '已导出到下载目录: ${fallbackFile.filePath}'
+              : 'ICS 文件已创建。',
           style: AdaptiveFeedbackStyle.info,
         );
         return;
@@ -472,14 +472,14 @@ class _SchedulePageState extends State<SchedulePage> {
       if (!mounted) return;
       showAdaptiveFeedback(
         context: context,
-        message: "课表导出操作成功",
+        message: '课表导出操作成功',
         style: AdaptiveFeedbackStyle.success,
       );
     } catch (_) {
       if (!mounted) return;
       showAdaptiveFeedback(
         context: context,
-        message: "导出课表失败",
+        message: '导出课表失败',
         style: AdaptiveFeedbackStyle.error,
       );
     } finally {
@@ -509,13 +509,13 @@ class _SchedulePageState extends State<SchedulePage> {
         }
 
         return AlertDialog(
-          title: const Text("请输入日历名称"),
+          title: const Text('请输入日历名称'),
           content: TextField(
             controller: _calendarNameController,
             autofocus: true,
             decoration: const InputDecoration(
-              labelText: "日历名",
-              hintText: "例如：2025-2026 春季学期",
+              labelText: '日历名',
+              hintText: '例如：2025-2026 春季学期',
             ),
             textInputAction: TextInputAction.done,
             onSubmitted: (value) {
@@ -525,11 +525,11 @@ class _SchedulePageState extends State<SchedulePage> {
           actions: [
             TextButton(
               onPressed: () => closeDialog(),
-              child: const Text("取消"),
+              child: const Text('取消'),
             ),
             FilledButton(
               onPressed: () => closeDialog(_calendarNameController.text.trim()),
-              child: const Text("导入"),
+              child: const Text('导入'),
             ),
           ],
         );
@@ -551,70 +551,70 @@ class _SchedulePageState extends State<SchedulePage> {
       extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
       appBar: useIosChrome
           ? IosNativeNavigationBar(
-              title: "第 $_currentWeek 周",
+              title: '第 $_currentWeek 周',
               subtitle: _semesterLabel.isEmpty ? null : _semesterLabel,
               largeTitleMode: true,
               trailingItems: [
                 IosNativeNavigationBarItem(
-                  id: "settings",
-                  sfSymbol: "ellipsis",
-                  accessibilityLabel: "视图设置",
+                  id: 'settings',
+                  sfSymbol: 'ellipsis',
+                  accessibilityLabel: '视图设置',
                   menuItems: [
                     IosNativeNavigationBarMenuItem(
-                      value: "semester",
-                      title: "切换学期",
+                      value: 'semester',
+                      title: '切换学期',
                       children: [
                         for (final entry
                             in _schedule.semesterInfo?.allSemesters ??
                                 const <MapEntry<String, String>>[])
                           IosNativeNavigationBarMenuItem(
-                            value: "semester:${entry.key}",
+                            value: 'semester:${entry.key}',
                             title: entry.value,
                             checked: _schedule.selectedSemesterId == entry.key,
                           ),
                       ],
                     ),
                     IosNativeNavigationBarMenuItem(
-                      value: "saturday",
-                      title: "显示周六",
+                      value: 'saturday',
+                      title: '显示周六',
                       checked: _showSaturday,
                     ),
                     IosNativeNavigationBarMenuItem(
-                      value: "sunday",
-                      title: "显示周日",
+                      value: 'sunday',
+                      title: '显示周日',
                       checked: _showSunday,
                     ),
                     IosNativeNavigationBarMenuItem(
-                      value: "ghost",
-                      title: "显示非本周课程",
+                      value: 'ghost',
+                      title: '显示非本周课程',
                       checked: _showGhostCourses,
                     ),
                     IosNativeNavigationBarMenuItem(
-                      value: "__export_section__",
-                      title: "",
+                      value: '__export_section__',
+                      title: '',
                       displayInline: true,
                       children: [
                         IosNativeNavigationBarMenuItem(
-                          value: "exportCalendar",
-                          title: _exportingCalendar ? "正在导出…" : "导出课表",
+                          value: 'exportCalendar',
+                          title: _exportingCalendar ? '正在导出…' : '导出课表',
                           sfSymbol: _exportingCalendar
-                              ? "arrow.triangle.2.circlepath"
-                              : "square.and.arrow.up",
+                              ? 'arrow.triangle.2.circlepath'
+                              : 'square.and.arrow.up',
                         ),
                       ],
                     ),
                   ],
                 ),
                 IosNativeNavigationBarItem(
-                  id: "currentWeek",
-                  sfSymbol: "calendar.badge.clock",
+                  id: 'currentWeek',
+                  sfSymbol: 'calendar.badge.clock',
                   hidden: isViewingCurrentWeek,
-                  accessibilityLabel: "回到本周",
-                  placementGroup: "week-actions",
+                  accessibilityLabel: '回到本周',
+                  placementGroup: 'week-actions',
                 ),
               ],
               onItemPressed: (id) {
-                if (id == "currentWeek") {
+                if (id == 'currentWeek') {
                   _goToCurrentWeek();
                 }
               },
@@ -648,7 +648,7 @@ class _SchedulePageState extends State<SchedulePage> {
                     TextButton.icon(
                       onPressed: _goToCurrentWeek,
                       icon: const Icon(Icons.today_outlined, size: 18),
-                      label: const Text("回到本周"),
+                      label: const Text('回到本周'),
                     ),
                   ],
                   const Spacer(),
@@ -657,16 +657,16 @@ class _SchedulePageState extends State<SchedulePage> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
-                  tooltip: "Previous week",
+                  tooltip: 'Previous week',
                   onPressed: _previousWeek,
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  tooltip: "Next week",
+                  tooltip: 'Next week',
                   onPressed: _nextWeek,
                 ),
                 IconButton(
-                  tooltip: _exportingCalendar ? "正在导出课表" : "导出课表",
+                  tooltip: _exportingCalendar ? '正在导出课表' : '导出课表',
                   onPressed: _exportingCalendar ? null : _startExportCalendar,
                   icon: _exportingCalendar
                       ? const SizedBox(
@@ -680,33 +680,33 @@ class _SchedulePageState extends State<SchedulePage> {
                   IconButton(
                     key: _viewSettingsAnchorKey,
                     icon: const Icon(Icons.more_vert),
-                    tooltip: "视图设置",
+                    tooltip: '视图设置',
                     onPressed: _showViewSettingsMenu,
                   )
                 else
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
-                    tooltip: "视图设置",
+                    tooltip: '视图设置',
                     onSelected: _onMenuSelected,
                     itemBuilder: (context) => [
                       const PopupMenuItem(
-                        value: "semester",
-                        child: Text("切换学期"),
+                        value: 'semester',
+                        child: Text('切换学期'),
                       ),
                       CheckedPopupMenuItem(
-                        value: "saturday",
+                        value: 'saturday',
                         checked: _showSaturday,
-                        child: const Text("显示周六"),
+                        child: const Text('显示周六'),
                       ),
                       CheckedPopupMenuItem(
-                        value: "sunday",
+                        value: 'sunday',
                         checked: _showSunday,
-                        child: const Text("显示周日"),
+                        child: const Text('显示周日'),
                       ),
                       CheckedPopupMenuItem(
-                        value: "ghost",
+                        value: 'ghost',
                         checked: _showGhostCourses,
-                        child: const Text("显示非本周课程"),
+                        child: const Text('显示非本周课程'),
                       ),
                     ],
                   ),
@@ -730,7 +730,7 @@ class _SchedulePageState extends State<SchedulePage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      "登录以查看课表",
+                      '登录以查看课表',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -752,7 +752,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              "加载失败",
+                              '加载失败',
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 color: theme.colorScheme.error,
                               ),
@@ -760,7 +760,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             const SizedBox(height: 8),
                             FilledButton.tonal(
                               onPressed: _refresh,
-                              child: const Text("重试"),
+                              child: const Text('重试'),
                             ),
                           ],
                         ),
@@ -813,13 +813,13 @@ class _SchedulePageState extends State<SchedulePage> {
 
     final content = visibleCourses.isEmpty
         ? ListView(
-            key: ValueKey<String>("empty-$week"),
+            key: ValueKey<String>('empty-$week'),
             children: [
               SizedBox(
                 height: 300,
                 child: Center(
                   child: Text(
-                    "本周没有课程",
+                    '本周没有课程',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -860,8 +860,8 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   void _onMenuSelected(String value) {
-    if (value.startsWith("semester:")) {
-      final semesterId = value.substring("semester:".length);
+    if (value.startsWith('semester:')) {
+      final semesterId = value.substring('semester:'.length);
       if (semesterId.isNotEmpty) {
         unawaited(_schedule.selectSemester(semesterId));
       }
@@ -869,20 +869,20 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     switch (value) {
-      case "currentWeek":
+      case 'currentWeek':
         _goToCurrentWeek();
-      case "semester":
+      case 'semester':
         _showSemesterPicker();
-      case "saturday":
+      case 'saturday':
         setState(() => _showSaturday = !_showSaturday);
-      case "sunday":
+      case 'sunday':
         setState(() => _showSunday = !_showSunday);
-      case "ghost":
+      case 'ghost':
         setState(() {
           _showGhostCourses = !_showGhostCourses;
           _filterCoursesForWeek();
         });
-      case "exportCalendar":
+      case 'exportCalendar':
         _startExportCalendar();
     }
   }
@@ -912,7 +912,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                    child: Text("视图设置", style: theme.textTheme.titleSmall),
+                    child: Text('视图设置', style: theme.textTheme.titleSmall),
                   ),
                   const Divider(height: 1),
                   _DesktopSemesterSelectButton(
@@ -931,16 +931,16 @@ class _SchedulePageState extends State<SchedulePage> {
                           : Icons.check_box_outline_blank,
                       size: 20,
                     ),
-                    title: Text("显示周六", style: theme.textTheme.bodyMedium),
-                    onTap: () => toggle("saturday"),
+                    title: Text('显示周六', style: theme.textTheme.bodyMedium),
+                    onTap: () => toggle('saturday'),
                   ),
                   DesktopMenuRow(
                     leading: Icon(
                       _showSunday ? Icons.check : Icons.check_box_outline_blank,
                       size: 20,
                     ),
-                    title: Text("显示周日", style: theme.textTheme.bodyMedium),
-                    onTap: () => toggle("sunday"),
+                    title: Text('显示周日', style: theme.textTheme.bodyMedium),
+                    onTap: () => toggle('sunday'),
                   ),
                   DesktopMenuRow(
                     leading: Icon(
@@ -949,8 +949,8 @@ class _SchedulePageState extends State<SchedulePage> {
                           : Icons.check_box_outline_blank,
                       size: 20,
                     ),
-                    title: Text("显示非本周课程", style: theme.textTheme.bodyMedium),
-                    onTap: () => toggle("ghost"),
+                    title: Text('显示非本周课程', style: theme.textTheme.bodyMedium),
+                    onTap: () => toggle('ghost'),
                   ),
                   const Divider(height: 1),
                   DesktopMenuRow(
@@ -961,7 +961,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.ios_share_rounded, size: 20),
-                    title: Text("导出课表", style: theme.textTheme.bodyMedium),
+                    title: Text('导出课表', style: theme.textTheme.bodyMedium),
                     onTap: _exportingCalendar
                         ? null
                         : () {
@@ -996,12 +996,12 @@ class _DesktopSemesterSelectButton extends StatelessWidget {
     final currentValue =
         selectedId != null && semesters.any((entry) => entry.key == selectedId)
             ? selectedId
-            : (semesters.isNotEmpty ? semesters.first.key : "");
+            : (semesters.isNotEmpty ? semesters.first.key : '');
 
     if (semesters.isEmpty || currentValue.isEmpty) {
       return DesktopMenuRow(
         leading: const Icon(Icons.swap_horiz, size: 20),
-        title: Text("切换学期", style: Theme.of(context).textTheme.bodyMedium),
+        title: Text('切换学期', style: Theme.of(context).textTheme.bodyMedium),
       );
     }
 
@@ -1029,7 +1029,7 @@ class _DesktopSemesterSelectButton extends StatelessWidget {
       anchorBuilder: (context, isOpen, toggle) {
         return DesktopMenuRow(
           leading: const Icon(Icons.swap_horiz, size: 20),
-          title: Text("切换学期", style: Theme.of(context).textTheme.bodyMedium),
+          title: Text('切换学期', style: Theme.of(context).textTheme.bodyMedium),
           onTap: toggle,
         );
       },
@@ -1058,7 +1058,7 @@ class _DesktopWeekTitleMenu extends StatelessWidget {
       items: _weeks,
       value: currentWeek,
       onChanged: onWeekChanged,
-      labelBuilder: (week) => "第 $week 周",
+      labelBuilder: (week) => '第 $week 周',
       width: 200,
       itemHeight: 56,
       visibleItemCount: 5,
@@ -1122,7 +1122,7 @@ class _WeekTitleContent extends StatelessWidget {
                 );
               },
               child: Text(
-                "第 $currentWeek 周",
+                '第 $currentWeek 周',
                 key: ValueKey<int>(currentWeek),
                 style: theme.textTheme.titleMedium,
               ),
@@ -1154,7 +1154,7 @@ class _DayHeader extends StatelessWidget {
     required this.visibleDays,
   });
 
-  static const _dayLabels = ["一", "二", "三", "四", "五", "六", "日"];
+  static const _dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
 
   @override
   Widget build(BuildContext context) {
@@ -1170,8 +1170,8 @@ class _DayHeader extends StatelessWidget {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Text(
-                  "${weekStart.month}\n月",
-                  key: ValueKey<String>("${weekStart.year}-${weekStart.month}"),
+                  '${weekStart.month}\n月',
+                  key: ValueKey<String>('${weekStart.year}-${weekStart.month}'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -1232,7 +1232,7 @@ class _DayHeaderCell extends StatelessWidget {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: Container(
-            key: ValueKey<String>("${date.year}-${date.month}-${date.day}"),
+            key: ValueKey<String>('${date.year}-${date.month}-${date.day}'),
             width: 28,
             height: 28,
             decoration: isToday
@@ -1243,7 +1243,7 @@ class _DayHeaderCell extends StatelessWidget {
                 : null,
             alignment: Alignment.center,
             child: Text(
-              "${date.day}",
+              '${date.day}',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: isToday
                     ? theme.colorScheme.onPrimary
@@ -1333,7 +1333,7 @@ class _PeriodLabel extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "${period.number}",
+            '${period.number}',
             style: theme.textTheme.titleSmall?.copyWith(
               color: theme.colorScheme.onSurface,
             ),

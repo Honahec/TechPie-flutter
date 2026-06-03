@@ -1,7 +1,7 @@
-import "package:flutter/foundation.dart";
+import 'package:flutter/foundation.dart';
 
-import "../../models/course_table.dart";
-import "ics_file_saver.dart";
+import '../../models/course_table.dart';
+import 'ics_file_saver.dart';
 
 class StructuredLocation {
   final String keyword;
@@ -46,99 +46,99 @@ class _CalendarEventData {
 class IcsExportService {
   static const List<StructuredLocation> _structuredLocations = [
     StructuredLocation(
-      keyword: "信息学院",
-      title: "上海科技大学信息科学与技术学院",
+      keyword: '信息学院',
+      title: '上海科技大学信息科学与技术学院',
       latitude: 31.18043,
       longitude: 121.5907,
     ),
     StructuredLocation(
-      keyword: "创管学院",
-      title: "上海科技大学创业与管理学院",
+      keyword: '创管学院',
+      title: '上海科技大学创业与管理学院',
       latitude: 31.17872,
       longitude: 121.59061,
     ),
     StructuredLocation(
-      keyword: "生命学院",
-      title: "上海科技大学生命科学与技术学院",
+      keyword: '生命学院',
+      title: '上海科技大学生命科学与技术学院',
       latitude: 31.1818,
       longitude: 121.59018,
     ),
     StructuredLocation(
-      keyword: "物质学院",
-      title: "上海科技大学物质科学与技术学院",
+      keyword: '物质学院',
+      title: '上海科技大学物质科学与技术学院',
       latitude: 31.17894,
       longitude: 121.58821,
     ),
     StructuredLocation(
-      keyword: "教学中心",
-      title: "上海科技大学教学中心",
+      keyword: '教学中心',
+      title: '上海科技大学教学中心',
       latitude: 31.17772,
       longitude: 121.59093,
     ),
     StructuredLocation(
-      keyword: "创艺学院",
-      title: "上海科技大学创意与艺术学院",
+      keyword: '创艺学院',
+      title: '上海科技大学创意与艺术学院',
       latitude: 31.17887,
       longitude: 121.58887,
     ),
     StructuredLocation(
-      keyword: "生医工学院",
-      title: "上海科技大学生物医学工程学院",
+      keyword: '生医工学院',
+      title: '上海科技大学生物医学工程学院',
       latitude: 31.17997,
       longitude: 121.59122,
     ),
   ];
 
-  static const String _structuredLocationAddress = "上海市浦东新区中科路1号";
+  static const String _structuredLocationAddress = '上海市浦东新区中科路1号';
 
   String buildCalendar({
     required CourseTable table,
     required DateTime termBegin,
-    String calendarName = "课表",
+    String calendarName = '课表',
   }) {
     final buffer = StringBuffer()
-      ..writeln("BEGIN:VCALENDAR")
-      ..writeln("VERSION:2.0")
-      ..writeln("PRODID:-//TechPie//Schedule Export//CN")
-      ..writeln("CALSCALE:GREGORIAN")
-      ..writeln("METHOD:PUBLISH")
-      ..writeln("X-WR-CALNAME:${_escapeText(calendarName)}")
-      ..writeln("X-WR-TIMEZONE:Asia/Shanghai");
+      ..writeln('BEGIN:VCALENDAR')
+      ..writeln('VERSION:2.0')
+      ..writeln('PRODID:-//TechPie//Schedule Export//CN')
+      ..writeln('CALSCALE:GREGORIAN')
+      ..writeln('METHOD:PUBLISH')
+      ..writeln('X-WR-CALNAME:${_escapeText(calendarName)}')
+      ..writeln('X-WR-TIMEZONE:Asia/Shanghai');
 
     for (final event in _expandCalendarEvents(table, termBegin)) {
-      buffer.writeln("BEGIN:VEVENT");
+      buffer.writeln('BEGIN:VEVENT');
       buffer.writeln(
-        "UID:${_buildUid(event.course, event.week, event.day, event.startPeriodIndex, event.endPeriodIndex)}",
+        'UID:${_buildUid(event.course, event.week, event.day, event.startPeriodIndex, event.endPeriodIndex)}',
       );
       buffer.writeln(
-        "DTSTAMP:${_formatUtcTimestamp(DateTime.now().toUtc())}",
+        'DTSTAMP:${_formatUtcTimestamp(DateTime.now().toUtc())}',
       );
       buffer.writeln(
-        "DTSTART;TZID=Asia/Shanghai:${_formatDateTimeForIcs(event.startDateTime)}",
+        'DTSTART;TZID=Asia/Shanghai:${_formatDateTimeForIcs(event.startDateTime)}',
       );
       buffer.writeln(
-        "DTEND;TZID=Asia/Shanghai:${_formatDateTimeForIcs(event.endDateTime)}",
+        'DTEND;TZID=Asia/Shanghai:${_formatDateTimeForIcs(event.endDateTime)}',
       );
-      buffer.writeln("SUMMARY:${_escapeText(event.course.name)}");
-      buffer.writeln("LOCATION-TYPE:SCHOOL");
-      buffer.writeln("LOCATION:${_escapeText(event.location)}");
+      buffer.writeln('SUMMARY:${_escapeText(event.course.name)}');
+      buffer.writeln('LOCATION-TYPE:SCHOOL');
+      buffer.writeln('LOCATION:${_escapeText(event.location)}');
       final structuredLocation = event.structuredLocation;
       if (structuredLocation != null) {
         buffer.writeln(
-          "GEO:${structuredLocation.latitude};${structuredLocation.longitude}",
+          'GEO:${structuredLocation.latitude};${structuredLocation.longitude}',
         );
         buffer.writeln(
           'X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="${_escapeAppleText(_structuredLocationAddress)}";X-APPLE-RADIUS=200;X-TITLE="${_escapeAppleText(structuredLocation.title)}":geo:${structuredLocation.latitude},${structuredLocation.longitude}',
         );
       }
       if (event.course.teachers.trim().isNotEmpty) {
-        buffer.writeln("DESCRIPTION:${_escapeText(event.course.teachers)}");
+        buffer.writeln('DESCRIPTION:${_escapeText(event.course.teachers)}');
       }
-      buffer.writeln("SEQUENCE:0");
-      buffer.writeln("END:VEVENT");
+      buffer.writeln('SEQUENCE:0');
+      buffer.writeln('END:VEVENT');
     }
 
-    buffer.writeln("END:VCALENDAR");
+    buffer.writeln('END:VCALENDAR');
     return buffer.toString();
   }
 
@@ -147,12 +147,12 @@ class IcsExportService {
     required DateTime termBegin,
     required String fileName,
     required IcsSaveLocation location,
-    String calendarName = "Course Table",
+    String calendarName = 'Course Table',
   }) async {
     final content = await compute(_buildCalendarInBackground, {
-      "table": table.toJson(),
-      "termBegin": termBegin.toIso8601String(),
-      "calendarName": calendarName,
+      'table': table.toJson(),
+      'termBegin': termBegin.toIso8601String(),
+      'calendarName': calendarName,
     });
     return saveIcsFile(fileName, content, location: location);
   }
@@ -162,8 +162,8 @@ class IcsExportService {
     required DateTime termBegin,
   }) {
     return compute(_buildCalendarEventPayloadsInBackground, {
-      "table": table.toJson(),
-      "termBegin": termBegin.toIso8601String(),
+      'table': table.toJson(),
+      'termBegin': termBegin.toIso8601String(),
     });
   }
 
@@ -184,8 +184,8 @@ class IcsExportService {
     int endPeriod,
   ) {
     final seed =
-        "${course.name}-${course.classroom}-$week-$day-$startPeriod-$endPeriod";
-    return "${Uri.encodeComponent(seed)}@techpie";
+        '${course.name}-${course.classroom}-$week-$day-$startPeriod-$endPeriod';
+    return '${Uri.encodeComponent(seed)}@techpie';
   }
 
   Iterable<_CalendarEventData> _expandCalendarEvents(
@@ -201,7 +201,7 @@ class IcsExportService {
 
     for (final course in table.courses) {
       for (int week = 1; week < course.weeks.length; week++) {
-        if (course.weeks[week] != "1") continue;
+        if (course.weeks[week] != '1') continue;
 
         final monday = mondayOfWeekOne.add(Duration(days: (week - 1) * 7));
         for (final entry in course.times.entries) {
@@ -216,7 +216,7 @@ class IcsExportService {
 
           final classDate = monday.add(Duration(days: entry.key - 1));
           final classroom = course.classroom.trim();
-          final location = classroom.isEmpty ? "上海科技大学" : "$classroom 上海科技大学";
+          final location = classroom.isEmpty ? '上海科技大学' : '$classroom 上海科技大学';
           yield _CalendarEventData(
             course: course,
             week: week,
@@ -239,7 +239,7 @@ class IcsExportService {
     return '${dateTime.year.toString().padLeft(4, '0')}'
         '${dateTime.month.toString().padLeft(2, '0')}'
         '${dateTime.day.toString().padLeft(2, '0')}'
-        "T"
+        'T'
         '${dateTime.hour.toString().padLeft(2, '0')}'
         '${dateTime.minute.toString().padLeft(2, '0')}'
         '${dateTime.second.toString().padLeft(2, '0')}';
@@ -249,7 +249,7 @@ class IcsExportService {
     return '${date.year.toString().padLeft(4, '0')}'
         '${date.month.toString().padLeft(2, '0')}'
         '${date.day.toString().padLeft(2, '0')}'
-        "T"
+        'T'
         '${date.hour.toString().padLeft(2, '0')}'
         '${date.minute.toString().padLeft(2, '0')}'
         '${date.second.toString().padLeft(2, '0')}Z';
@@ -257,23 +257,23 @@ class IcsExportService {
 
   String _escapeText(String value) {
     return value
-        .replaceAll(r"", r"\")
-        .replaceAll(";", r"\;")
-        .replaceAll(",", r"\,")
-        .replaceAll("\n", r"\n");
+        .replaceAll(r'', r'')
+        .replaceAll(';', r'\;')
+        .replaceAll(',', r'\,')
+        .replaceAll('\n', r'\n');
   }
 
   String _escapeAppleText(String value) {
-    return value.replaceAll(r"", r"\").replaceAll('"', r'\"');
+    return value.replaceAll(r'', r'').replaceAll('"', r'\"');
   }
 }
 
 String _buildCalendarInBackground(Map<String, Object?> payload) {
   final table = CourseTable.fromJson(
-    (payload["table"] as Map<Object?, Object?>).cast<String, dynamic>(),
+    (payload['table'] as Map<Object?, Object?>).cast<String, dynamic>(),
   );
-  final termBegin = DateTime.parse(payload["termBegin"] as String);
-  final calendarName = payload["calendarName"] as String? ?? "课表";
+  final termBegin = DateTime.parse(payload['termBegin'] as String);
+  final calendarName = payload['calendarName'] as String? ?? '课表';
 
   return IcsExportService().buildCalendar(
     table: table,
@@ -286,26 +286,26 @@ List<Map<String, Object?>> _buildCalendarEventPayloadsInBackground(
   Map<String, Object?> payload,
 ) {
   final table = CourseTable.fromJson(
-    (payload["table"] as Map<Object?, Object?>).cast<String, dynamic>(),
+    (payload['table'] as Map<Object?, Object?>).cast<String, dynamic>(),
   );
-  final termBegin = DateTime.parse(payload["termBegin"] as String);
+  final termBegin = DateTime.parse(payload['termBegin'] as String);
   final service = IcsExportService();
   return service._expandCalendarEvents(table, termBegin).map((event) {
     final payload = <String, Object?>{
-      "title": event.course.name,
-      "location": event.location,
-      "notes": event.course.teachers.trim(),
-      "startMillis": event.startDateTime.millisecondsSinceEpoch,
-      "endMillis": event.endDateTime.millisecondsSinceEpoch,
+      'title': event.course.name,
+      'location': event.location,
+      'notes': event.course.teachers.trim(),
+      'startMillis': event.startDateTime.millisecondsSinceEpoch,
+      'endMillis': event.endDateTime.millisecondsSinceEpoch,
     };
     final structuredLocation = event.structuredLocation;
     if (structuredLocation != null) {
       payload.addAll({
-        "structuredLocationTitle": event.location,
-        "structuredLocationAddress":
-            "${structuredLocation.title} ${IcsExportService._structuredLocationAddress}",
-        "structuredLocationLatitude": structuredLocation.latitude,
-        "structuredLocationLongitude": structuredLocation.longitude,
+        'structuredLocationTitle': event.location,
+        'structuredLocationAddress':
+            '${structuredLocation.title} ${IcsExportService._structuredLocationAddress}',
+        'structuredLocationLatitude': structuredLocation.latitude,
+        'structuredLocationLongitude': structuredLocation.longitude,
       });
     }
     return payload;
@@ -313,7 +313,7 @@ List<Map<String, Object?>> _buildCalendarEventPayloadsInBackground(
 }
 
 DateTime _combineDateAndTime(DateTime date, String hhmm) {
-  final parts = hhmm.split(":");
+  final parts = hhmm.split(':');
   final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
   final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
   return DateTime(date.year, date.month, date.day, hour, minute);

@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:techpie/utils/platform.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:techpie/utils/platform.dart';
 
 class IosGlassSelectOption {
   const IosGlassSelectOption({required this.value, required this.label});
@@ -15,8 +15,8 @@ class IosGlassSelect extends StatefulWidget {
     required this.options,
     required this.onChanged,
     this.value,
-    this.placeholder = "Select",
-    this.sfSymbol = "chevron.up.chevron.down",
+    this.placeholder = 'Select',
+    this.sfSymbol = 'chevron.up.chevron.down',
     this.width = 150,
     this.height = 36,
   });
@@ -52,8 +52,8 @@ class _IosGlassSelectState extends State<IosGlassSelect> {
     }
 
     final signature = widget.options
-        .map((option) => "${option.value}|${option.label}")
-        .join(";");
+        .map((option) => '${option.value}|${option.label}')
+        .join(';');
 
     return SizedBox(
       width: widget.width,
@@ -65,12 +65,12 @@ class _IosGlassSelectState extends State<IosGlassSelect> {
         viewType: _viewType,
         layoutDirection: Directionality.of(context),
         creationParams: <String, Object?>{
-          "value": widget.value,
-          "placeholder": widget.placeholder,
-          "sfSymbol": widget.sfSymbol,
-          "options": [
+          'value': widget.value,
+          'placeholder': widget.placeholder,
+          'sfSymbol': widget.sfSymbol,
+          'options': [
             for (final option in widget.options)
-              <String, Object?>{"value": option.value, "label": option.label},
+              <String, Object?>{'value': option.value, 'label': option.label},
           ],
         },
         creationParamsCodec: const StandardMessageCodec(),
@@ -113,14 +113,14 @@ class _IosGlassSelectState extends State<IosGlassSelect> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != "onChanged") return null;
+      if (call.method != 'onChanged') return null;
 
       final arguments = call.arguments;
-      final value = arguments is Map ? arguments["value"] : null;
+      final value = arguments is Map ? arguments['value'] : null;
 
       if (value is String && value.isNotEmpty) {
         widget.onChanged(value);
@@ -131,5 +131,5 @@ class _IosGlassSelectState extends State<IosGlassSelect> {
   }
 }
 
-const _viewType = "techpie/native_glass_select";
-const _channelPrefix = "techpie/native_glass_select";
+const _viewType = 'techpie/native_glass_select';
+const _channelPrefix = 'techpie/native_glass_select';

@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../pages/oa_gym_page.dart";
+import '../pages/oa_gym_page.dart';
 
 enum FeatureMode {
   native,
@@ -35,24 +35,24 @@ class Feature {
 
 final featureEntries = <Feature>[
   Feature(
-    id: "ecourse",
-    description: "E云课堂",
+    id: 'ecourse',
+    description: 'E云课堂',
     mode: FeatureMode.webviewWithCookie,
-    url: "https://ecourse.shanghaitech.edu.cn:8080/",
+    url: 'https://ecourse.shanghaitech.edu.cn:8080/',
     cookieType: CookieType.ecourse,
     icon: const Icon(Icons.cast_for_education),
   ),
   Feature(
-    id: "student_leave",
-    description: "学生请假",
+    id: 'student_leave',
+    description: '学生请假',
     mode: FeatureMode.webviewWithCookie,
-    url: "https://egate.shanghaitech.edu.cn/xsfw/sys/xsqjapp/*default/index.do",
+    url: 'https://egate.shanghaitech.edu.cn/xsfw/sys/xsqjapp/*default/index.do',
     cookieType: CookieType.egate,
     icon: const Icon(Icons.door_front_door),
   ),
   Feature(
-    id: "oa_gym",
-    description: "场馆预约",
+    id: 'oa_gym',
+    description: '场馆预约',
     mode: FeatureMode.native,
     nativeEntry: (context) => Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const OaGymPage()),
@@ -62,8 +62,8 @@ final featureEntries = <Feature>[
 ];
 
 final moreFeature = Feature(
-  id: "more",
-  description: "更多",
+  id: 'more',
+  description: '更多',
   mode: FeatureMode.native,
   nativeEntry: (context) {},
   icon: const Icon(Icons.more_horiz),

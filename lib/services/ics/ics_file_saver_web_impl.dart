@@ -1,8 +1,8 @@
-import "dart:convert";
+import 'dart:convert';
 
-import "package:web/web.dart" as web;
+import 'package:web/web.dart' as web;
 
-import "ics_file_saver.dart";
+import 'ics_file_saver.dart';
 
 Future<SavedIcsFile> saveIcsFileImpl(
   String fileName,
@@ -11,13 +11,13 @@ Future<SavedIcsFile> saveIcsFileImpl(
 }) async {
   final href = Uri.dataFromString(
     content,
-    mimeType: "text/calendar",
+    mimeType: 'text/calendar',
     encoding: utf8,
   ).toString();
   final anchor = web.HTMLAnchorElement()
     ..href = href
     ..download = fileName
-    ..style.display = "none";
+    ..style.display = 'none';
   web.document.body?.append(anchor);
   anchor.click();
   anchor.remove();

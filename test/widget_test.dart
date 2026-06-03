@@ -1,20 +1,20 @@
-import "package:flutter/material.dart";
-import "package:flutter_test/flutter_test.dart";
-import "package:shared_preferences/shared_preferences.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import "package:techpie/main.dart";
-import "package:techpie/services/assignment_service.dart";
-import "package:techpie/services/auth_service.dart";
-import "package:techpie/services/debug_logger.dart";
-import "package:techpie/services/http_client.dart";
-import "package:techpie/services/oa_gym_service.dart";
-import "package:techpie/services/schedule_service.dart";
-import "package:techpie/services/storage_service.dart";
-import "package:techpie/services/theme_service.dart";
-import "package:techpie/services/third_party_auth_service.dart";
+import 'package:techpie/main.dart';
+import 'package:techpie/services/assignment_service.dart';
+import 'package:techpie/services/auth_service.dart';
+import 'package:techpie/services/debug_logger.dart';
+import 'package:techpie/services/http_client.dart';
+import 'package:techpie/services/oa_gym_service.dart';
+import 'package:techpie/services/schedule_service.dart';
+import 'package:techpie/services/storage_service.dart';
+import 'package:techpie/services/theme_service.dart';
+import 'package:techpie/services/third_party_auth_service.dart';
 
 void main() {
-  testWidgets("App shell renders with desktop sidebar", (
+  testWidgets('App shell renders with desktop sidebar', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 800);
@@ -48,13 +48,13 @@ void main() {
     );
 
     expect(find.byType(NavigationRail), findsNothing);
-    expect(find.text("Home"), findsWidgets);
-    expect(find.text("Schedule"), findsWidgets);
-    expect(find.text("Deadlines"), findsWidgets);
-    expect(find.text("Settings"), findsWidgets);
+    expect(find.text('Home'), findsWidgets);
+    expect(find.text('Schedule'), findsWidgets);
+    expect(find.text('Deadlines'), findsWidgets);
+    expect(find.text('Settings'), findsWidgets);
   });
 
-  testWidgets("Navigation switches pages", (WidgetTester tester) async {
+  testWidgets('Navigation switches pages', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -85,22 +85,22 @@ void main() {
     );
 
     // Starts on Home
-    expect(find.text("Welcome to TechPie"), findsOneWidget);
+    expect(find.text('Welcome to TechPie'), findsOneWidget);
 
     // Tap Schedule
-    await tester.tap(find.text("Schedule"));
+    await tester.tap(find.text('Schedule'));
     await tester.pumpAndSettle();
     // Not logged in, so shows login prompt
-    expect(find.text("登录以查看课表"), findsOneWidget);
+    expect(find.text('登录以查看课表'), findsOneWidget);
 
     // Tap Deadlines
-    await tester.tap(find.text("Deadlines"));
+    await tester.tap(find.text('Deadlines'));
     await tester.pumpAndSettle();
-    expect(find.text("No upcoming assignments"), findsOneWidget);
+    expect(find.text('No upcoming assignments'), findsOneWidget);
 
     // Tap Settings
-    await tester.tap(find.text("Settings"));
+    await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text("Appearance"), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
   });
 }

@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../models/feature.dart";
+import '../models/feature.dart';
 
 class AppCard extends StatelessWidget {
   final List<Feature> features;

@@ -1,10 +1,10 @@
-import "dart:math" as math;
+import 'dart:math' as math;
 
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../app_destination.dart";
-import "desktop_sidebar.dart";
-import "desktop_sidebar_tokens.dart";
+import '../app_destination.dart';
+import 'desktop_sidebar.dart';
+import 'desktop_sidebar_tokens.dart';
 
 class DesktopShell extends StatelessWidget {
   final List<AppDestination> destinations;

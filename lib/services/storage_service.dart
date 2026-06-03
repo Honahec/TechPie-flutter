@@ -1,4 +1,4 @@
-import "dart:convert";
+import 'dart:convert';
 
 // NOTE: import the OHOS package, not the upstream `flutter_secure_storage`.
 // Despite the name, `flutter_secure_storage_ohos` is a hard fork (declares
@@ -6,23 +6,23 @@ import "dart:convert";
 // class with OhosOptions) — it is NOT a federated platform implementation.
 // Importing the upstream facade falls through to UNSUPPORTED_PLATFORM on OHOS
 // and crashes at boot. Keep this import as-is on the OHOS branch.
-import "package:flutter_secure_storage_ohos/flutter_secure_storage_ohos.dart";
-import "package:shared_preferences/shared_preferences.dart";
+import 'package:flutter_secure_storage_ohos/flutter_secure_storage_ohos.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import "../models/assignment_overrides.dart";
-import "../models/course_table.dart";
-import "../models/oa_gym.dart";
-import "../models/third_party_account.dart";
-import "../models/user_session.dart";
+import '../models/assignment_overrides.dart';
+import '../models/course_table.dart';
+import '../models/oa_gym.dart';
+import '../models/third_party_account.dart';
+import '../models/user_session.dart';
 
 class StorageService {
-  static const _sessionKey = "user_session";
-  static const _debugModeKey = "debug_mode";
-  static const _schoolNameKey = "cached_school_name";
-  static const _phoneKey = "cached_phone";
-  static const _themeModeKey = "theme_mode";
-  static const _colorSchemeKey = "color_scheme";
-  static const _useLocalhostKey = "use_localhost";
+  static const _sessionKey = 'user_session';
+  static const _debugModeKey = 'debug_mode';
+  static const _schoolNameKey = 'cached_school_name';
+  static const _phoneKey = 'cached_phone';
+  static const _themeModeKey = 'theme_mode';
+  static const _colorSchemeKey = 'color_scheme';
+  static const _useLocalhostKey = 'use_localhost';
 
   final FlutterSecureStorage _secure;
   final SharedPreferences _prefs;
@@ -48,8 +48,8 @@ class StorageService {
   }
 
   // Secure third-party account storage (one secure key per platform)
-  static const _thirdPartyKeyPrefix = "third_party_";
-  String _thirdPartyKey(ThirdPartyPlatform p) => "$_thirdPartyKeyPrefix${p.id}";
+  static const _thirdPartyKeyPrefix = 'third_party_';
+  String _thirdPartyKey(ThirdPartyPlatform p) => '$_thirdPartyKeyPrefix${p.id}';
 
   Future<void> saveThirdPartyAccount(ThirdPartyAccount acc) async {
     await _secure.write(
@@ -93,19 +93,19 @@ class StorageService {
   bool get debugMode => _prefs.getBool(_debugModeKey) ?? false;
   Future<void> setDebugMode(bool value) => _prefs.setBool(_debugModeKey, value);
 
-  String get cachedSchoolName => _prefs.getString(_schoolNameKey) ?? "";
+  String get cachedSchoolName => _prefs.getString(_schoolNameKey) ?? '';
   Future<void> setCachedSchoolName(String name) =>
       _prefs.setString(_schoolNameKey, name);
 
-  String get cachedPhone => _prefs.getString(_phoneKey) ?? "";
+  String get cachedPhone => _prefs.getString(_phoneKey) ?? '';
   Future<void> setCachedPhone(String phone) =>
       _prefs.setString(_phoneKey, phone);
 
-  String get themeMode => _prefs.getString(_themeModeKey) ?? "system";
+  String get themeMode => _prefs.getString(_themeModeKey) ?? 'system';
   Future<void> setThemeMode(String mode) =>
       _prefs.setString(_themeModeKey, mode);
 
-  String get colorScheme => _prefs.getString(_colorSchemeKey) ?? "system";
+  String get colorScheme => _prefs.getString(_colorSchemeKey) ?? 'system';
   Future<void> setColorScheme(String scheme) =>
       _prefs.setString(_colorSchemeKey, scheme);
 
@@ -114,10 +114,10 @@ class StorageService {
       _prefs.setBool(_useLocalhostKey, value);
 
   // Schedule cache
-  static const _semestersKey = "schedule_semesters";
-  static const _courseTablePrefix = "schedule_course_table_";
-  static const _termBeginPrefix = "schedule_term_begin_";
-  static const _selectedSemesterKey = "schedule_selected_semester";
+  static const _semestersKey = 'schedule_semesters';
+  static const _courseTablePrefix = 'schedule_course_table_';
+  static const _termBeginPrefix = 'schedule_term_begin_';
+  static const _selectedSemesterKey = 'schedule_selected_semester';
 
   Future<void> saveSemesters(SemesterInfo info) =>
       _prefs.setString(_semestersKey, jsonEncode(info.toJson()));
@@ -129,19 +129,19 @@ class StorageService {
   }
 
   Future<void> saveCourseTable(String semesterId, CourseTable table) => _prefs
-      .setString("$_courseTablePrefix$semesterId", jsonEncode(table.toJson()));
+      .setString('$_courseTablePrefix$semesterId', jsonEncode(table.toJson()));
 
   CourseTable? loadCourseTable(String semesterId) {
-    final raw = _prefs.getString("$_courseTablePrefix$semesterId");
+    final raw = _prefs.getString('$_courseTablePrefix$semesterId');
     if (raw == null) return null;
     return CourseTable.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
   Future<void> saveTermBegin(String key, DateTime date) =>
-      _prefs.setString("$_termBeginPrefix$key", date.toIso8601String());
+      _prefs.setString('$_termBeginPrefix$key', date.toIso8601String());
 
   DateTime? loadTermBegin(String key) {
-    final raw = _prefs.getString("$_termBeginPrefix$key");
+    final raw = _prefs.getString('$_termBeginPrefix$key');
     if (raw == null) return null;
     return DateTime.tryParse(raw);
   }
@@ -151,7 +151,7 @@ class StorageService {
       _prefs.setString(_selectedSemesterKey, id);
 
   // Assignments cache (non-sensitive — stored as JSON in SharedPreferences)
-  static const _assignmentsKey = "cached_assignments";
+  static const _assignmentsKey = 'cached_assignments';
 
   Future<void> saveCachedAssignments(List<Map<String, dynamic>> items) =>
       _prefs.setString(_assignmentsKey, jsonEncode(items));
@@ -170,7 +170,7 @@ class StorageService {
   Future<void> clearCachedAssignments() => _prefs.remove(_assignmentsKey);
 
   // Local user overrides on assignments (completion flips + hidden ids).
-  static const _assignmentOverridesKey = "assignment_overrides";
+  static const _assignmentOverridesKey = 'assignment_overrides';
 
   Future<void> saveAssignmentOverrides(AssignmentOverrides ov) =>
       _prefs.setString(_assignmentOverridesKey, jsonEncode(ov.toJson()));
@@ -192,7 +192,7 @@ class StorageService {
 
   // OA gym booking profile. This is non-sensitive contact info used to submit
   // reservation forms and can be edited by the user.
-  static const _oaBookingProfileKey = "oa_booking_profile";
+  static const _oaBookingProfileKey = 'oa_booking_profile';
 
   Future<void> saveOaBookingProfile(OaBookingProfile profile) =>
       _prefs.setString(_oaBookingProfileKey, jsonEncode(profile.toJson()));
@@ -200,14 +200,14 @@ class StorageService {
   OaBookingProfile loadOaBookingProfile() {
     final raw = _prefs.getString(_oaBookingProfileKey);
     if (raw == null) {
-      return const OaBookingProfile(name: "", phone: "", email: "");
+      return const OaBookingProfile(name: '', phone: '', email: '');
     }
     try {
       return OaBookingProfile.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
     } catch (_) {
-      return const OaBookingProfile(name: "", phone: "", email: "");
+      return const OaBookingProfile(name: '', phone: '', email: '');
     }
   }
 }

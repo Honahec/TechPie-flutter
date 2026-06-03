@@ -1,7 +1,7 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../app_destination.dart";
-import "desktop_sidebar_tokens.dart";
+import '../app_destination.dart';
+import 'desktop_sidebar_tokens.dart';
 
 class DesktopSidebarItem extends StatelessWidget {
   final AppDestination destination;

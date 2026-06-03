@@ -1,9 +1,9 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import "../../utils/platform.dart";
+import '../../utils/platform.dart';
 
 class IosNativeTextFieldGroupItem {
   const IosNativeTextFieldGroupItem({
@@ -108,34 +108,34 @@ class _IosNativeTextFieldGroupState extends State<IosNativeTextFieldGroup> {
 
   Map<String, Object?> get _configuration {
     return <String, Object?>{
-      "items": [
+      'items': [
         for (final item in widget.items)
           <String, Object?>{
-            "text": item.controller.text,
-            "placeholder": item.placeholder,
-            "keyboardType": _keyboardTypeName(item.keyboardType),
-            "textInputAction": item.textInputAction.name,
-            "obscureText": item.obscureText,
-            "enabled": item.enabled,
+            'text': item.controller.text,
+            'placeholder': item.placeholder,
+            'keyboardType': _keyboardTypeName(item.keyboardType),
+            'textInputAction': item.textInputAction.name,
+            'obscureText': item.obscureText,
+            'enabled': item.enabled,
           },
       ],
     };
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
       final arguments = call.arguments as Map<Object?, Object?>?;
-      final index = arguments?["index"];
+      final index = arguments?['index'];
       if (index is! int || index < 0 || index >= widget.items.length) {
         return null;
       }
 
       switch (call.method) {
-        case "onChanged":
-          final text = arguments?["text"] as String? ?? "";
+        case 'onChanged':
+          final text = arguments?['text'] as String? ?? '';
           final controller = widget.items[index].controller;
           if (text == controller.text) return null;
           _updatingFromNative = true;
@@ -145,8 +145,8 @@ class _IosNativeTextFieldGroupState extends State<IosNativeTextFieldGroup> {
             composing: TextRange.empty,
           );
           _updatingFromNative = false;
-        case "onSubmitted":
-          final text = arguments?["text"] as String?;
+        case 'onSubmitted':
+          final text = arguments?['text'] as String?;
           final item = widget.items[index];
           if (text != null && text != item.controller.text) {
             _updatingFromNative = true;
@@ -169,8 +169,8 @@ class _IosNativeTextFieldGroupState extends State<IosNativeTextFieldGroup> {
     final channel = _channel;
     if (channel == null) return;
     unawaited(
-      channel.invokeMethod<void>("updateTexts", <String, Object?>{
-        "texts": [for (final item in widget.items) item.controller.text],
+      channel.invokeMethod<void>('updateTexts', <String, Object?>{
+        'texts': [for (final item in widget.items) item.controller.text],
       }),
     );
   }
@@ -180,7 +180,7 @@ class _IosNativeTextFieldGroupState extends State<IosNativeTextFieldGroup> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>("updateConfiguration", _configuration);
+      await channel.invokeMethod<void>('updateConfiguration', _configuration);
     } on PlatformException {
       // Platform view may be tearing down.
     } on MissingPluginException {
@@ -189,13 +189,13 @@ class _IosNativeTextFieldGroupState extends State<IosNativeTextFieldGroup> {
   }
 
   String _keyboardTypeName(TextInputType keyboardType) {
-    if (keyboardType == TextInputType.emailAddress) return "emailAddress";
-    if (keyboardType == TextInputType.phone) return "phone";
-    if (keyboardType == TextInputType.url) return "url";
-    if (keyboardType == TextInputType.number) return "number";
-    return "text";
+    if (keyboardType == TextInputType.emailAddress) return 'emailAddress';
+    if (keyboardType == TextInputType.phone) return 'phone';
+    if (keyboardType == TextInputType.url) return 'url';
+    if (keyboardType == TextInputType.number) return 'number';
+    return 'text';
   }
 }
 
-const _viewType = "techpie/native_text_field_group";
-const _channelPrefix = "techpie/native_text_field_group";
+const _viewType = 'techpie/native_text_field_group';
+const _channelPrefix = 'techpie/native_text_field_group';

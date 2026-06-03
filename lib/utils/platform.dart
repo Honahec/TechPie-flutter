@@ -1,8 +1,8 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-const MethodChannel _platformChannel = MethodChannel("techpie/platform");
+const MethodChannel _platformChannel = MethodChannel('techpie/platform');
 
 bool _supportsIosLiquidGlass = false;
 
@@ -12,7 +12,7 @@ Future<void> initializePlatformCapabilities() async {
 
   try {
     final majorVersion = await _platformChannel.invokeMethod<int>(
-      "iosMajorVersion",
+      'iosMajorVersion',
     );
     _supportsIosLiquidGlass = (majorVersion ?? 0) >= 26;
   } on PlatformException {

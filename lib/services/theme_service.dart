@@ -1,13 +1,13 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-import "storage_service.dart";
+import 'storage_service.dart';
 
 enum AppThemeMode {
-  system("System", Icons.brightness_auto_outlined),
-  light("Light", Icons.light_mode_outlined),
-  dark("Dark", Icons.dark_mode_outlined),
-  amoled("Dark AMOLED", Icons.brightness_2_outlined);
+  system('System', Icons.brightness_auto_outlined),
+  light('Light', Icons.light_mode_outlined),
+  dark('Dark', Icons.dark_mode_outlined),
+  amoled('Dark AMOLED', Icons.brightness_2_outlined);
 
   const AppThemeMode(this.label, this.icon);
   final String label;
@@ -15,8 +15,8 @@ enum AppThemeMode {
 }
 
 enum AppColorScheme {
-  system("System", Icons.colorize_outlined),
-  techRed("TechRed", Icons.palette_outlined);
+  system('System', Icons.colorize_outlined),
+  techRed('TechRed', Icons.palette_outlined);
 
   const AppColorScheme(this.label, this.icon);
   final String label;

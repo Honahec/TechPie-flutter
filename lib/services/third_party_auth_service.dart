@@ -1,20 +1,20 @@
-import "dart:convert";
+import 'dart:convert';
 
-import "package:flutter/foundation.dart";
+import 'package:flutter/foundation.dart';
 
-import "../models/third_party_account.dart";
-import "http_client.dart";
-import "storage_service.dart";
+import '../models/third_party_account.dart';
+import 'http_client.dart';
+import 'storage_service.dart';
 
-const String _devBaseUrl = "http://localhost:3000/api";
-const String _prodBaseUrl = "https://techpie.geekpie.club/api";
+const String _devBaseUrl = 'http://localhost:3000/api';
+const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
 class ThirdPartyBindException implements Exception {
   final ThirdPartyPlatform platform;
   final String message;
   ThirdPartyBindException(this.platform, this.message);
   @override
-  String toString() => "${platform.label}: $message";
+  String toString() => '${platform.label}: $message';
 }
 
 class ThirdPartyAuthService extends ChangeNotifier {
@@ -51,20 +51,20 @@ class ThirdPartyAuthService extends ChangeNotifier {
     bool autoRenew = false,
   }) async {
     final body = <String, dynamic>{
-      "account": account,
-      "password": password,
+      'account': account,
+      'password': password,
     };
     if (platform == ThirdPartyPlatform.hydro &&
         hydroOrigin != null &&
         hydroOrigin.isNotEmpty) {
-      body["args"] = {"url": hydroOrigin};
+      body['args'] = {'url': hydroOrigin};
     }
 
     final resp = await _http.post(
-      Uri.parse("$_baseUrl/auth/third-party/${platform.id}"),
-      headers: {"Content-Type": "application/json; charset=UTF-8"},
+      Uri.parse('$_baseUrl/auth/third-party/${platform.id}'),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode(body),
-      tag: "thirdPartyBind:${platform.id}",
+      tag: 'thirdPartyBind:${platform.id}',
     );
 
     Map<String, dynamic> data;
@@ -73,32 +73,32 @@ class ThirdPartyAuthService extends ChangeNotifier {
     } catch (_) {
       throw ThirdPartyBindException(
         platform,
-        "Invalid response (status ${resp.statusCode})",
+        'Invalid response (status ${resp.statusCode})',
       );
     }
 
-    if (data["success"] != true) {
+    if (data['success'] != true) {
       throw ThirdPartyBindException(
         platform,
-        (data["error"] as String?) ?? "login failed (${resp.statusCode})",
+        (data['error'] as String?) ?? 'login failed (${resp.statusCode})',
       );
     }
 
-    final d = (data["data"] as Map?)?.cast<String, dynamic>() ?? const {};
-    final token = d["token"] as String?;
+    final d = (data['data'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final token = d['token'] as String?;
     if (token == null || token.isEmpty) {
-      throw ThirdPartyBindException(platform, "response missing token");
+      throw ThirdPartyBindException(platform, 'response missing token');
     }
 
     final acc = ThirdPartyAccount(
       platform: platform,
       account: account,
-      sid: d["sid"] as String?,
-      name: d["name"] as String?,
-      email: d["email"] as String?,
+      sid: d['sid'] as String?,
+      name: d['name'] as String?,
+      email: d['email'] as String?,
       token: token,
-      expire: (d["expire"] as num?)?.toInt(),
-      raw: (d["raw"] as Map?)?.cast<String, dynamic>() ?? const {},
+      expire: (d['expire'] as num?)?.toInt(),
+      raw: (d['raw'] as Map?)?.cast<String, dynamic>() ?? const {},
       hydroOrigin: platform == ThirdPartyPlatform.hydro
           ? (hydroOrigin?.isNotEmpty == true ? hydroOrigin : null)
           : null,

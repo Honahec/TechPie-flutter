@@ -1,8 +1,8 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../app_destination.dart";
-import "desktop_sidebar_item.dart";
-import "desktop_sidebar_tokens.dart";
+import '../app_destination.dart';
+import 'desktop_sidebar_item.dart';
+import 'desktop_sidebar_tokens.dart';
 
 class DesktopSidebar extends StatelessWidget {
   final List<AppDestination> destinations;
@@ -150,7 +150,7 @@ class _SidebarBrand extends StatelessWidget {
                 const SizedBox(width: DesktopSidebarTokens.brandTextGap),
                 Expanded(
                   child: Text(
-                    "TechPie",
+                    'TechPie',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -182,7 +182,7 @@ class _SidebarToggleButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return IconButton(
-      tooltip: collapsed ? "Expand sidebar" : "Collapse sidebar",
+      tooltip: collapsed ? 'Expand sidebar' : 'Collapse sidebar',
       onPressed: onPressed,
       icon: const SizedBox(
         width: DesktopSidebarTokens.iconColumnWidth,

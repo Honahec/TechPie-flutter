@@ -1,5 +1,5 @@
-import "ics_file_saver_native_impl.dart"
-    if (dart.library.html) "ics_file_saver_web_impl.dart" as impl;
+import 'ics_file_saver_native_impl.dart'
+    if (dart.library.html) 'ics_file_saver_web_impl.dart' as impl;
 
 abstract class SavedIcsFile {
   String get fileName;

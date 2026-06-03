@@ -7,24 +7,24 @@ enum OaSport {
 
 extension OaSportInfo on OaSport {
   String get id => switch (this) {
-        OaSport.badminton => "badminton",
-        OaSport.pingpong => "pingpong",
-        OaSport.tennis => "tennis",
-        OaSport.pickleball => "pickleball",
+        OaSport.badminton => 'badminton',
+        OaSport.pingpong => 'pingpong',
+        OaSport.tennis => 'tennis',
+        OaSport.pickleball => 'pickleball',
       };
 
   String get label => switch (this) {
-        OaSport.badminton => "羽毛球",
-        OaSport.pingpong => "乒乓球",
-        OaSport.tennis => "网球",
-        OaSport.pickleball => "匹克球",
+        OaSport.badminton => '羽毛球',
+        OaSport.pingpong => '乒乓球',
+        OaSport.tennis => '网球',
+        OaSport.pickleball => '匹克球',
       };
 
   String get courtPrefix => switch (this) {
-        OaSport.badminton => "羽毛球场地",
-        OaSport.pingpong => "乒乓球场",
-        OaSport.tennis => "网球场",
-        OaSport.pickleball => "匹克球",
+        OaSport.badminton => '羽毛球场地',
+        OaSport.pingpong => '乒乓球场',
+        OaSport.tennis => '网球场',
+        OaSport.pickleball => '匹克球',
       };
 }
 
@@ -39,21 +39,21 @@ class OaTimeSlot {
     required this.end,
   });
 
-  String get range => "$start-$end";
+  String get range => '$start-$end';
 }
 
 const oaTimeSlots = <OaTimeSlot>[
-  OaTimeSlot(id: 1, start: "11:00", end: "12:00"),
-  OaTimeSlot(id: 2, start: "12:00", end: "13:00"),
-  OaTimeSlot(id: 3, start: "13:00", end: "14:00"),
-  OaTimeSlot(id: 4, start: "14:00", end: "15:00"),
-  OaTimeSlot(id: 5, start: "15:00", end: "16:00"),
-  OaTimeSlot(id: 6, start: "16:00", end: "17:00"),
-  OaTimeSlot(id: 7, start: "17:00", end: "18:00"),
-  OaTimeSlot(id: 8, start: "18:00", end: "19:00"),
-  OaTimeSlot(id: 9, start: "19:00", end: "20:00"),
-  OaTimeSlot(id: 10, start: "20:00", end: "21:00"),
-  OaTimeSlot(id: 11, start: "21:00", end: "22:00"),
+  OaTimeSlot(id: 1, start: '11:00', end: '12:00'),
+  OaTimeSlot(id: 2, start: '12:00', end: '13:00'),
+  OaTimeSlot(id: 3, start: '13:00', end: '14:00'),
+  OaTimeSlot(id: 4, start: '14:00', end: '15:00'),
+  OaTimeSlot(id: 5, start: '15:00', end: '16:00'),
+  OaTimeSlot(id: 6, start: '16:00', end: '17:00'),
+  OaTimeSlot(id: 7, start: '17:00', end: '18:00'),
+  OaTimeSlot(id: 8, start: '18:00', end: '19:00'),
+  OaTimeSlot(id: 9, start: '19:00', end: '20:00'),
+  OaTimeSlot(id: 10, start: '20:00', end: '21:00'),
+  OaTimeSlot(id: 11, start: '21:00', end: '22:00'),
 ];
 
 const oaTimeEndpointStart = 11;
@@ -91,39 +91,39 @@ class OaSportConfig {
 const oaSportConfigs = <OaSport, OaSportConfig>{
   OaSport.badminton: OaSportConfig(
     sport: OaSport.badminton,
-    field32340: "4",
+    field32340: '4',
     courtOffset: 12,
     courtCount: 6,
-    parentName: "室内羽毛球场",
-    courtNamePrefix: "羽毛球场地",
-    courtNameSuffix: "号",
+    parentName: '室内羽毛球场',
+    courtNamePrefix: '羽毛球场地',
+    courtNameSuffix: '号',
   ),
   OaSport.pingpong: OaSportConfig(
     sport: OaSport.pingpong,
-    field32340: "5",
+    field32340: '5',
     courtOffset: 18,
     courtCount: 6,
-    parentName: "室内乒乓球场",
-    courtNamePrefix: "乒乓球场",
-    courtNameSuffix: "号",
+    parentName: '室内乒乓球场',
+    courtNamePrefix: '乒乓球场',
+    courtNameSuffix: '号',
   ),
   OaSport.tennis: OaSportConfig(
     sport: OaSport.tennis,
-    field32340: "6",
+    field32340: '6',
     courtOffset: 24,
     courtCount: 3,
-    parentName: "网球场",
-    courtNamePrefix: "网球场",
-    courtNameSuffix: "号",
+    parentName: '网球场',
+    courtNamePrefix: '网球场',
+    courtNameSuffix: '号',
   ),
   OaSport.pickleball: OaSportConfig(
     sport: OaSport.pickleball,
-    field32340: "11",
+    field32340: '11',
     courtOffset: 42,
     courtCount: 1,
-    parentName: "匹克球场",
-    courtNamePrefix: "匹克球",
-    courtNameSuffix: "号场地",
+    parentName: '匹克球场',
+    courtNamePrefix: '匹克球',
+    courtNameSuffix: '号场地',
   ),
 };
 
@@ -142,7 +142,7 @@ class OaAvailability {
     required this.totalCourts,
   });
 
-  String get key => "${sport.id}|$timeSlot";
+  String get key => '${sport.id}|$timeSlot';
 }
 
 class OaCourtSearchResult {
@@ -190,15 +190,15 @@ class OaBookingProfile {
       );
 
   Map<String, dynamic> toJson() => {
-        "name": name,
-        "phone": phone,
-        "email": email,
+        'name': name,
+        'phone': phone,
+        'email': email,
       };
 
   factory OaBookingProfile.fromJson(Map<String, dynamic> json) =>
       OaBookingProfile(
-        name: json["name"] as String? ?? "",
-        phone: json["phone"] as String? ?? "",
-        email: json["email"] as String? ?? "",
+        name: json['name'] as String? ?? '',
+        phone: json['phone'] as String? ?? '',
+        email: json['email'] as String? ?? '',
       );
 }

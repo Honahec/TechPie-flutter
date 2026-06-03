@@ -1,7 +1,7 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class IosGlassTabBarItem {
   const IosGlassTabBarItem({
@@ -77,27 +77,27 @@ class _IosGlassTabBarState extends State<IosGlassTabBar> {
         final itemSignature = widget.items
             .map(
               (item) =>
-                  "${item.label}|${item.sfSymbol}|${item.selectedSfSymbol}",
+                  '${item.label}|${item.sfSymbol}|${item.selectedSfSymbol}',
             )
-            .join(";");
+            .join(';');
 
         return SizedBox(
           width: width,
           height: tabBarHeight,
           child: UiKitView(
             key: ValueKey(
-              "ios-glass-tabbar-${width.round()}-${tabBarHeight.round()}-$itemSignature",
+              'ios-glass-tabbar-${width.round()}-${tabBarHeight.round()}-$itemSignature',
             ),
             viewType: _viewType,
             layoutDirection: Directionality.of(context),
             creationParams: <String, Object?>{
-              "selectedIndex": _safeSelectedIndex,
-              "items": [
+              'selectedIndex': _safeSelectedIndex,
+              'items': [
                 for (final item in widget.items)
                   <String, Object?>{
-                    "label": item.label,
-                    "sfSymbol": item.sfSymbol,
-                    "selectedSfSymbol": item.selectedSfSymbol,
+                    'label': item.label,
+                    'sfSymbol': item.sfSymbol,
+                    'selectedSfSymbol': item.selectedSfSymbol,
                   },
               ],
             },
@@ -110,14 +110,14 @@ class _IosGlassTabBarState extends State<IosGlassTabBar> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != "onSelect") return null;
+      if (call.method != 'onSelect') return null;
 
       final arguments = call.arguments;
-      final index = arguments is Map ? arguments["index"] : null;
+      final index = arguments is Map ? arguments['index'] : null;
 
       if (index is int && index >= 0 && index < widget.items.length) {
         widget.onSelected(index);
@@ -132,8 +132,8 @@ class _IosGlassTabBarState extends State<IosGlassTabBar> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>("updateSelectedIndex", <String, Object?>{
-        "index": index,
+      await channel.invokeMethod<void>('updateSelectedIndex', <String, Object?>{
+        'index': index,
       });
     } on PlatformException {
       // Platform view may be tearing down.
@@ -143,5 +143,5 @@ class _IosGlassTabBarState extends State<IosGlassTabBar> {
   }
 }
 
-const _viewType = "techpie/native_glass_tab_bar";
-const _channelPrefix = "techpie/native_glass_tab_bar";
+const _viewType = 'techpie/native_glass_tab_bar';
+const _channelPrefix = 'techpie/native_glass_tab_bar';

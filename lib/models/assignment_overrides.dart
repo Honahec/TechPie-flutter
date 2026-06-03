@@ -1,4 +1,4 @@
-import "assignment.dart";
+import 'assignment.dart';
 
 /// Local user-side overrides on top of the deadline data we fetch from
 /// the backend. Stored in SharedPreferences (non-sensitive).
@@ -12,7 +12,7 @@ class AssignmentOverrides {
   })  : completed = completed ?? {},
         hidden = hidden ?? {};
 
-  static String keyFor(Assignment a) => "${a.platform}:${a.id}";
+  static String keyFor(Assignment a) => '${a.platform}:${a.id}';
 
   bool isHidden(Assignment a) => hidden.contains(keyFor(a));
 
@@ -27,17 +27,17 @@ class AssignmentOverrides {
   bool hasCompletionOverride(Assignment a) => completed.containsKey(keyFor(a));
 
   Map<String, dynamic> toJson() => {
-        "completed": completed,
-        "hidden": hidden.toList(),
+        'completed': completed,
+        'hidden': hidden.toList(),
       };
 
   factory AssignmentOverrides.fromJson(Map<String, dynamic> json) {
-    final c = (json["completed"] as Map?)?.map(
+    final c = (json['completed'] as Map?)?.map(
           (k, v) => MapEntry(k as String, v as bool),
         ) ??
         <String, bool>{};
     final h =
-        ((json["hidden"] as List?) ?? const []).map((e) => e as String).toSet();
+        ((json['hidden'] as List?) ?? const []).map((e) => e as String).toSet();
     return AssignmentOverrides(completed: c, hidden: h);
   }
 }

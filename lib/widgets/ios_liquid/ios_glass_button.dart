@@ -1,8 +1,8 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:techpie/utils/platform.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:techpie/utils/platform.dart';
 
 class IosGlassButton extends StatefulWidget {
   const IosGlassButton({
@@ -52,7 +52,7 @@ class _IosGlassButtonState extends State<IosGlassButton> {
       child: UiKitView(
         viewType: _viewType,
         layoutDirection: Directionality.of(context),
-        creationParams: <String, Object?>{"sfSymbol": widget.sfSymbol},
+        creationParams: <String, Object?>{'sfSymbol': widget.sfSymbol},
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
       ),
@@ -60,11 +60,11 @@ class _IosGlassButtonState extends State<IosGlassButton> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != "onTap") return null;
+      if (call.method != 'onTap') return null;
 
       widget.onPressed();
       return null;
@@ -76,8 +76,8 @@ class _IosGlassButtonState extends State<IosGlassButton> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>("updateSymbol", <String, Object?>{
-        "sfSymbol": sfSymbol,
+      await channel.invokeMethod<void>('updateSymbol', <String, Object?>{
+        'sfSymbol': sfSymbol,
       });
     } on PlatformException {
       // Platform view may be tearing down.
@@ -87,5 +87,5 @@ class _IosGlassButtonState extends State<IosGlassButton> {
   }
 }
 
-const _viewType = "techpie/native_glass_button";
-const _channelPrefix = "techpie/native_glass_button";
+const _viewType = 'techpie/native_glass_button';
+const _channelPrefix = 'techpie/native_glass_button';

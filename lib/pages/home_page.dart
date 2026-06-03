@@ -1,24 +1,24 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/material.dart";
-import "package:intl/intl.dart";
-import "package:url_launcher/url_launcher.dart";
-import "package:webview_flutter/webview_flutter.dart";
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-import "../models/assignment.dart";
-import "../models/course.dart";
-import "../models/course_table.dart";
-import "../models/feature.dart";
-import "../services/assignment_service.dart";
-import "../services/schedule_service.dart";
-import "../services/service_provider.dart";
-import "../utils/platform.dart";
-import "../widgets/adaptive_alert_dialog.dart";
-import "../widgets/adaptive_feedback.dart";
-import "../widgets/app_card.dart";
-import "../widgets/blurred_app_bar.dart";
-import "../widgets/ios_liquid/ios_native_navigation_bar.dart";
-import "generic_webview_page.dart";
+import '../models/assignment.dart';
+import '../models/course.dart';
+import '../models/course_table.dart';
+import '../models/feature.dart';
+import '../services/assignment_service.dart';
+import '../services/schedule_service.dart';
+import '../services/service_provider.dart';
+import '../utils/platform.dart';
+import '../widgets/adaptive_alert_dialog.dart';
+import '../widgets/adaptive_feedback.dart';
+import '../widgets/app_card.dart';
+import '../widgets/blurred_app_bar.dart';
+import '../widgets/ios_liquid/ios_native_navigation_bar.dart';
+import 'generic_webview_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -161,9 +161,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         course.endPeriod - 1 < _periods.length) {
       final start = _periods[course.startPeriod - 1];
       final end = _periods[course.endPeriod - 1];
-      return "${start.startTime} – ${end.endTime}";
+      return '${start.startTime} – ${end.endTime}';
     }
-    return "第${course.startPeriod}-${course.endPeriod}节";
+    return '第${course.startPeriod}-${course.endPeriod}节';
   }
 
   _CourseStatus _courseStatus(Course course) {
@@ -205,7 +205,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   static int? _parseMinutes(String time) {
-    final parts = time.split(":");
+    final parts = time.split(':');
     if (parts.length != 2) return null;
     final h = int.tryParse(parts[0]);
     final m = int.tryParse(parts[1]);
@@ -270,8 +270,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
       appBar: useIosChrome
-          ? const IosNativeNavigationBar(title: "Home", largeTitleMode: true)
-          : const BlurredAppBar(title: Text("Home")),
+          ? const IosNativeNavigationBar(title: 'Home', largeTitleMode: true)
+          : const BlurredAppBar(title: Text('Home')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
@@ -293,12 +293,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Welcome to TechPie",
+                    'Welcome to TechPie',
                     style: theme.textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Your academic dashboard at a glance.",
+                    'Your academic dashboard at a glance.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -332,7 +332,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         curve: Curves.easeOutCubic,
         alignment: Alignment.topCenter,
         child: Column(
-          key: ValueKey("apps-${features.length}-$rows"),
+          key: ValueKey('apps-${features.length}-$rows'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
@@ -345,7 +345,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text("应用", style: theme.textTheme.titleSmall),
+                  Text('应用', style: theme.textTheme.titleSmall),
                 ],
               ),
             ),
@@ -402,23 +402,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     Widget content;
     if (!isLoggedIn) {
       content = _buildEmptyContent(
-        key: const ValueKey("not-logged-in"),
+        key: const ValueKey('not-logged-in'),
         theme: theme,
         icon: Icons.login_rounded,
-        title: "登录以查看今日课程",
-        subtitle: "连接你的教务系统账号",
+        title: '登录以查看今日课程',
+        subtitle: '连接你的教务系统账号',
       );
     } else if (_todayCourses.isEmpty) {
       content = _buildEmptyContent(
-        key: ValueKey("no-courses-${_now.weekday}"),
+        key: ValueKey('no-courses-${_now.weekday}'),
         theme: theme,
         icon: Icons.wb_sunny_outlined,
-        title: "今天没有课程",
-        subtitle: "享受你的自由时间吧",
+        title: '今天没有课程',
+        subtitle: '享受你的自由时间吧',
       );
     } else {
       content = _buildCourseContent(
-        key: ValueKey("courses-${_now.weekday}"),
+        key: ValueKey('courses-${_now.weekday}'),
         theme: theme,
       );
     }
@@ -464,15 +464,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     Widget content;
     if (pending.isEmpty) {
       content = _buildEmptyContent(
-        key: const ValueKey("no-pending"),
+        key: const ValueKey('no-pending'),
         theme: theme,
         icon: Icons.assignment_turned_in_outlined,
-        title: "没有待办作业",
-        subtitle: "All caught up!",
+        title: '没有待办作业',
+        subtitle: 'All caught up!',
       );
     } else {
       content = Column(
-        key: ValueKey("pending-${pending.length}-${now.day}-${now.hour}"),
+        key: ValueKey('pending-${pending.length}-${now.day}-${now.hour}'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -485,10 +485,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   color: theme.colorScheme.tertiary,
                 ),
                 const SizedBox(width: 8),
-                Text("待办作业", style: theme.textTheme.titleSmall),
+                Text('待办作业', style: theme.textTheme.titleSmall),
                 const Spacer(),
                 Text(
-                  "${pending.length} 项",
+                  '${pending.length} 项',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -505,7 +505,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: Text(
-                "还有 $overflow 项,前往 Deadlines 查看全部",
+                '还有 $overflow 项,前往 Deadlines 查看全部',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -601,13 +601,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String _dueLabel(DateTime due, DateTime now) {
     final diff = due.difference(now);
     if (diff.inDays >= 3) {
-      return DateFormat("MM/dd HH:mm").format(due);
+      return DateFormat('MM/dd HH:mm').format(due);
     }
-    if (diff.inDays >= 1) return "${diff.inDays} 天内";
-    if (diff.inHours >= 1) return "${diff.inHours} 小时内";
+    if (diff.inDays >= 1) return '${diff.inDays} 天内';
+    if (diff.inHours >= 1) return '${diff.inHours} 小时内';
     final minutes = diff.inMinutes;
-    if (minutes >= 1) return "$minutes 分钟内";
-    return "< 1 分钟";
+    if (minutes >= 1) return '$minutes 分钟内';
+    return '< 1 分钟';
   }
 
   Color _dueColor(DateTime due, DateTime now, ColorScheme scheme) {
@@ -623,16 +623,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (isIos()) {
         await showAdaptiveAlertDialog<void>(
           context: context,
-          title: "无法打开作业",
-          message: "这个作业没有可打开的链接。",
+          title: '无法打开作业',
+          message: '这个作业没有可打开的链接。',
           actions: const [
-            AdaptiveAlertAction<void>(label: "Done", isDefault: true),
+            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
           ],
         );
       } else {
         showAdaptiveFeedback(
           context: context,
-          message: "该作业没有链接",
+          message: '该作业没有链接',
           style: AdaptiveFeedbackStyle.info,
         );
       }
@@ -700,10 +700,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Text("今日课程", style: theme.textTheme.titleSmall),
+              Text('今日课程', style: theme.textTheme.titleSmall),
               const Spacer(),
               Text(
-                "${_todayCourses.length} 节课",
+                '${_todayCourses.length} 节课',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -758,7 +758,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Text(course.name),
         ),
         subtitle: Text(
-          "${_timeForCourse(course)}"
+          '${_timeForCourse(course)}'
           '${course.location.isNotEmpty ? '  ${course.location}' : ''}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -773,7 +773,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // ── Debug Panel ──
 
-  static const _dayLabels = ["一", "二", "三", "四", "五", "六", "日"];
+  static const _dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
 
   Widget _buildDebugPanel(ThemeData theme) {
     final now = _now;
@@ -797,23 +797,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               size: 20,
             ),
             title: Text(
-              "Debug: Time Override",
+              'Debug: Time Override',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.error,
               ),
             ),
             subtitle: isOverriding
                 ? Text(
-                    "${_dayLabels[now.weekday - 1]}  "
+                    '${_dayLabels[now.weekday - 1]}  '
                     '${now.hour.toString().padLeft(2, '0')}:'
                     '${now.minute.toString().padLeft(2, '0')}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: "monospace",
+                      fontFamily: 'monospace',
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   )
                 : Text(
-                    "Real time",
+                    'Real time',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -842,7 +842,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
                   // Time slider
                   Text(
-                    "Time of day",
+                    'Time of day',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -853,7 +853,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         '${(minutes ~/ 60).toString().padLeft(2, '0')}:'
                         '${(minutes.toInt() % 60).toString().padLeft(2, '0')}',
                         style: theme.textTheme.titleMedium?.copyWith(
-                          fontFamily: "monospace",
+                          fontFamily: 'monospace',
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -873,8 +873,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
                   // Day shift buttons
                   Text(
-                    "Day (周${_dayLabels[now.weekday - 1]}  "
-                    "${now.month}/${now.day})",
+                    'Day (周${_dayLabels[now.weekday - 1]}  '
+                    '${now.month}/${now.day})',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -883,19 +883,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Row(
                     children: [
                       _DebugChip(
-                        label: "- Day",
+                        label: '- Day',
                         icon: Icons.chevron_left,
                         onPressed: () => _debugShiftDay(-1),
                       ),
                       const SizedBox(width: 8),
                       _DebugChip(
-                        label: "+ Day",
+                        label: '+ Day',
                         icon: Icons.chevron_right,
                         onPressed: () => _debugShiftDay(1),
                       ),
                       const SizedBox(width: 8),
                       _DebugChip(
-                        label: "Replay",
+                        label: 'Replay',
                         icon: Icons.replay,
                         onPressed: _debugReplayStagger,
                       ),
@@ -903,7 +903,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       FilledButton.tonalIcon(
                         onPressed: _debugReset,
                         icon: const Icon(Icons.restore, size: 18),
-                        label: const Text("Reset"),
+                        label: const Text('Reset'),
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
@@ -952,7 +952,7 @@ class _CourseBadge extends StatelessWidget {
       },
       child: hasBadge
           ? _buildBadgeContent()
-          : const SizedBox.shrink(key: ValueKey("none")),
+          : const SizedBox.shrink(key: ValueKey('none')),
     );
   }
 
@@ -964,7 +964,7 @@ class _CourseBadge extends StatelessWidget {
     final fgColor = isSoon
         ? theme.colorScheme.onTertiaryContainer
         : theme.colorScheme.onPrimaryContainer;
-    final label = isSoon ? "即将开始" : "正在进行";
+    final label = isSoon ? '即将开始' : '正在进行';
 
     return Container(
       key: ValueKey(status),

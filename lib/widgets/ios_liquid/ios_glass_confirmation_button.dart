@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:techpie/utils/platform.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:techpie/utils/platform.dart';
 
 class IosGlassConfirmationButton extends StatefulWidget {
   const IosGlassConfirmationButton({
@@ -10,7 +10,7 @@ class IosGlassConfirmationButton extends StatefulWidget {
     required this.confirmLabel,
     required this.onConfirmed,
     this.icon = Icons.link_off,
-    this.sfSymbol = "link.badge.minus",
+    this.sfSymbol = 'link.badge.minus',
     this.destructive = false,
     this.width,
     this.height = 36,
@@ -71,17 +71,17 @@ class _IosGlassConfirmationButtonState
       child: UiKitView(
         key: ValueKey<String>(
           'ios-glass-confirm-${widget.label ?? ''}-'
-          "${widget.confirmTitle}-${widget.confirmLabel}-"
-          "${widget.sfSymbol}-${widget.destructive}",
+          '${widget.confirmTitle}-${widget.confirmLabel}-'
+          '${widget.sfSymbol}-${widget.destructive}',
         ),
         viewType: _viewType,
         layoutDirection: Directionality.of(context),
         creationParams: <String, Object?>{
-          "label": widget.label,
-          "confirmTitle": widget.confirmTitle,
-          "confirmLabel": widget.confirmLabel,
-          "sfSymbol": widget.sfSymbol,
-          "destructive": widget.destructive,
+          'label': widget.label,
+          'confirmTitle': widget.confirmTitle,
+          'confirmLabel': widget.confirmLabel,
+          'sfSymbol': widget.sfSymbol,
+          'destructive': widget.destructive,
         },
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
@@ -90,17 +90,17 @@ class _IosGlassConfirmationButtonState
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel?.setMethodCallHandler(null);
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != "onConfirmed") return null;
+      if (call.method != 'onConfirmed') return null;
       widget.onConfirmed();
       return null;
     });
   }
 }
 
-const _viewType = "techpie/native_glass_confirmation_button";
-const _channelPrefix = "techpie/native_glass_confirmation_button";
+const _viewType = 'techpie/native_glass_confirmation_button';
+const _channelPrefix = 'techpie/native_glass_confirmation_button';

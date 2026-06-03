@@ -1,13 +1,13 @@
-import "package:animations/animations.dart";
-import "package:flutter/material.dart";
+import 'package:animations/animations.dart';
+import 'package:flutter/material.dart';
 
-import "../../pages/assignments_page.dart";
-import "../../pages/home_page.dart";
-import "../../pages/schedule_page.dart";
-import "../../pages/settings_page.dart";
-import "app_destination.dart";
-import "desktop/desktop_shell.dart";
-import "mobile_shell.dart";
+import '../../pages/assignments_page.dart';
+import '../../pages/home_page.dart';
+import '../../pages/schedule_page.dart';
+import '../../pages/settings_page.dart';
+import 'app_destination.dart';
+import 'desktop/desktop_shell.dart';
+import 'mobile_shell.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -23,36 +23,36 @@ class _AppShellState extends State<AppShell> {
   bool _sidebarCollapsed = false;
   static const List<AppDestination> _destinations = [
     AppDestination(
-      label: "Home",
+      label: 'Home',
       icon: Icons.home_outlined,
       selectedIcon: Icons.home,
-      sfSymbol: "house",
-      selectedSfSymbol: "house.fill",
-      page: HomePage(key: ValueKey("home")),
+      sfSymbol: 'house',
+      selectedSfSymbol: 'house.fill',
+      page: HomePage(key: ValueKey('home')),
     ),
     AppDestination(
-      label: "Schedule",
+      label: 'Schedule',
       icon: Icons.calendar_month_outlined,
       selectedIcon: Icons.calendar_month,
-      sfSymbol: "calendar",
-      selectedSfSymbol: "calendar.circle.fill",
-      page: SchedulePage(key: ValueKey("schedule")),
+      sfSymbol: 'calendar',
+      selectedSfSymbol: 'calendar.circle.fill',
+      page: SchedulePage(key: ValueKey('schedule')),
     ),
     AppDestination(
-      label: "Deadlines",
+      label: 'Deadlines',
       icon: Icons.assignment_outlined,
       selectedIcon: Icons.assignment,
-      sfSymbol: "checkmark.circle",
-      selectedSfSymbol: "checkmark.circle.fill",
-      page: AssignmentsPage(key: ValueKey("assignments")),
+      sfSymbol: 'checkmark.circle',
+      selectedSfSymbol: 'checkmark.circle.fill',
+      page: AssignmentsPage(key: ValueKey('assignments')),
     ),
     AppDestination(
-      label: "Settings",
+      label: 'Settings',
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
-      sfSymbol: "gearshape",
-      selectedSfSymbol: "gearshape.fill",
-      page: SettingsPage(key: ValueKey("settings")),
+      sfSymbol: 'gearshape',
+      selectedSfSymbol: 'gearshape.fill',
+      page: SettingsPage(key: ValueKey('settings')),
     ),
   ];
 
@@ -82,7 +82,7 @@ class _AppShellState extends State<AppShell> {
 
   Widget _buildDesktopContentNavigator(Widget pageView) {
     return Navigator(
-      key: ValueKey("desktop-content-$_selectedIndex"),
+      key: ValueKey('desktop-content-$_selectedIndex'),
       onGenerateRoute: (settings) => MaterialPageRoute<void>(
         settings: settings,
         builder: (context) => pageView,

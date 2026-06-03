@@ -1,8 +1,8 @@
-import "dart:async";
+import 'dart:async';
 
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class IosGlassSwitch extends StatefulWidget {
   const IosGlassSwitch({
@@ -62,8 +62,8 @@ class _IosGlassSwitchState extends State<IosGlassSwitch> {
         viewType: _viewType,
         layoutDirection: Directionality.of(context),
         creationParams: <String, Object?>{
-          "value": widget.value,
-          "enabled": widget.enabled,
+          'value': widget.value,
+          'enabled': widget.enabled,
         },
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _onPlatformViewCreated,
@@ -72,14 +72,14 @@ class _IosGlassSwitchState extends State<IosGlassSwitch> {
   }
 
   void _onPlatformViewCreated(int viewId) {
-    final channel = MethodChannel("$_channelPrefix/$viewId");
+    final channel = MethodChannel('$_channelPrefix/$viewId');
     _channel = channel;
 
     channel.setMethodCallHandler((call) async {
-      if (call.method != "onChanged") return null;
+      if (call.method != 'onChanged') return null;
 
       final arguments = call.arguments;
-      final value = arguments is Map ? arguments["value"] : null;
+      final value = arguments is Map ? arguments['value'] : null;
 
       if (value is bool) {
         widget.onChanged(value);
@@ -94,8 +94,8 @@ class _IosGlassSwitchState extends State<IosGlassSwitch> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>("updateValue", <String, Object?>{
-        "value": value,
+      await channel.invokeMethod<void>('updateValue', <String, Object?>{
+        'value': value,
       });
     } on PlatformException {
       // Platform view may be tearing down.
@@ -109,8 +109,8 @@ class _IosGlassSwitchState extends State<IosGlassSwitch> {
     if (channel == null) return;
 
     try {
-      await channel.invokeMethod<void>("updateEnabled", <String, Object?>{
-        "enabled": enabled,
+      await channel.invokeMethod<void>('updateEnabled', <String, Object?>{
+        'enabled': enabled,
       });
     } on PlatformException {
       // Platform view may be tearing down.
@@ -120,5 +120,5 @@ class _IosGlassSwitchState extends State<IosGlassSwitch> {
   }
 }
 
-const _viewType = "techpie/native_glass_switch";
-const _channelPrefix = "techpie/native_glass_switch";
+const _viewType = 'techpie/native_glass_switch';
+const _channelPrefix = 'techpie/native_glass_switch';

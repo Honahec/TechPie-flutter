@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../models/course.dart";
+import '../models/course.dart';
 
 class CourseDetailContent extends StatelessWidget {
   final Course course;
@@ -76,17 +76,17 @@ class CourseDetailContent extends StatelessWidget {
         course.endPeriod - 1 < periods.length) {
       final start = periods[course.startPeriod - 1];
       final end = periods[course.endPeriod - 1];
-      return "${start.startTime} – ${end.endTime}  (第${course.startPeriod}-${course.endPeriod}节)";
+      return '${start.startTime} – ${end.endTime}  (第${course.startPeriod}-${course.endPeriod}节)';
     }
-    return "第${course.startPeriod}-${course.endPeriod}节";
+    return '第${course.startPeriod}-${course.endPeriod}节';
   }
 
   String _dayName() {
-    const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+    const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     if (course.dayOfWeek >= 1 && course.dayOfWeek <= 7) {
       return days[course.dayOfWeek - 1];
     }
-    return "";
+    return '';
   }
 }
 

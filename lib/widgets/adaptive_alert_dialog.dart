@@ -1,6 +1,6 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AdaptiveAlertAction<T> {
   const AdaptiveAlertAction({
@@ -16,7 +16,7 @@ class AdaptiveAlertAction<T> {
   final bool isDefault;
 }
 
-const _presenterChannel = MethodChannel("techpie/native_glass_presenter");
+const _presenterChannel = MethodChannel('techpie/native_glass_presenter');
 
 Future<T?> showAdaptiveAlertDialog<T>({
   required BuildContext context,
@@ -60,7 +60,7 @@ List<AdaptiveAlertAction<T>> _normalizeActions<T>(
 
   if (normalized.isNotEmpty) return normalized;
 
-  return [AdaptiveAlertAction<T>(label: "OK", isDefault: true)];
+  return [AdaptiveAlertAction<T>(label: 'OK', isDefault: true)];
 }
 
 Future<T?> _showNativeIosAlert<T>({
@@ -70,15 +70,15 @@ Future<T?> _showNativeIosAlert<T>({
   required BuildContext fallbackContext,
 }) async {
   try {
-    final result = await _presenterChannel.invokeMethod<dynamic>("showAlert", {
-      "title": title,
-      "message": message,
-      "actions": [
+    final result = await _presenterChannel.invokeMethod<dynamic>('showAlert', {
+      'title': title,
+      'message': message,
+      'actions': [
         for (final action in actions)
           {
-            "label": action.label,
-            "isDestructive": action.isDestructive,
-            "isDefault": action.isDefault,
+            'label': action.label,
+            'isDestructive': action.isDestructive,
+            'isDefault': action.isDefault,
           },
       ],
     });

@@ -1,9 +1,9 @@
-import "dart:math" as math;
+import 'dart:math' as math;
 
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-import "desktop_popup.dart";
+import 'desktop_popup.dart';
 
 typedef DesktopSelectAnchorBuilder = Widget Function(
   BuildContext context,

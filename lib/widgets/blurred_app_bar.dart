@@ -1,7 +1,7 @@
-import "dart:ui";
+import 'dart:ui';
 
-import "package:flutter/material.dart";
-import "package:techpie/utils/platform.dart";
+import 'package:flutter/material.dart';
+import 'package:techpie/utils/platform.dart';
 
 /// AppBar with a fixed elevation and a Gaussian blur backdrop where supported.
 ///
