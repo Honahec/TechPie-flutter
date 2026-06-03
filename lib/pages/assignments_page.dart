@@ -148,8 +148,15 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                 checked: _showExams,
               ),
               IosNativeNavigationBarMenuItem(
-                value: 'hidden',
-                title: '查看已忽略 (${service.overrides.hidden.length})',
+                value: '__hidden_section__',
+                title: '',
+                displayInline: true,
+                children: [
+                  IosNativeNavigationBarMenuItem(
+                    value: 'hidden',
+                    title: '查看已忽略 (${service.overrides.hidden.length})',
+                  ),
+                ],
               ),
             ],
           ),
