@@ -1,6 +1,25 @@
+enum DeadlineKind {
+  assignment('assignment', '作业'),
+  exam('exam', '考试');
+
+  final String id;
+  final String label;
+
+  const DeadlineKind(this.id, this.label);
+
+  static DeadlineKind fromJson(dynamic value) {
+    final id = value?.toString().toLowerCase();
+    return DeadlineKind.values.firstWhere(
+      (kind) => kind.id == id,
+      orElse: () => DeadlineKind.assignment,
+    );
+  }
+}
+
 class Assignment {
   final String id;
   final String platform;
+  final DeadlineKind kind;
   final String title;
   final String course;
   final DateTime due;
@@ -11,6 +30,7 @@ class Assignment {
   const Assignment({
     required this.id,
     required this.platform,
+    this.kind = DeadlineKind.assignment,
     required this.title,
     required this.course,
     required this.due,
@@ -22,9 +42,17 @@ class Assignment {
   bool get submitted => status == 'Submitted' || status == 'Graded';
 
   factory Assignment.fromJson(Map<String, dynamic> json) {
-    DateTime parseEpoch(dynamic v) {
+    DateTime parseDate(dynamic v) {
       if (v is num) {
         return DateTime.fromMillisecondsSinceEpoch(v.toInt() * 1000);
+      }
+      if (v is String) {
+        final asNum = num.tryParse(v);
+        if (asNum != null) {
+          return DateTime.fromMillisecondsSinceEpoch(asNum.toInt() * 1000);
+        }
+        final parsed = DateTime.tryParse(v);
+        if (parsed != null) return parsed;
       }
       return DateTime.now();
     }
@@ -32,10 +60,11 @@ class Assignment {
     return Assignment(
       id: json['id'] as String? ?? '',
       platform: json['platform'] as String? ?? 'unknown',
+      kind: DeadlineKind.fromJson(json['kind']),
       title: json['title'] as String? ?? '',
       course: json['course'] as String? ?? '',
-      due: json['due'] != null ? parseEpoch(json['due']) : DateTime.now(),
-      lateDue: json['lateDue'] != null ? parseEpoch(json['lateDue']) : null,
+      due: json['due'] != null ? parseDate(json['due']) : DateTime.now(),
+      lateDue: json['lateDue'] != null ? parseDate(json['lateDue']) : null,
       status: json['status'] as String?,
       url: json['url'] as String?,
     );
@@ -44,6 +73,7 @@ class Assignment {
   Map<String, dynamic> toJson() => {
         'id': id,
         'platform': platform,
+        'kind': kind.id,
         'title': title,
         'course': course,
         'due': due.millisecondsSinceEpoch ~/ 1000,

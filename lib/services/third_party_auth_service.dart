@@ -3,11 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../models/third_party_account.dart';
+import 'api_base_url.dart';
 import 'http_client.dart';
 import 'storage_service.dart';
-
-const String _devBaseUrl = 'http://localhost:3000/api';
-const String _prodBaseUrl = 'https://techpie.geekpie.club/api';
 
 class ThirdPartyBindException implements Exception {
   final ThirdPartyPlatform platform;
@@ -26,7 +24,7 @@ class ThirdPartyAuthService extends ChangeNotifier {
 
   ThirdPartyAuthService(this._storage, this._http);
 
-  String get _baseUrl => _storage.useLocalhost ? _devBaseUrl : _prodBaseUrl;
+  String get _baseUrl => apiBaseUrl(_storage);
 
   bool get initialized => _initialized;
   List<ThirdPartyPlatform> get boundPlatforms => _accounts.keys.toList();
