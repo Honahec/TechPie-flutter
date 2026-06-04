@@ -66,6 +66,7 @@ jobs:
           fi
 
           {
+            echo "TAG_NAME=$TAG_NAME"
             echo "BUILD_NAME=$BUILD_NAME"
             echo "BUILD_NUMBER=$BUILD_NUMBER"
             echo "TAG_SHA=$TAG_SHA"
@@ -75,7 +76,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           owner: CNDY1390
           repositories: TechPie-release
@@ -91,7 +92,7 @@ jobs:
           payload="$(
             jq -n \
               --arg ref "main" \
-              --arg tag "$GITHUB_REF_NAME" \
+              --arg tag "$TAG_NAME" \
               '{
                 ref: $ref,
                 inputs: {
