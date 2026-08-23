@@ -5,14 +5,9 @@ import 'package:flutter/material.dart';
 import '../services/service_provider.dart';
 import '../services/sync_service.dart';
 import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_button.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/adaptive_page_navigation.dart';
-import '../widgets/adaptive_text_input_dialog.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 
 /// Cloud-sync settings: turn sync on/off, set / restore / change the master
 /// password, and trigger a manual pull. All cryptography + Casdoor I/O lives
@@ -33,33 +28,12 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
   Widget build(BuildContext context) {
     final sp = ServiceProvider.of(context);
     final sync = sp.syncService;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset =
+        adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? IosNativeNavigationBar(
-              title: 'Cloud sync',
-              leadingItems: const [
-                IosNativeNavigationBarItem(
-                  id: 'back',
-                  title: 'Settings',
-                  sfSymbol: 'chevron.left',
-                  accessibilityLabel: '返回 Settings',
-                  placementGroup: 'leading-main',
-                ),
-              ],
-              onItemPressed: (id) {
-                if (id == 'back') {
-                  unawaited(maybePopAdaptivePage<void>(context));
-                }
-              },
-            )
-          : const BlurredAppBar(title: Text('Cloud sync')),
+      extendBodyBehindAppBar: true,
+      appBar: const BlurredAppBar(title: Text('Cloud sync')),
       body: ListenableBuilder(
         listenable: sync,
         builder: (context, _) {
@@ -79,7 +53,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     label: '立即从云端恢复',
                     subtitle: '用云端备份覆盖本设备绑定',
                     icon: Icons.download_for_offline_outlined,
-                    sfSymbol: 'arrow.down.circle',
                     onPressed: () => unawaited(_pull(sync)),
                   ),
                   _actionButton(
@@ -87,7 +60,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     label: '立即备份到云端',
                     subtitle: '用本设备绑定覆盖云端备份',
                     icon: Icons.upload_outlined,
-                    sfSymbol: 'arrow.up.circle',
                     role: AdaptiveButtonRole.prominent,
                     onPressed: () => unawaited(_push(sync)),
                   ),
@@ -95,7 +67,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     id: 'password',
                     label: '修改主密码',
                     icon: Icons.lock_outline,
-                    sfSymbol: 'key',
                     role: AdaptiveButtonRole.plain,
                     onPressed: () => unawaited(_changePassword(sync)),
                   ),
@@ -104,7 +75,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     label: '关闭云同步',
                     subtitle: '清除云端备份与本设备主密码',
                     icon: Icons.cloud_off_outlined,
-                    sfSymbol: 'icloud.slash',
                     role: AdaptiveButtonRole.destructive,
                     onPressed: () => unawaited(_disable(sync)),
                   ),
@@ -116,7 +86,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     label: '从云端恢复',
                     subtitle: '已有备份时输入主密码恢复',
                     icon: Icons.lock_reset_outlined,
-                    sfSymbol: 'icloud.and.arrow.down',
                     onPressed: () => unawaited(_restore(sync)),
                   ),
                   _actionButton(
@@ -124,7 +93,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                     label: '开启并备份',
                     subtitle: '首次设置主密码并加密上传',
                     icon: Icons.cloud_upload_outlined,
-                    sfSymbol: 'icloud.and.arrow.up',
                     role: AdaptiveButtonRole.prominent,
                     onPressed: () => unawaited(_setup(sync)),
                   ),
@@ -177,7 +145,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     required String id,
     required String label,
     required IconData icon,
-    required String sfSymbol,
     required VoidCallback onPressed,
     String? subtitle,
     AdaptiveButtonRole role = AdaptiveButtonRole.standard,
@@ -189,7 +156,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
         AdaptiveButton(
           label: label,
           icon: icon,
-          sfSymbol: sfSymbol,
           role: role,
           height: 44,
           loading: _busyAction == id,
@@ -273,18 +239,24 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
   }
 
   Future<void> _disable(SyncService sync) async {
-    final ok = await showAdaptiveAlertDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
-      title: '关闭云同步？',
-      message: '将清除云端加密备份与本设备主密码。本设备上的绑定不受影响；其它设备将无法再从云端恢复。',
-      actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
-        AdaptiveAlertAction<bool>(
-          label: '关闭',
-          value: true,
-          isDestructive: true,
+      builder: (context) => AlertDialog(
+        title: const Text('关闭云同步？'),
+        content: const Text(
+          '将清除云端加密备份与本设备主密码。本设备上的绑定不受影响；其它设备将无法再从云端恢复。',
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
     );
     if (ok != true) return;
     await _guard('disable', () async {
@@ -325,17 +297,8 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
 
   void _toast(String message) {
     if (!mounted) return;
-    final isError = message.contains('失败') ||
-        message.contains('不正确') ||
-        message.contains('不能为空') ||
-        message.contains('过期') ||
-        message.contains('Unauthorized') ||
-        message.contains('错误');
-    showAdaptiveFeedback(
-      context: context,
-      message: message,
-      style:
-          isError ? AdaptiveFeedbackStyle.error : AdaptiveFeedbackStyle.success,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -344,16 +307,69 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     required bool confirm,
     required String? warning,
   }) async {
-    return showAdaptiveTextInputDialog(
+    final passwordController = TextEditingController();
+    final confirmationController = TextEditingController();
+    String? error;
+    final result = await showDialog<String>(
       context: context,
-      title: title,
-      message: warning,
-      fieldLabel: '主密码',
-      confirmationFieldLabel: confirm ? '再次输入' : null,
-      mismatchMessage: '两次输入不一致',
-      confirmLabel: '确定',
-      obscureText: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (warning != null) ...[
+                Text(warning),
+                const SizedBox(height: 16),
+              ],
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: '主密码',
+                  errorText: error,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (confirm) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmationController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: '再次输入',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final password = passwordController.text;
+                if (password.isEmpty) {
+                  setDialogState(() => error = '主密码不能为空');
+                } else if (confirm && password != confirmationController.text) {
+                  setDialogState(() => error = '两次输入不一致');
+                } else {
+                  Navigator.pop(dialogContext, password);
+                }
+              },
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      ),
     );
+    passwordController.dispose();
+    confirmationController.dispose();
+    return result;
   }
 }
 
@@ -448,7 +464,6 @@ class _RestoreBanner extends StatelessWidget {
             AdaptiveButton(
               label: '恢复备份',
               icon: Icons.cloud_download_outlined,
-              sfSymbol: 'icloud.and.arrow.down',
               role: AdaptiveButtonRole.prominent,
               onPressed: onTap,
               accessibilityLabel: '恢复云端备份',

@@ -1,18 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../models/oa_gym.dart';
 import '../services/service_provider.dart';
-import '../utils/platform.dart';
 import '../widgets/adaptive_button.dart';
-import '../widgets/adaptive_date_picker.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/adaptive_page_navigation.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import 'login_page.dart';
 import 'third_party_accounts_page.dart';
 
@@ -53,15 +47,18 @@ class _OaGymPageState extends State<OaGymPage>
       await _openThirdPartyAccounts();
       return;
     }
-    await presentLoginPage(context);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+    );
     if (!mounted) return;
     setState(() {});
   }
 
   Future<void> _openThirdPartyAccounts() async {
-    await pushAdaptivePage<void>(
-      context,
-      builder: (_) => const ThirdPartyAccountsPage(),
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const ThirdPartyAccountsPage(),
+      ),
     );
   }
 
@@ -70,34 +67,11 @@ class _OaGymPageState extends State<OaGymPage>
     final sp = ServiceProvider.of(context);
     final auth = sp.authService;
     final tpAuth = sp.thirdPartyAuthService;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? IosNativeNavigationBar(
-              title: '场馆预约',
-              leadingItems: const [
-                IosNativeNavigationBarItem(
-                  id: 'back',
-                  title: 'Home',
-                  sfSymbol: 'chevron.left',
-                  accessibilityLabel: '返回 Home',
-                  placementGroup: 'leading-main',
-                ),
-              ],
-              onItemPressed: (id) {
-                switch (id) {
-                  case 'back':
-                    unawaited(maybePopAdaptivePage<void>(context));
-                }
-              },
-            )
-          : const BlurredAppBar(title: Text('场馆预约')),
+      extendBodyBehindAppBar: true,
+      appBar: const BlurredAppBar(title: Text('场馆预约')),
       body: ListenableBuilder(
         listenable: Listenable.merge([auth, tpAuth]),
         builder: (context, _) {
@@ -108,37 +82,23 @@ class _OaGymPageState extends State<OaGymPage>
                     SizedBox(height: topInset),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: isIos()
-                          ? CupertinoSlidingSegmentedControl<int>(
-                              groupValue: _selectedTab,
-                              children: const {
-                                0: Text('预约'),
-                                1: Text('查询'),
-                                2: Text('个人'),
-                              },
-                              onValueChanged: (value) {
-                                if (value != null) {
-                                  _tabController.animateTo(value);
-                                }
-                              },
-                            )
-                          : Card.outlined(
-                              clipBehavior: Clip.antiAlias,
-                              child: TabBar(
-                                controller: _tabController,
-                                tabs: const [
-                                  Tab(
-                                    text: '预约',
-                                    icon: Icon(Icons.event_available),
-                                  ),
-                                  Tab(text: '查询', icon: Icon(Icons.search)),
-                                  Tab(
-                                    text: '个人',
-                                    icon: Icon(Icons.person_outline),
-                                  ),
-                                ],
-                              ),
+                      child: Card.outlined(
+                        clipBehavior: Clip.antiAlias,
+                        child: TabBar(
+                          controller: _tabController,
+                          tabs: const [
+                            Tab(
+                              text: '预约',
+                              icon: Icon(Icons.event_available),
                             ),
+                            Tab(text: '查询', icon: Icon(Icons.search)),
+                            Tab(
+                              text: '个人',
+                              icon: Icon(Icons.person_outline),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: TabBarView(
@@ -191,9 +151,6 @@ class _OaGymPageState extends State<OaGymPage>
                               icon: auth.isLoggedIn
                                   ? Icons.vpn_key_outlined
                                   : Icons.login,
-                              sfSymbol: auth.isLoggedIn
-                                  ? 'key.horizontal'
-                                  : 'person.crop.circle.badge.plus',
                               label: auth.isLoggedIn ? '去绑定 eGate' : '去登录',
                               role: AdaptiveButtonRole.prominent,
                               accessibilityLabel:
@@ -248,7 +205,7 @@ class _BookingTabState extends State<_BookingTab> {
     final maxDate = now.hour >= 12
         ? DateTime(now.year, now.month, now.day + 2)
         : DateTime(now.year, now.month, now.day + 1);
-    final picked = await showAdaptiveDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _date,
       firstDate: DateTime(now.year, now.month, now.day),
@@ -456,7 +413,6 @@ class _BookingTabState extends State<_BookingTab> {
                   child: AdaptiveButton(
                     onPressed: _checking ? null : _refreshAvailability,
                     icon: Icons.refresh,
-                    sfSymbol: 'arrow.clockwise',
                     label: '刷新可用场地',
                     role: AdaptiveButtonRole.plain,
                     loading: _checking,
@@ -513,7 +469,6 @@ class _BookingTabState extends State<_BookingTab> {
         AdaptiveButton(
           onPressed: _submitting || _selectedCount == 0 ? null : _submit,
           icon: Icons.send,
-          sfSymbol: 'paperplane.fill',
           label: _selectedCount == 0 ? '提交预约' : '提交预约 ($_selectedCount)',
           role: AdaptiveButtonRole.prominent,
           loading: _submitting,
@@ -628,7 +583,7 @@ class _SearchTabState extends State<_SearchTab> {
   }
 
   Future<void> _pickStartDate() async {
-    final picked = await showAdaptiveDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _startDate,
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
@@ -638,7 +593,7 @@ class _SearchTabState extends State<_SearchTab> {
   }
 
   Future<void> _pickEndDate() async {
-    final picked = await showAdaptiveDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _endDate,
       firstDate: _startDate,
@@ -851,7 +806,6 @@ class _SearchTabState extends State<_SearchTab> {
                 AdaptiveButton(
                   onPressed: _loading ? null : _search,
                   icon: Icons.search,
-                  sfSymbol: 'magnifyingglass',
                   label: _loading ? '查询中...' : '查询预约记录',
                   role: AdaptiveButtonRole.prominent,
                   loading: _loading,
@@ -1008,10 +962,8 @@ class _ProfileTabState extends State<_ProfileTab> {
           ),
         );
     if (!mounted) return;
-    showAdaptiveFeedback(
-      context: context,
-      message: '预约信息已保存',
-      style: AdaptiveFeedbackStyle.success,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('预约信息已保存')),
     );
   }
 
@@ -1026,7 +978,9 @@ class _ProfileTabState extends State<_ProfileTab> {
     // meaning in the OA booking context.
     final displayName = cpdaily?.name?.isNotEmpty == true
         ? cpdaily!.name!
-        : (cpdaily?.account.isNotEmpty == true ? cpdaily!.account : 'TechPie 用户');
+        : (cpdaily?.account.isNotEmpty == true
+            ? cpdaily!.account
+            : 'TechPie 用户');
     final studentId = cpdaily?.sid ?? '';
     final avatarText = displayName.characters.firstOrNull ?? 'U';
 
@@ -1104,7 +1058,6 @@ class _ProfileTabState extends State<_ProfileTab> {
                 AdaptiveButton(
                   onPressed: _save,
                   icon: Icons.save_outlined,
-                  sfSymbol: 'square.and.arrow.down',
                   label: '保存',
                   role: AdaptiveButtonRole.prominent,
                   accessibilityLabel: '保存预约信息',

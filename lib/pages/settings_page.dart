@@ -11,16 +11,10 @@ import '../services/theme_service.dart';
 import '../services/third_party_auth_service.dart';
 import '../utils/adaptive_layout.dart';
 import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/adaptive_button.dart';
-import '../widgets/adaptive_confirmation_button.dart';
 import '../widgets/adaptive_page_navigation.dart';
-import '../widgets/adaptive_select.dart';
-import '../widgets/adaptive_switch.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
 import '../widgets/desktop_popup.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import 'debug_log_page.dart';
 import 'login_page.dart';
 import 'sync_settings_page.dart';
@@ -74,20 +68,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final storage = sp.storageService;
     final themeService = sp.themeService;
     final tpAuth = sp.thirdPartyAuthService;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset =
+        adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? const IosNativeNavigationBar(
-              title: 'Settings',
-              largeTitleMode: true,
-            )
-          : const BlurredAppBar(title: Text('Settings')),
+      extendBodyBehindAppBar: true,
+      appBar: const BlurredAppBar(title: Text('Settings')),
       body: ListenableBuilder(
         listenable: Listenable.merge([auth, logger, themeService, tpAuth]),
         builder: (context, _) => ListView(
@@ -122,9 +108,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => unawaited(
-                  pushAdaptivePage<void>(
-                    context,
-                    builder: (_) => const ThirdPartyAccountsPage(),
+                  Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ThirdPartyAccountsPage(),
+                    ),
                   ),
                 ),
               ),
@@ -134,87 +121,41 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle: Text(_cloudSyncSubtitle(sp.syncService)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => unawaited(
-                  pushAdaptivePage<void>(
-                    context,
-                    builder: (_) => const SyncSettingsPage(),
+                  Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SyncSettingsPage(),
+                    ),
                   ),
                 ),
               ),
-              if (useIosChrome)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: AdaptiveConfirmationButton(
-                    label: 'Logout',
-                    icon: Icons.logout,
-                    sfSymbol: 'rectangle.portrait.and.arrow.right',
-                    confirmTitle: '退出登录？',
-                    confirmLabel: '退出登录',
-                    destructive: true,
-                    width: double.infinity,
-                    height: 44,
-                    onConfirmed: () => unawaited(auth.logout()),
-                  ),
-                )
-              else
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Logout'),
-                  onTap: () => unawaited(_confirmLogout(auth)),
-                ),
-            ] else if (useIosChrome)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: AdaptiveButton(
-                  icon: Icons.login,
-                  sfSymbol: 'person.crop.circle.badge.plus',
-                  label: '通过 GeekPie Uni-Auth 登录',
-                  role: AdaptiveButtonRole.prominent,
-                  accessibilityLabel: '登录 TechPie',
-                  onPressed: () => unawaited(presentLoginPage(context)),
-                ),
-              )
-            else
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () => unawaited(_confirmLogout(auth)),
+              ),
+            ] else
               ListTile(
                 leading: const Icon(Icons.login),
                 title: const Text('Login'),
                 subtitle: const Text('通过 GeekPie Uni-Auth 登录'),
-                onTap: () => unawaited(presentLoginPage(context)),
+                onTap: () => unawaited(
+                  Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+                  ),
+                ),
               ),
             const Divider(),
 
             // Appearance section
             _sectionHeader(theme, 'Appearance'),
-            if (useIosChrome)
-              ListTile(
+            Builder(
+              builder: (tileContext) => ListTile(
                 leading: Icon(themeService.mode.icon),
                 title: const Text('Theme'),
                 subtitle: Text(themeService.mode.label),
-                trailing: AdaptiveSelect(
-                  value: themeService.mode.name,
-                  placeholder: 'Choose theme',
-                  width: 156,
-                  options: [
-                    for (final mode in AppThemeMode.values)
-                      AdaptiveSelectOption(value: mode.name, label: mode.label),
-                  ],
-                  onChanged: (value) {
-                    final mode = AppThemeMode.values.firstWhere(
-                      (item) => item.name == value,
-                      orElse: () => AppThemeMode.system,
-                    );
-                    unawaited(themeService.setMode(mode));
-                  },
-                ),
-              )
-            else
-              Builder(
-                builder: (tileContext) => ListTile(
-                  leading: Icon(themeService.mode.icon),
-                  title: const Text('Theme'),
-                  subtitle: Text(themeService.mode.label),
-                  onTap: () => _showThemePicker(tileContext, themeService),
-                ),
+                onTap: () => _showThemePicker(tileContext, themeService),
               ),
+            ),
             if (themeService.supportsColorSchemeSelection)
               Builder(
                 builder: (tileContext) => ListTile(
@@ -242,7 +183,6 @@ class _SettingsPageState extends State<SettingsPage> {
             // Developer section
             _sectionHeader(theme, 'Developer'),
             _AdaptiveSwitchTile(
-              usesIosLiquidGlass: useIosChrome,
               secondary: const Icon(Icons.bug_report_outlined),
               title: 'Debug mode',
               subtitle: 'Log all API requests',
@@ -253,7 +193,6 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
             _AdaptiveSwitchTile(
-              usesIosLiquidGlass: useIosChrome,
               secondary: const Icon(Icons.dns_outlined),
               title: 'Use localhost',
               subtitle: isAndroid()
@@ -284,23 +223,25 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _confirmLogout(AuthService auth) async {
-    final ok = await showAdaptiveAlertDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
-      title: '退出登录',
-      message: '将清除当前设备上的登录状态和相关缓存数据。',
-      actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
-        AdaptiveAlertAction<bool>(
-          label: '退出登录',
-          value: true,
-          isDestructive: true,
-        ),
-      ],
+      builder: (context) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('将清除当前设备上的登录状态和相关缓存数据。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('退出登录'),
+          ),
+        ],
+      ),
     );
 
-    if (ok == true) {
-      await auth.logout();
-    }
+    if (ok == true) await auth.logout();
   }
 
   void _showThemePicker(BuildContext context, ThemeService themeService) {
@@ -520,7 +461,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
 class _AdaptiveSwitchTile extends StatelessWidget {
   const _AdaptiveSwitchTile({
-    required this.usesIosLiquidGlass,
     required this.secondary,
     required this.title,
     required this.subtitle,
@@ -528,7 +468,6 @@ class _AdaptiveSwitchTile extends StatelessWidget {
     required this.onChanged,
   });
 
-  final bool usesIosLiquidGlass;
   final Widget secondary;
   final String title;
   final String subtitle;
@@ -537,22 +476,12 @@ class _AdaptiveSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!usesIosLiquidGlass) {
-      return SwitchListTile(
-        secondary: secondary,
-        title: Text(title),
-        subtitle: Text(subtitle),
-        value: value,
-        onChanged: onChanged,
-      );
-    }
-
-    return ListTile(
-      leading: secondary,
+    return SwitchListTile(
+      secondary: secondary,
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: AdaptiveSwitch(value: value, onChanged: onChanged),
-      onTap: () => onChanged(!value),
+      value: value,
+      onChanged: onChanged,
     );
   }
 }
@@ -585,9 +514,10 @@ class _CpdailyBindingTile extends StatelessWidget {
       onTap: bound
           ? null
           : () => unawaited(
-                pushAdaptivePage<void>(
-                  context,
-                  builder: (_) => const ThirdPartyAccountsPage(),
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ThirdPartyAccountsPage(),
+                  ),
                 ),
               ),
     );

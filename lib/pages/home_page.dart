@@ -14,14 +14,12 @@ import '../services/schedule_service.dart';
 import '../services/service_provider.dart';
 import '../utils/adaptive_motion.dart';
 import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_button.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/adaptive_page_navigation.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import 'generic_webview_page.dart';
 import 'login_page.dart';
 
@@ -287,17 +285,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final sp = ServiceProvider.of(context);
     final auth = sp.authService;
     final isDebug = sp.storageService.debugMode;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 16.0
-        : 16 + adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset =
+        16 + adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? const IosNativeNavigationBar(title: 'Home', largeTitleMode: true)
-          : const BlurredAppBar(title: Text('Home')),
+      extendBodyBehindAppBar: true,
+      appBar: const BlurredAppBar(title: Text('Home')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
@@ -428,9 +421,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final cp = sp.thirdPartyAuthService.cpdailyNode.cookieProvider;
     if (cp == null || cp.isEmpty) return cookies;
 
-    final domain = cp.domain.isNotEmpty
-        ? cp.domain
-        : 'ids.shanghaitech.edu.cn';
+    final domain = cp.domain.isNotEmpty ? cp.domain : 'ids.shanghaitech.edu.cn';
 
     for (final part in cp.cookies.split(';')) {
       final idx = part.indexOf('=');
@@ -463,7 +454,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         title: '登录以查看今日课程',
         subtitle: '连接你的教务系统账号',
         actionLabel: '登录',
-        actionSfSymbol: 'person.crop.circle.badge.checkmark',
         onTap: () async {
           await presentLoginPage(context);
           if (!mounted) return;
@@ -500,10 +490,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const Duration(milliseconds: 300),
           ),
           switchInCurve: appAnimationCurve(Curves.easeOutCubic),
-          switchOutCurve: appAnimationCurve(
-            Curves.easeInCubic,
-            iosCurve: Curves.easeInOut,
-          ),
+          switchOutCurve: appAnimationCurve(Curves.easeInCubic),
           transitionBuilder: (child, animation) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -601,10 +588,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const Duration(milliseconds: 300),
           ),
           switchInCurve: appAnimationCurve(Curves.easeOutCubic),
-          switchOutCurve: appAnimationCurve(
-            Curves.easeInCubic,
-            iosCurve: Curves.easeInOut,
-          ),
+          switchOutCurve: appAnimationCurve(Curves.easeInCubic),
           transitionBuilder: (child, animation) =>
               FadeTransition(opacity: animation, child: child),
           layoutBuilder: (currentChild, previousChildren) {
@@ -701,22 +685,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final url = a.url;
     if (url == null || url.isEmpty) {
       final itemLabel = a.kind == DeadlineKind.exam ? '考试' : '作业';
-      if (isIos()) {
-        await showAdaptiveAlertDialog<void>(
-          context: context,
-          title: '无法打开$itemLabel',
-          message: '这个$itemLabel没有可打开的链接。',
-          actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
-          ],
-        );
-      } else {
-        showAdaptiveFeedback(
-          context: context,
-          message: '该$itemLabel没有链接',
-          style: AdaptiveFeedbackStyle.info,
-        );
-      }
+      showAdaptiveFeedback(
+        context: context,
+        message: '该$itemLabel没有链接',
+        style: AdaptiveFeedbackStyle.info,
+      );
       return;
     }
     final uri = Uri.tryParse(url);
@@ -731,7 +704,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     required String title,
     required String subtitle,
     String? actionLabel,
-    String? actionSfSymbol,
     VoidCallback? onTap,
   }) {
     final inner = SizedBox(
@@ -767,7 +739,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               AdaptiveButton(
                 label: actionLabel,
                 icon: icon,
-                sfSymbol: actionSfSymbol ?? 'arrow.right',
                 role: AdaptiveButtonRole.prominent,
                 width: 180,
                 onPressed: onTap,
@@ -1049,10 +1020,7 @@ class _CourseBadge extends StatelessWidget {
         const Duration(milliseconds: 350),
       ),
       switchInCurve: appAnimationCurve(Curves.easeOutCubic),
-      switchOutCurve: appAnimationCurve(
-        Curves.easeInCubic,
-        iosCurve: Curves.easeInOut,
-      ),
+      switchOutCurve: appAnimationCurve(Curves.easeInCubic),
       transitionBuilder: (child, animation) {
         return FadeTransition(
           opacity: animation,

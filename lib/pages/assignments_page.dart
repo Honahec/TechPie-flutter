@@ -9,13 +9,10 @@ import '../models/assignment_overrides.dart';
 import '../services/assignment_service.dart';
 import '../services/service_provider.dart';
 import '../utils/adaptive_motion.dart';
-import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/adaptive_feedback.dart';
 import '../widgets/adaptive_page_navigation.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import '../widgets/swipeable_card.dart';
 import 'hidden_assignments_page.dart';
 
@@ -104,11 +101,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   @override
   Widget build(BuildContext context) {
     final assignmentService = ServiceProvider.of(context).assignmentService;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset = kToolbarHeight + MediaQuery.viewPaddingOf(context).top;
 
     return ListenableBuilder(
       listenable: assignmentService,
@@ -116,7 +109,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
         final allVisible = assignmentService.visibleAssignments;
         final visible = _filterAssignments(allVisible);
         return Scaffold(
-          extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
+          extendBodyBehindAppBar: true,
           appBar: _selectionMode
               ? _buildSelectionAppBar(context, assignmentService, visible)
               : _buildNormalAppBar(context, assignmentService),
@@ -142,60 +135,6 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     BuildContext context,
     AssignmentService service,
   ) {
-    if (isIos()) {
-      return IosNativeNavigationBar(
-        title: 'Deadlines',
-        largeTitleMode: true,
-        trailingItems: [
-          IosNativeNavigationBarItem(
-            id: 'more',
-            sfSymbol: 'ellipsis',
-            accessibilityLabel: '更多操作',
-            menuItems: [
-              IosNativeNavigationBarMenuItem(
-                value: 'toggleAssignments',
-                title: '显示作业',
-                sfSymbol: 'checklist',
-                checked: _showAssignments,
-              ),
-              IosNativeNavigationBarMenuItem(
-                value: 'toggleExams',
-                title: '显示考试',
-                sfSymbol: 'calendar.badge.clock',
-                checked: _showExams,
-              ),
-              IosNativeNavigationBarMenuItem(
-                value: '__hidden_section__',
-                title: '',
-                displayInline: true,
-                children: [
-                  IosNativeNavigationBarMenuItem(
-                    value: 'hidden',
-                    title: '查看已忽略 (${service.overrides.hidden.length})',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-        onMenuSelected: (_, value) {
-          switch (value) {
-            case 'toggleAssignments':
-              _toggleAssignmentsVisibility();
-            case 'toggleExams':
-              _toggleExamsVisibility();
-            case 'hidden':
-              unawaited(
-                pushAdaptivePage<void>(
-                  context,
-                  builder: (_) => const HiddenAssignmentsPage(),
-                ),
-              );
-          }
-        },
-      );
-    }
-
     return BlurredAppBar(
       title: const Text('Deadlines'),
       actions: [
@@ -282,66 +221,6 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
   ) {
     final allSelected =
         visible.isNotEmpty && _selected.length == visible.length;
-    if (isIos()) {
-      return IosNativeNavigationBar(
-        title: '已选择 ${_selected.length} 个',
-        selectionMode: true,
-        leadingItems: const [
-          IosNativeNavigationBarItem(
-            id: 'cancelSelection',
-            title: 'Cancel',
-            accessibilityLabel: '退出多选',
-            placementGroup: 'leading-main',
-          ),
-        ],
-        trailingItems: [
-          IosNativeNavigationBarItem(
-            id: 'toggleSelectAll',
-            title: allSelected ? 'Deselect All' : 'Select All',
-            enabled: visible.isNotEmpty,
-            accessibilityLabel: allSelected ? '全不选' : '全选',
-            placementGroup: 'selection-actions',
-          ),
-          IosNativeNavigationBarItem(
-            id: 'selectionMore',
-            sfSymbol: 'ellipsis.circle',
-            accessibilityLabel: '更多选择操作',
-            placementGroup: 'selection-actions',
-            menuItems: [
-              const IosNativeNavigationBarMenuItem(
-                value: 'invertSelection',
-                title: '反选',
-                sfSymbol: 'arrow.triangle.2.circlepath',
-              ),
-              IosNativeNavigationBarMenuItem(
-                value: 'resetSelected',
-                title: '重置状态',
-                sfSymbol: 'arrow.counterclockwise',
-                destructive: _selected.isNotEmpty,
-              ),
-            ],
-          ),
-        ],
-        onItemPressed: (id) {
-          switch (id) {
-            case 'cancelSelection':
-              _exitSelection();
-            case 'toggleSelectAll':
-              if (visible.isNotEmpty) _selectAll(visible);
-          }
-        },
-        onMenuSelected: (_, value) {
-          switch (value) {
-            case 'invertSelection':
-              _invertSelection(visible);
-            case 'resetSelected':
-              if (_selected.isNotEmpty) {
-                unawaited(_resetSelected(service));
-              }
-          }
-        },
-      );
-    }
 
     return BlurredAppBar(
       leading: IconButton(
@@ -624,7 +503,6 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     Assignment a,
     String key,
   ) async {
-    final usesIosContextualFeedback = isIos();
     if (_selectionMode) {
       _toggleSelection(key);
       return;
@@ -632,62 +510,29 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     final url = a.url;
     if (url == null || url.isEmpty) {
       final itemLabel = a.kind == DeadlineKind.exam ? '考试' : '作业';
-      if (usesIosContextualFeedback) {
-        await showAdaptiveAlertDialog<void>(
-          context: context,
-          title: '无法打开$itemLabel',
-          message: '这个$itemLabel没有可打开的链接。',
-          actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
-          ],
-        );
-      } else {
-        showAdaptiveFeedback(
-          context: context,
-          message: '该$itemLabel没有链接',
-          style: AdaptiveFeedbackStyle.info,
-        );
-      }
+      showAdaptiveFeedback(
+        context: context,
+        message: '该$itemLabel没有链接',
+        style: AdaptiveFeedbackStyle.info,
+      );
       return;
     }
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      if (usesIosContextualFeedback) {
-        await showAdaptiveAlertDialog<void>(
-          context: context,
-          title: '无法打开作业',
-          message: '链接格式无效。',
-          actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
-          ],
-        );
-      } else {
-        showAdaptiveFeedback(
-          context: context,
-          message: '链接无法解析',
-          style: AdaptiveFeedbackStyle.error,
-        );
-      }
+      showAdaptiveFeedback(
+        context: context,
+        message: '链接无法解析',
+        style: AdaptiveFeedbackStyle.error,
+      );
       return;
     }
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      if (usesIosContextualFeedback) {
-        await showAdaptiveAlertDialog<void>(
-          context: context,
-          title: '无法打开作业',
-          message: '目前无法打开这个链接。',
-          actions: const [
-            AdaptiveAlertAction<void>(label: 'Done', isDefault: true),
-          ],
-        );
-      } else {
-        showAdaptiveFeedback(
-          context: context,
-          message: '无法打开链接',
-          style: AdaptiveFeedbackStyle.error,
-        );
-      }
+      showAdaptiveFeedback(
+        context: context,
+        message: '无法打开链接',
+        style: AdaptiveFeedbackStyle.error,
+      );
     }
   }
 }
@@ -882,12 +727,8 @@ class _AssignmentCard extends StatelessWidget {
                       context,
                       const Duration(milliseconds: 280),
                     ),
-                    switchInCurve: isIos()
-                        ? Curves.easeInOut
-                        : Curves.easeInOutCubicEmphasized,
-                    switchOutCurve: isIos()
-                        ? Curves.easeInOut
-                        : Curves.easeInOutCubicEmphasized,
+                    switchInCurve: Curves.easeInOutCubicEmphasized,
+                    switchOutCurve: Curves.easeInOutCubicEmphasized,
                     transitionBuilder: (child, animation) => FadeTransition(
                       opacity: animation,
                       child: ScaleTransition(scale: animation, child: child),
@@ -947,10 +788,8 @@ class _AssignmentCard extends StatelessWidget {
                       context,
                       const Duration(milliseconds: 320),
                     ),
-                    switchInCurve:
-                        isIos() ? Curves.easeOut : Curves.easeOutBack,
-                    switchOutCurve:
-                        isIos() ? Curves.easeIn : Curves.easeInCubic,
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) => FadeTransition(
                       opacity: animation,
                       child: ScaleTransition(scale: animation, child: child),

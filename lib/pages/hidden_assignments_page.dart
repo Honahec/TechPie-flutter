@@ -9,9 +9,7 @@ import '../services/service_provider.dart';
 import '../utils/platform.dart';
 import '../widgets/adaptive_button.dart';
 import '../widgets/adaptive_feedback.dart';
-import '../widgets/adaptive_page_navigation.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 
 class HiddenAssignmentsPage extends StatefulWidget {
   const HiddenAssignmentsPage({super.key});
@@ -68,10 +66,8 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
   Widget build(BuildContext context) {
     final service = ServiceProvider.of(context).assignmentService;
     final theme = Theme.of(context);
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topPad = isIos() || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topPad =
+        adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return ListenableBuilder(
       listenable: service,
@@ -81,106 +77,40 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
             hiddenKeys.isNotEmpty && _selected.length == hiddenKeys.length;
 
         return Scaffold(
-          extendBodyBehindAppBar: !isIos() && !useLegacyIosChrome,
-          appBar: isIos()
-              ? IosNativeNavigationBar(
-                  title:
-                      _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
-                  selectionMode: _selectionMode,
-                  leadingItems: [
-                    IosNativeNavigationBarItem(
-                      id: 'back',
-                      title: 'Deadlines',
-                      sfSymbol: 'chevron.left',
-                      hidden: _selectionMode,
-                      accessibilityLabel: '返回 Deadlines',
-                      placementGroup: 'leading-main',
-                    ),
-                    IosNativeNavigationBarItem(
-                      id: 'toggleSelectAll',
-                      title: selectedAll ? 'Deselect All' : 'Select All',
-                      enabled: hiddenKeys.isNotEmpty,
-                      hidden: !_selectionMode,
-                      accessibilityLabel: selectedAll ? '全不选' : '全选',
-                      placementGroup: 'leading-main',
-                    ),
-                  ],
-                  trailingItems: [
-                    IosNativeNavigationBarItem(
-                      id: 'restore',
-                      sfSymbol: 'arrow.uturn.backward',
-                      enabled: _selected.isNotEmpty,
-                      hidden: !_selectionMode,
-                      accessibilityLabel: '恢复',
-                      placementGroup: 'selection-actions',
-                    ),
-                    IosNativeNavigationBarItem(
-                      id: 'toggleSelection',
-                      title: _selectionMode ? 'Done' : 'Select',
-                      role: _selectionMode
-                          ? IosNativeNavigationBarItemRole.done
-                          : IosNativeNavigationBarItemRole.normal,
-                      enabled: _selectionMode || hiddenKeys.isNotEmpty,
-                      accessibilityLabel: _selectionMode ? '完成' : '选择',
-                      placementGroup: 'selection-actions',
-                    ),
-                  ],
-                  onItemPressed: (id) {
-                    switch (id) {
-                      case 'back':
-                        unawaited(maybePopAdaptivePage<void>(context));
-                      case 'toggleSelectAll':
-                        if (hiddenKeys.isNotEmpty) {
-                          _toggleSelectAll(hiddenKeys);
-                        }
-                      case 'restore':
-                        if (_selected.isNotEmpty) {
-                          _restoreSelected();
-                        }
-                      case 'toggleSelection':
-                        _selectionMode
-                            ? _exitSelectionMode()
-                            : _enterSelectionMode();
-                    }
-                  },
-                )
-              : BlurredAppBar(
-                  centerTitle: false,
-                  title: Text(
-                    _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
+          extendBodyBehindAppBar: true,
+          appBar: BlurredAppBar(
+            centerTitle: false,
+            title: Text(
+              _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
+            ),
+            actions: [
+              if (_selectionMode)
+                IconButton(
+                  tooltip: selectedAll ? '全不选' : '全选',
+                  icon: Icon(
+                    selectedAll ? Icons.deselect : Icons.select_all,
                   ),
-                  actions: [
-                    if (_selectionMode)
-                      IconButton(
-                        tooltip: selectedAll ? '全不选' : '全选',
-                        icon: Icon(
-                          selectedAll ? Icons.deselect : Icons.select_all,
-                        ),
-                        onPressed: hiddenKeys.isEmpty
-                            ? null
-                            : () => _toggleSelectAll(hiddenKeys),
-                      ),
-                    if (_selectionMode)
-                      IconButton(
-                        tooltip: '恢复',
-                        onPressed:
-                            _selected.isNotEmpty ? _restoreSelected : null,
-                        icon: const Icon(Icons.restore),
-                      ),
-                    if (hiddenKeys.isNotEmpty)
-                      IconButton(
-                        tooltip: _selectionMode ? '完成' : '选择',
-                        icon: Icon(
-                          _selectionMode
-                              ? Icons.check
-                              : Icons.checklist_outlined,
-                        ),
-                        onPressed: _selectionMode
-                            ? _exitSelectionMode
-                            : _enterSelectionMode,
-                      ),
-                  ],
+                  onPressed: hiddenKeys.isEmpty
+                      ? null
+                      : () => _toggleSelectAll(hiddenKeys),
                 ),
+              if (_selectionMode)
+                IconButton(
+                  tooltip: '恢复',
+                  onPressed: _selected.isNotEmpty ? _restoreSelected : null,
+                  icon: const Icon(Icons.restore),
+                ),
+              if (hiddenKeys.isNotEmpty)
+                IconButton(
+                  tooltip: _selectionMode ? '完成' : '选择',
+                  icon: Icon(
+                    _selectionMode ? Icons.check : Icons.checklist_outlined,
+                  ),
+                  onPressed:
+                      _selectionMode ? _exitSelectionMode : _enterSelectionMode,
+                ),
+            ],
+          ),
           body: hiddenKeys.isEmpty
               ? Padding(
                   padding: EdgeInsets.only(top: topPad),
@@ -263,7 +193,6 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
               ? null
               : AdaptiveButton(
                   icon: Icons.restore,
-                  sfSymbol: 'arrow.uturn.backward',
                   width: 44,
                   height: 44,
                   accessibilityLabel: '恢复 ${a?.title ?? key}',

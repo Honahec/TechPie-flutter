@@ -4,7 +4,6 @@ import 'package:desktop_webview_window/desktop_webview_window.dart'
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:techpie/utils/platform.dart';
 
 import 'models/third_party_account.dart';
 import 'services/assignment_service.dart';
@@ -21,6 +20,7 @@ import 'services/third_party_auth_service.dart';
 import 'services/uni_auth_service.dart';
 import 'widgets/adaptive_feedback.dart';
 import 'widgets/app_shell/app_shell.dart';
+
 void main(List<String> args) async {
   // If this Flutter engine is a desktop_webview_window title bar (secondary
   // engine inside the webview popup), render the navigation controls and
@@ -28,7 +28,6 @@ void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) return;
 
   WidgetsFlutterBinding.ensureInitialized();
-  await initializePlatformCapabilities();
   // OHOS white-screen probe disabled to speed up startup. Re-enable by
   // restoring the runApp(_BootProbe...) calls and wrapping init in try/catch.
   // runApp(const _BootProbe(message: '启动中…'));
@@ -78,7 +77,8 @@ Future<void> _realMain(SharedPreferences prefs) async {
     thirdPartyAuthService,
     scheduleService,
   );
-  final syncService = SyncService(authService, thirdPartyAuthService, storageService);
+  final syncService =
+      SyncService(authService, thirdPartyAuthService, storageService);
 
   authService.onLogout = () async {
     // Third-party bindings persist across logouts — they will be used by the
@@ -152,16 +152,14 @@ Future<void> _realMain(SharedPreferences prefs) async {
 
     // Only surface a renewal failure when we actually had a refresh token
     // to try (a no-op returning false is not an expiry).
-    if (!mainOk &&
-        authService.session?.geekpieRefreshToken != null &&
-        !isIos()) {
+    if (!mainOk && authService.session?.geekpieRefreshToken != null) {
       showAdaptiveFeedback(
         message: '登录已过期，请重新登录',
         style: AdaptiveFeedbackStyle.error,
         duration: const Duration(seconds: 4),
       );
     }
-    if (failedTp.isNotEmpty && !isIos()) {
+    if (failedTp.isNotEmpty) {
       showAdaptiveFeedback(
         message: '${failedTp.map((p) => p.label).join('、')} 续期失败',
         style: AdaptiveFeedbackStyle.error,

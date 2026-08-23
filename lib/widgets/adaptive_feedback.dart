@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../utils/platform.dart';
 import 'app_shell/tg_bottom_nav_bar.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootMessengerKey =
@@ -154,9 +153,8 @@ class AdaptiveFeedbackHostState extends State<AdaptiveFeedbackHost>
                 final width = MediaQuery.sizeOf(context).width;
                 final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
                 final navVisible = depth <= 1 && width < 600;
-                final navClearance = isIos()
-                    ? 52.0 + 12
-                    : TgBottomNavBar.barHeight + 2 * TgBottomNavBar.margin;
+                final navClearance =
+                    TgBottomNavBar.barHeight + 2 * TgBottomNavBar.margin;
                 final bottom = safeBottom + (navVisible ? navClearance : 12);
                 return IgnorePointer(
                   ignoring: _entry!.actionLabel == null,

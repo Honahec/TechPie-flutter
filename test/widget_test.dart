@@ -14,53 +14,9 @@ import 'package:techpie/services/sync_service.dart';
 import 'package:techpie/services/theme_service.dart';
 import 'package:techpie/services/third_party_auth_service.dart';
 import 'package:techpie/services/uni_auth_service.dart';
-import 'package:techpie/widgets/app_shell/app_shell.dart';
 import 'package:techpie/widgets/app_shell/tg_bottom_nav_bar.dart';
 
 void main() {
-  testWidgets('iOS-style destination switching lazily preserves visited pages',
-      (
-    WidgetTester tester,
-  ) async {
-    var selectedIndex = 0;
-    late StateSetter setHostState;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: StatefulBuilder(
-          builder: (context, setState) {
-            setHostState = setState;
-            return AppDestinationSwitcher(
-              pages: const [
-                _StatefulDestination(label: 'First'),
-                _StatefulDestination(label: 'Second'),
-              ],
-              selectedIndex: selectedIndex,
-              previousSelectedIndex: 0,
-              preserveVisitedPages: true,
-              animationsEnabled: true,
-            );
-          },
-        ),
-      ),
-    );
-
-    expect(find.text('First: 0'), findsOneWidget);
-    expect(find.text('Second: 0'), findsNothing);
-    await tester.tap(find.text('First: 0'));
-    await tester.pump();
-
-    setHostState(() => selectedIndex = 1);
-    await tester.pump();
-    expect(find.text('First: 1'), findsNothing);
-    expect(find.text('Second: 0'), findsOneWidget);
-
-    setHostState(() => selectedIndex = 0);
-    await tester.pump();
-    expect(find.text('First: 1'), findsOneWidget);
-    expect(find.text('Second: 0'), findsNothing);
-  });
-
   testWidgets('App shell renders with desktop sidebar', (
     WidgetTester tester,
   ) async {

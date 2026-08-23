@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../utils/platform.dart';
 
 class AdaptiveSwitch extends StatelessWidget {
   const AdaptiveSwitch({
@@ -17,22 +14,9 @@ class AdaptiveSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isIos()) {
-      return Switch(
-        value: value,
-        onChanged: enabled ? onChanged : null,
-      );
-    }
-
-    return SizedBox(
-      width: 52,
-      height: iosMinimumInteractiveDimension,
-      child: Center(
-        child: CupertinoSwitch(
-          value: value,
-          onChanged: enabled ? onChanged : null,
-        ),
-      ),
+    return Switch(
+      value: value,
+      onChanged: enabled ? onChanged : null,
     );
   }
 }

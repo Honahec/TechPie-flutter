@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
-import '../utils/platform.dart';
-
 class SwipeAction {
   final IconData icon;
   final String label;
@@ -152,8 +150,8 @@ class _SwipeableCardState extends State<SwipeableCard>
     }
     return _move.animateTo(
       0,
-      duration: Duration(milliseconds: isIos() ? 250 : 280),
-      curve: isIos() ? Curves.easeOut : _emphasized,
+      duration: const Duration(milliseconds: 280),
+      curve: _emphasized,
     );
   }
 
@@ -164,8 +162,8 @@ class _SwipeableCardState extends State<SwipeableCard>
     }
     return _move.animateTo(
       sign * 1.25,
-      duration: Duration(milliseconds: isIos() ? 200 : 220),
-      curve: isIos() ? Curves.easeIn : _emphasizedAccelerate,
+      duration: const Duration(milliseconds: 220),
+      curve: _emphasizedAccelerate,
     );
   }
 
@@ -189,7 +187,7 @@ class _SwipeableCardState extends State<SwipeableCard>
       builder: (context, child) {
         final t = _collapse.value;
         // Use Curves.easeInOutCubicEmphasized via direct curve evaluation.
-        final eased = (isIos() ? Curves.easeInOut : _emphasized).transform(t);
+        final eased = _emphasized.transform(t);
         return ClipRect(
           child: Align(
             heightFactor: (1 - eased).clamp(0.0, 1.0),
@@ -230,7 +228,7 @@ class _SwipeableCardState extends State<SwipeableCard>
                 Transform.translate(
                   offset: Offset(value * _width * 0.92, 0),
                   child: Transform.scale(
-                    scale: isIos() ? 1 : 1 - progress * 0.04,
+                    scale: 1 - progress * 0.04,
                     alignment: Alignment.center,
                     child: Semantics(
                       customSemanticsActions: _semanticActions,

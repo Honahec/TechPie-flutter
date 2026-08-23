@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../utils/platform.dart';
 
 class AdaptiveTextArea extends StatelessWidget {
   const AdaptiveTextArea({
@@ -25,38 +22,14 @@ class AdaptiveTextArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isIos()) {
-      return TextField(
-        controller: controller,
-        decoration: InputDecoration(hintText: placeholder),
-        keyboardType: keyboardType,
-        textInputAction: textInputAction,
-        minLines: minLines,
-        maxLines: maxLines,
-        enabled: enabled,
-      );
-    }
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 108),
-      child: CupertinoTextField(
-        controller: controller,
-        placeholder: placeholder,
-        keyboardType: keyboardType,
-        textInputAction: textInputAction,
-        minLines: minLines,
-        maxLines: maxLines,
-        enabled: enabled,
-        padding: const EdgeInsets.all(14),
-        textAlignVertical: TextAlignVertical.top,
-        clearButtonMode: OverlayVisibilityMode.editing,
-        decoration: BoxDecoration(
-          color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
-            context,
-          ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(hintText: placeholder),
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      minLines: minLines,
+      maxLines: maxLines,
+      enabled: enabled,
     );
   }
 }

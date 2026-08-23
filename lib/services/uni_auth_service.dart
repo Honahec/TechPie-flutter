@@ -95,25 +95,6 @@ class UniAuthService extends ChangeNotifier {
     }
   }
 
-  /// Open the GeekPie Uni-Auth login using a system browser (no BuildContext).
-  /// Used by the native iOS liquid glass login sheet.
-  Future<SsoTokens> loginSdkOnly() async {
-    _loading = true;
-    notifyListeners();
-    try {
-      final casdoor = _getCasdoor();
-      final callbackUrl = await casdoor.show();
-      final code = _extractCode(callbackUrl);
-      if (code.isEmpty) {
-        throw Exception('Login cancelled or failed');
-      }
-      return _exchangeCode(casdoor, code);
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
   Future<String> _showOhosLogin(
     NavigatorState navigator,
     Casdoor casdoor,
@@ -171,8 +152,8 @@ class UniAuthService extends ChangeNotifier {
   }
 
   /// Pull the `code` query parameter out of the callback URL the SDK returns.
-  /// casdoor.showFullscreen / casdoor.show yield the full redirect URL
-  /// (e.g. `techpie://auth-callback?code=xxx&state=yyy`), not just the code.
+  /// casdoor.showFullscreen yields the full redirect URL (for example,
+  /// `techpie://auth-callback?code=xxx&state=yyy`), not just the code.
   String _extractCode(String callbackUrl) {
     if (callbackUrl.isEmpty) return '';
     final uri = Uri.tryParse(callbackUrl);

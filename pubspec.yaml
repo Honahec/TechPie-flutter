@@ -11,9 +11,6 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 version: 0.1.0
@@ -30,10 +27,7 @@ environment:
 dependencies:
   animations: ^2.0.11
   casdoor_flutter_sdk: ^1.0.0
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cryptography: ^2.9.0
-  cupertino_icons: ^1.0.8
   desktop_webview_window: any
   dynamic_color: ">=1.7.0 <1.8.0"
   flutter:
@@ -119,8 +113,6 @@ flutter_launcher_icons:
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
-  ios: true
-  remove_alpha_ios: true
   web:
     generate: true
     image_path: "assets/icon/icon.png"

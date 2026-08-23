@@ -7,7 +7,6 @@ import '../services/service_provider.dart';
 import '../utils/platform.dart';
 import '../widgets/adaptive_alert_dialog.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 
 class DebugLogPage extends StatelessWidget {
   const DebugLogPage({super.key});
@@ -15,41 +14,21 @@ class DebugLogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logger = ServiceProvider.of(context).debugLogger;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topPad = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topPad =
+        adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? IosNativeNavigationBar(
-              title: 'Debug Logs',
-              trailingItems: const [
-                IosNativeNavigationBarItem(
-                  id: 'clear',
-                  sfSymbol: 'trash',
-                  role: IosNativeNavigationBarItemRole.destructive,
-                  accessibilityLabel: 'Clear logs',
-                ),
-              ],
-              onItemPressed: (id) {
-                if (id == 'clear') {
-                  unawaited(_confirmClearLogs(context, logger));
-                }
-              },
-            )
-          : BlurredAppBar(
-              title: const Text('Debug Logs'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: logger.clear,
-                  tooltip: 'Clear logs',
-                ),
-              ],
-            ),
+      extendBodyBehindAppBar: true,
+      appBar: BlurredAppBar(
+        title: const Text('Debug Logs'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => unawaited(_confirmClearLogs(context, logger)),
+            tooltip: 'Clear logs',
+          ),
+        ],
+      ),
       body: ListenableBuilder(
         listenable: logger,
         builder: (context, _) {

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,15 +15,11 @@ import '../utils/adaptive_layout.dart';
 import '../utils/adaptive_motion.dart';
 import '../utils/platform.dart';
 import '../widgets/adaptive_button.dart';
-import '../widgets/adaptive_feedback.dart';
-import '../widgets/adaptive_page_navigation.dart';
-import '../widgets/adaptive_text_input_dialog.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
 import '../widgets/course_detail_panel.dart';
 import '../widgets/desktop_popup.dart';
 import '../widgets/desktop_select_popover.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import 'login_page.dart';
 import 'third_party_accounts_page.dart';
 
@@ -88,13 +83,8 @@ class _SchedulePageState extends State<SchedulePage> {
     await _schedule.fetchAll();
     if (!mounted) return;
     final hasError = _schedule.error != null;
-    showAdaptiveFeedback(
-      context: context,
-      message: hasError ? '刷新失败' : '已刷新',
-      style: hasError
-          ? AdaptiveFeedbackStyle.error
-          : AdaptiveFeedbackStyle.success,
-      duration: const Duration(seconds: 2),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(hasError ? '刷新失败' : '已刷新')),
     );
   }
 
@@ -171,17 +161,6 @@ class _SchedulePageState extends State<SchedulePage> {
         includeGhosts: _showGhostCourses,
       );
     }
-  }
-
-  List<Course> _coursesForWeek(int week) {
-    final table = _schedule.courseTable;
-    if (table == null) return const [];
-
-    return eamsToDisplayCourses(
-      table.courses,
-      week.clamp(1, _schedule.totalWeeks).toInt(),
-      includeGhosts: _showGhostCourses,
-    );
   }
 
   DateTime _weekStartForWeek(int week) {
@@ -402,7 +381,7 @@ class _SchedulePageState extends State<SchedulePage> {
     final termBegin = _schedule.termBegin;
     if (table == null || termBegin == null || _exportingCalendar) return;
 
-    final calendarName = (isIos() || isAndroid())
+    final calendarName = isAndroid()
         ? await _promptCalendarName(initialValue: _defaultCalendarName)
         : _defaultCalendarName;
     if (calendarName == null || calendarName.trim().isEmpty) return;
@@ -413,7 +392,7 @@ class _SchedulePageState extends State<SchedulePage> {
     await WidgetsBinding.instance.endOfFrame;
 
     try {
-      if (isIos() || isAndroid()) {
+      if (isAndroid()) {
         try {
           final events = await _icsExport.buildCalendarEventPayloads(
             table: table,
@@ -424,13 +403,12 @@ class _SchedulePageState extends State<SchedulePage> {
             calendarName: calendarName,
           );
           if (!mounted) return;
-          showAdaptiveFeedback(
-            context: context,
-            message:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
                 imported > 0 ? '已导入 $imported 个日程到“$calendarName”' : '没有可导入的日程',
-            style: imported > 0
-                ? AdaptiveFeedbackStyle.success
-                : AdaptiveFeedbackStyle.info,
+              ),
+            ),
           );
           return;
         } catch (_) {
@@ -439,12 +417,14 @@ class _SchedulePageState extends State<SchedulePage> {
             calendarName: calendarName,
           );
           if (!mounted) return;
-          showAdaptiveFeedback(
-            context: context,
-            message: fallbackFile.filePath != null
-                ? '导入失败，已导出到下载目录: ${fallbackFile.filePath}'
-                : '导入失败，ICS 文件已创建。',
-            style: AdaptiveFeedbackStyle.info,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                fallbackFile.filePath != null
+                    ? '导入失败，已导出到下载目录: ${fallbackFile.filePath}'
+                    : '导入失败，ICS 文件已创建。',
+              ),
+            ),
           );
           return;
         }
@@ -491,28 +471,26 @@ class _SchedulePageState extends State<SchedulePage> {
         }
         if (!mounted) return;
 
-        showAdaptiveFeedback(
-          context: context,
-          message: fallbackFile.filePath != null
-              ? '已导出到下载目录: ${fallbackFile.filePath}'
-              : 'ICS 文件已创建。',
-          style: AdaptiveFeedbackStyle.info,
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              fallbackFile.filePath != null
+                  ? '已导出到下载目录: ${fallbackFile.filePath}'
+                  : 'ICS 文件已创建。',
+            ),
+          ),
         );
         return;
       }
 
       if (!mounted) return;
-      showAdaptiveFeedback(
-        context: context,
-        message: '课表导出操作成功',
-        style: AdaptiveFeedbackStyle.success,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('课表导出操作成功')),
       );
     } catch (_) {
       if (!mounted) return;
-      showAdaptiveFeedback(
-        context: context,
-        message: '导出课表失败',
-        style: AdaptiveFeedbackStyle.error,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('导出课表失败')),
       );
     } finally {
       if (mounted) {
@@ -524,15 +502,34 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   Future<String?> _promptCalendarName({required String initialValue}) async {
-    return showAdaptiveTextInputDialog(
+    final controller = TextEditingController(text: initialValue);
+    final result = await showDialog<String>(
       context: context,
-      title: '请输入日历名称',
-      fieldLabel: '日历名',
-      hintText: '例如：2025-2026 春季学期',
-      initialValue: initialValue,
-      confirmLabel: '导入',
-      trimResult: true,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('请输入日历名称'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '日历名',
+            hintText: '例如：2025-2026 春季学期',
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('导入'),
+          ),
+        ],
+      ),
     );
+    controller.dispose();
+    return result?.trim();
   }
 
   @override
@@ -546,173 +543,107 @@ class _SchedulePageState extends State<SchedulePage> {
     final actualCurrentWeek =
         _schedule.currentWeek().clamp(1, _schedule.totalWeeks).toInt();
     final isViewingCurrentWeek = isInTerm && _currentWeek == actualCurrentWeek;
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? IosNativeNavigationBar(
-              title: '第 $_currentWeek 周',
-              subtitle: _semesterLabel.isEmpty ? null : _semesterLabel,
-              largeTitleMode: true,
-              trailingItems: [
-                IosNativeNavigationBarItem(
-                  id: 'settings',
-                  sfSymbol: 'ellipsis',
-                  accessibilityLabel: '视图设置',
-                  menuItems: [
-                    const IosNativeNavigationBarMenuItem(
-                      value: 'semester',
-                      title: '切换学期',
-                      sfSymbol: 'calendar',
-                    ),
-                    IosNativeNavigationBarMenuItem(
-                      value: 'saturday',
-                      title: '显示周六',
-                      checked: _showSaturday,
-                    ),
-                    IosNativeNavigationBarMenuItem(
-                      value: 'sunday',
-                      title: '显示周日',
-                      checked: _showSunday,
-                    ),
-                    IosNativeNavigationBarMenuItem(
-                      value: 'ghost',
-                      title: '显示非本周课程',
-                      checked: _showGhostCourses,
-                    ),
-                    IosNativeNavigationBarMenuItem(
-                      value: '__export_section__',
-                      title: '',
-                      displayInline: true,
-                      children: [
-                        IosNativeNavigationBarMenuItem(
-                          value: 'exportCalendar',
-                          title: _exportingCalendar ? '正在导出…' : '导出课表',
-                          sfSymbol: _exportingCalendar
-                              ? 'arrow.triangle.2.circlepath'
-                              : 'square.and.arrow.up',
-                        ),
-                      ],
-                    ),
-                  ],
+      extendBodyBehindAppBar: true,
+      appBar: BlurredAppBar(
+        titleSpacing: 16,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (usesSidebarLayout(context))
+              _DesktopWeekTitleMenu(
+                currentWeek: _currentWeek,
+                semesterLabel: _semesterLabel,
+                slideDirection: _slideDirection,
+                totalWeeks: _schedule.totalWeeks,
+                onWeekChanged: _setWeek,
+              )
+            else
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _showWeekPicker,
+                child: _WeekTitleContent(
+                  currentWeek: _currentWeek,
+                  semesterLabel: _semesterLabel,
+                  slideDirection: _slideDirection,
+                  trailingIcon: Icons.unfold_more,
                 ),
-                IosNativeNavigationBarItem(
-                  id: 'currentWeek',
-                  sfSymbol: 'calendar.badge.clock',
-                  hidden: !isInTerm || isViewingCurrentWeek,
-                  accessibilityLabel: '回到本周',
-                  placementGroup: 'week-actions',
-                ),
-              ],
-              onItemPressed: (id) {
-                if (id == 'currentWeek') {
-                  _goToCurrentWeek();
-                }
-              },
-              onMenuSelected: (_, value) => _onMenuSelected(value),
-            )
-          : BlurredAppBar(
-              titleSpacing: 16,
-              title: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (usesSidebarLayout(context))
-                    _DesktopWeekTitleMenu(
-                      currentWeek: _currentWeek,
-                      semesterLabel: _semesterLabel,
-                      slideDirection: _slideDirection,
-                      totalWeeks: _schedule.totalWeeks,
-                      onWeekChanged: _setWeek,
-                    )
-                  else
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _showWeekPicker,
-                      child: _WeekTitleContent(
-                        currentWeek: _currentWeek,
-                        semesterLabel: _semesterLabel,
-                        slideDirection: _slideDirection,
-                        trailingIcon: Icons.unfold_more,
-                      ),
-                    ),
-                  if (usesSidebarLayout(context) &&
-                      isInTerm &&
-                      !isViewingCurrentWeek) ...[
-                    const SizedBox(width: 12),
-                    TextButton.icon(
-                      onPressed: _goToCurrentWeek,
-                      icon: const Icon(Icons.today_outlined, size: 18),
-                      label: const Text('回到本周'),
-                    ),
-                  ],
-                  const Spacer(),
-                ],
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  tooltip: 'Previous week',
-                  onPressed: _previousWeek,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  tooltip: 'Next week',
-                  onPressed: _nextWeek,
-                ),
-                IconButton(
-                  tooltip: _exportingCalendar ? '正在导出课表' : '导出课表',
-                  onPressed: _exportingCalendar ? null : _startExportCalendar,
-                  icon: _exportingCalendar
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.ios_share_rounded),
-                ),
-                if (usesSidebarLayout(context))
-                  IconButton(
-                    key: _viewSettingsAnchorKey,
-                    icon: const Icon(Icons.more_vert),
-                    tooltip: '视图设置',
-                    onPressed: _showViewSettingsMenu,
+            if (usesSidebarLayout(context) &&
+                isInTerm &&
+                !isViewingCurrentWeek) ...[
+              const SizedBox(width: 12),
+              TextButton.icon(
+                onPressed: _goToCurrentWeek,
+                icon: const Icon(Icons.today_outlined, size: 18),
+                label: const Text('回到本周'),
+              ),
+            ],
+            const Spacer(),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous week',
+            onPressed: _previousWeek,
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Next week',
+            onPressed: _nextWeek,
+          ),
+          IconButton(
+            tooltip: _exportingCalendar ? '正在导出课表' : '导出课表',
+            onPressed: _exportingCalendar ? null : _startExportCalendar,
+            icon: _exportingCalendar
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                else
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    tooltip: '视图设置',
-                    onSelected: _onMenuSelected,
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'semester',
-                        child: Text('切换学期'),
-                      ),
-                      CheckedPopupMenuItem(
-                        value: 'saturday',
-                        checked: _showSaturday,
-                        child: const Text('显示周六'),
-                      ),
-                      CheckedPopupMenuItem(
-                        value: 'sunday',
-                        checked: _showSunday,
-                        child: const Text('显示周日'),
-                      ),
-                      CheckedPopupMenuItem(
-                        value: 'ghost',
-                        checked: _showGhostCourses,
-                        child: const Text('显示非本周课程'),
-                      ),
-                    ],
-                  ),
+                : const Icon(Icons.share_rounded),
+          ),
+          if (usesSidebarLayout(context))
+            IconButton(
+              key: _viewSettingsAnchorKey,
+              icon: const Icon(Icons.more_vert),
+              tooltip: '视图设置',
+              onPressed: _showViewSettingsMenu,
+            )
+          else
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: '视图设置',
+              onSelected: _onMenuSelected,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'semester',
+                  child: Text('切换学期'),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'saturday',
+                  checked: _showSaturday,
+                  child: const Text('显示周六'),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'sunday',
+                  checked: _showSunday,
+                  child: const Text('显示周日'),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'ghost',
+                  checked: _showGhostCourses,
+                  child: const Text('显示非本周课程'),
+                ),
               ],
             ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.only(
-          top: useIosChrome || useLegacyIosChrome
-              ? 0
-              : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top,
+          top: adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top,
         ),
         child: !auth.isLoggedIn || !tpAuth.hasCpdailyBinding
             ? Center(
@@ -737,21 +668,25 @@ class _SchedulePageState extends State<SchedulePage> {
                       icon: auth.isLoggedIn
                           ? Icons.account_tree_outlined
                           : Icons.login,
-                      sfSymbol: auth.isLoggedIn
-                          ? 'person.crop.circle.badge.plus'
-                          : 'person.crop.circle.badge.checkmark',
                       role: AdaptiveButtonRole.prominent,
                       width: 220,
                       onPressed: () {
                         if (auth.isLoggedIn) {
                           unawaited(
-                            pushAdaptivePage<void>(
-                              context,
-                              builder: (_) => const ThirdPartyAccountsPage(),
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const ThirdPartyAccountsPage(),
+                              ),
                             ),
                           );
                         } else {
-                          unawaited(presentLoginPage(context));
+                          unawaited(
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const LoginPage(),
+                              ),
+                            ),
+                          );
                         }
                       },
                       accessibilityLabel:
@@ -762,32 +697,14 @@ class _SchedulePageState extends State<SchedulePage> {
               )
             : RefreshIndicator(
                 onRefresh: _refresh,
-                child: useIosChrome
-                    ? PageView.builder(
-                        controller: _weekPageController,
-                        itemCount: _schedule.totalWeeks,
-                        onPageChanged: (index) {
-                          _setCurrentWeek(index + 1);
-                        },
-                        itemBuilder: (context, index) {
-                          final week = index + 1;
-                          return _buildScheduleWeek(
-                            context,
-                            theme,
-                            today,
-                            week,
-                            _coursesForWeek(week),
-                          );
-                        },
-                      )
-                    : _buildScheduleWeek(
-                        context,
-                        theme,
-                        today,
-                        _currentWeek,
-                        _courses,
-                        animated: true,
-                      ),
+                child: _buildScheduleWeek(
+                  context,
+                  theme,
+                  today,
+                  _currentWeek,
+                  _courses,
+                  animated: true,
+                ),
               ),
       ),
     );
@@ -1008,7 +925,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.ios_share_rounded, size: 20),
+                        : const Icon(Icons.share_rounded, size: 20),
                     title: Text('导出课表', style: theme.textTheme.bodyMedium),
                     onTap: _exportingCalendar
                         ? null
@@ -1046,9 +963,7 @@ class _DesktopSemesterSelectButton extends StatelessWidget {
   }
 }
 
-/// Two synced scroll wheels (academic year, then term) for picking a semester.
-/// Reports the pending selection live via [onSelectionChanged]; the caller is
-/// responsible for confirming (or discarding) it.
+/// Material controls for selecting an academic year and term.
 class _SemesterWheelPicker extends StatefulWidget {
   final SemesterInfo info;
   final String? initialSemesterId;
@@ -1066,47 +981,31 @@ class _SemesterWheelPicker extends StatefulWidget {
 
 class _SemesterWheelPickerState extends State<_SemesterWheelPicker> {
   late final List<String> _years;
-  late FixedExtentScrollController _yearController;
-  late FixedExtentScrollController _termController;
+  late String _selectedYear;
   late List<MapEntry<String, String>> _termsForYear;
-  late int _yearIndex;
-  late int _termIndex;
+  late String _selectedSemesterId;
 
   @override
   void initState() {
     super.initState();
     _years = widget.info.semesters.keys.toList()..sort();
+    _selectedYear = _years.first;
 
-    var yearIndex = 0;
-    String? initialLabel;
     final initialId = widget.initialSemesterId;
     if (initialId != null) {
-      for (var i = 0; i < _years.length; i++) {
-        for (final entry in widget.info.semesters[_years[i]]!.entries) {
-          if (entry.value == initialId) {
-            yearIndex = i;
-            initialLabel = entry.key;
-          }
+      for (final year in _years) {
+        if (widget.info.semesters[year]?.containsValue(initialId) ?? false) {
+          _selectedYear = year;
+          break;
         }
       }
     }
 
-    _yearIndex = yearIndex;
-    _termsForYear = _orderedTerms(_years[_yearIndex]);
-    final labelIndex = initialLabel == null
-        ? -1
-        : _termsForYear.indexWhere((entry) => entry.key == initialLabel);
-    _termIndex = labelIndex < 0 ? 0 : labelIndex;
-
-    _yearController = FixedExtentScrollController(initialItem: _yearIndex);
-    _termController = FixedExtentScrollController(initialItem: _termIndex);
-  }
-
-  @override
-  void dispose() {
-    _yearController.dispose();
-    _termController.dispose();
-    super.dispose();
+    _termsForYear = _orderedTerms(_selectedYear);
+    _selectedSemesterId = initialId != null &&
+            _termsForYear.any((entry) => entry.value == initialId)
+        ? initialId
+        : _termsForYear.first.value;
   }
 
   List<MapEntry<String, String>> _orderedTerms(String year) {
@@ -1118,87 +1017,60 @@ class _SemesterWheelPickerState extends State<_SemesterWheelPicker> {
     return entries;
   }
 
-  void _reportSelection() {
-    if (_termIndex >= _termsForYear.length) return;
-    widget.onSelectionChanged(_termsForYear[_termIndex].value);
-  }
-
-  void _onYearChanged(int index) {
-    final previousLabel = _termIndex < _termsForYear.length
-        ? _termsForYear[_termIndex].key
-        : null;
-
+  void _onYearChanged(String? year) {
+    if (year == null || year == _selectedYear) return;
     setState(() {
-      _yearIndex = index;
-      _termsForYear = _orderedTerms(_years[_yearIndex]);
-      final labelIndex = previousLabel == null
-          ? -1
-          : _termsForYear.indexWhere((entry) => entry.key == previousLabel);
-      _termIndex =
-          labelIndex < 0 ? 0 : labelIndex.clamp(0, _termsForYear.length - 1);
+      _selectedYear = year;
+      _termsForYear = _orderedTerms(year);
+      _selectedSemesterId = _termsForYear.first.value;
     });
-    _termController.jumpToItem(_termIndex);
-    _reportSelection();
+    widget.onSelectionChanged(_selectedSemesterId);
   }
 
-  void _onTermChanged(int index) {
-    setState(() => _termIndex = index);
-    _reportSelection();
+  void _onTermChanged(String? semesterId) {
+    if (semesterId == null) return;
+    setState(() => _selectedSemesterId = semesterId);
+    widget.onSelectionChanged(semesterId);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const itemExtent = 40.0;
-
-    Widget wheel({
-      required FixedExtentScrollController controller,
-      required int itemCount,
-      required String Function(int index) labelBuilder,
-      required ValueChanged<int> onChanged,
-    }) {
-      return CupertinoPicker(
-        scrollController: controller,
-        itemExtent: itemExtent,
-        onSelectedItemChanged: onChanged,
-        selectionOverlay: Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        children: [
-          for (var i = 0; i < itemCount; i++)
-            Center(
-              child: Text(
-                labelBuilder(i),
-                style: theme.textTheme.bodyLarge,
-              ),
-            ),
-        ],
-      );
-    }
-
-    return SizedBox(
-      height: 200,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
         children: [
           Expanded(
             flex: 3,
-            child: wheel(
-              controller: _yearController,
-              itemCount: _years.length,
-              labelBuilder: (i) => _years[i],
+            child: DropdownButtonFormField<String>(
+              value: _selectedYear,
+              decoration: const InputDecoration(
+                labelText: '学年',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                for (final year in _years)
+                  DropdownMenuItem(value: year, child: Text(year)),
+              ],
               onChanged: _onYearChanged,
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: wheel(
-              controller: _termController,
-              itemCount: _termsForYear.length,
-              labelBuilder: (i) =>
-                  '${semesterTermDisplayName(_termsForYear[i].key)}学期',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(_selectedYear),
+              value: _selectedSemesterId,
+              decoration: const InputDecoration(
+                labelText: '学期',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                for (final entry in _termsForYear)
+                  DropdownMenuItem(
+                    value: entry.value,
+                    child: Text(semesterTermDisplayName(entry.key)),
+                  ),
+              ],
               onChanged: _onTermChanged,
             ),
           ),

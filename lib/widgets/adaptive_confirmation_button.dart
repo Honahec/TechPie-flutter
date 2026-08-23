@@ -1,11 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:techpie/utils/platform.dart';
 
 import 'adaptive_alert_dialog.dart';
-import 'cupertino_symbol_icons.dart';
 
 class AdaptiveConfirmationButton extends StatelessWidget {
   const AdaptiveConfirmationButton({
@@ -15,10 +12,9 @@ class AdaptiveConfirmationButton extends StatelessWidget {
     required this.confirmLabel,
     required this.onConfirmed,
     this.icon = Icons.link_off,
-    this.sfSymbol = 'link.badge.minus',
     this.destructive = false,
     this.width,
-    this.height = iosMinimumInteractiveDimension,
+    this.height = 44.0,
   });
 
   final String? label;
@@ -26,7 +22,6 @@ class AdaptiveConfirmationButton extends StatelessWidget {
   final String confirmLabel;
   final VoidCallback onConfirmed;
   final IconData icon;
-  final String sfSymbol;
   final bool destructive;
   final double? width;
   final double height;
@@ -34,57 +29,23 @@ class AdaptiveConfirmationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasLabel = label != null && label!.isNotEmpty;
-    final buttonWidth =
-        width ?? (hasLabel ? 92 : iosMinimumInteractiveDimension);
-    final constrainedWidth = buttonWidth < iosMinimumInteractiveDimension
-        ? iosMinimumInteractiveDimension
-        : buttonWidth;
-    final constrainedHeight = height < iosMinimumInteractiveDimension
-        ? iosMinimumInteractiveDimension
-        : height;
+    final constrainedHeight = height < 44.0 ? 44.0 : height;
     void callback() => unawaited(_confirm(context));
 
-    if (!isIos()) {
-      return SizedBox(
-        width: width,
-        height: constrainedHeight,
-        child: hasLabel
-            ? TextButton.icon(
-                onPressed: callback,
-                icon: Icon(icon, size: 18),
-                label: Text(label!),
-              )
-            : IconButton(
-                onPressed: callback,
-                icon: Icon(icon, size: 18),
-                tooltip: confirmTitle,
-              ),
-      );
-    }
-
-    final color = destructive
-        ? CupertinoColors.systemRed
-        : CupertinoTheme.of(context).primaryColor;
     return SizedBox(
-      width: constrainedWidth,
+      width: width,
       height: constrainedHeight,
-      child: CupertinoButton(
-        minSize: iosMinimumInteractiveDimension,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        onPressed: callback,
-        child: hasLabel
-            ? Text(
-                label!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: color, fontSize: 17),
-              )
-            : Icon(
-                cupertinoIconForSfSymbol(sfSymbol, fallback: icon),
-                color: color,
-                size: 20,
-              ),
-      ),
+      child: hasLabel
+          ? TextButton.icon(
+              onPressed: callback,
+              icon: Icon(icon, size: 18),
+              label: Text(label!),
+            )
+          : IconButton(
+              onPressed: callback,
+              icon: Icon(icon, size: 18),
+              tooltip: confirmTitle,
+            ),
     );
   }
 

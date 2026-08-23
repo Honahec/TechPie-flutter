@@ -6,12 +6,8 @@ import 'package:intl/intl.dart';
 import '../models/third_party_account.dart';
 import '../services/service_provider.dart';
 import '../utils/platform.dart';
-import '../widgets/adaptive_alert_dialog.dart';
-import '../widgets/adaptive_confirmation_button.dart';
-import '../widgets/adaptive_page_navigation.dart';
 import '../widgets/app_shell/app_shell_metrics.dart';
 import '../widgets/blurred_app_bar.dart';
-import '../widgets/ios/ios_native_navigation_bar.dart';
 import 'login_page.dart';
 import 'third_party_bind_page.dart';
 
@@ -24,33 +20,12 @@ class ThirdPartyAccountsPage extends StatelessWidget {
     final tpAuth = sp.thirdPartyAuthService;
     final auth = sp.authService;
     final theme = Theme.of(context);
-    final useIosChrome = isIos();
-    final useLegacyIosChrome = usesLegacyIosChrome();
-    final topInset = useIosChrome || useLegacyIosChrome
-        ? 0.0
-        : adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
+    final topInset =
+        adaptiveTopBarHeight() + MediaQuery.viewPaddingOf(context).top;
 
     return Scaffold(
-      extendBodyBehindAppBar: !useIosChrome && !useLegacyIosChrome,
-      appBar: useIosChrome
-          ? IosNativeNavigationBar(
-              title: 'Linked Accounts',
-              leadingItems: [
-                if (Navigator.canPop(context))
-                  const IosNativeNavigationBarItem(
-                    id: 'back',
-                    title: 'Settings',
-                    sfSymbol: 'chevron.left',
-                    accessibilityLabel: '返回 Settings',
-                  ),
-              ],
-              onItemPressed: (id) {
-                if (id == 'back') {
-                  unawaited(maybePopAdaptivePage<void>(context));
-                }
-              },
-            )
-          : const BlurredAppBar(title: Text('Linked Accounts')),
+      extendBodyBehindAppBar: true,
+      appBar: const BlurredAppBar(title: Text('Linked Accounts')),
       body: ListenableBuilder(
         listenable: Listenable.merge([tpAuth, auth]),
         builder: (context, _) {
@@ -110,7 +85,13 @@ class _BlackboardTile extends StatelessWidget {
       trailing: loggedIn
           ? Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20)
           : const Icon(Icons.chevron_right),
-      onTap: loggedIn ? null : () => unawaited(presentLoginPage(context)),
+      onTap: loggedIn
+          ? null
+          : () => unawaited(
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+                ),
+              ),
     );
   }
 }
@@ -139,9 +120,10 @@ class _ThirdPartyTile extends StatelessWidget {
         subtitle: const Text('未绑定'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => unawaited(
-          pushAdaptivePage<void>(
-            context,
-            builder: (_) => ThirdPartyBindPage(platform: platform),
+          Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => ThirdPartyBindPage(platform: platform),
+            ),
           ),
         ),
       );
@@ -163,19 +145,11 @@ class _ThirdPartyTile extends StatelessWidget {
       title: Text(platform.label),
       subtitle: Text(subtitleParts.join('\n')),
       isThreeLine: subtitleParts.length > 1,
-      trailing: isIos()
-          ? AdaptiveConfirmationButton(
-              label: 'Unbind',
-              confirmTitle: '解绑 ${platform.label}?',
-              confirmLabel: '解绑',
-              destructive: true,
-              onConfirmed: () => unawaited(_unbind(context, platform)),
-            )
-          : TextButton.icon(
-              icon: const Icon(Icons.link_off, size: 18),
-              label: const Text('Unbind'),
-              onPressed: () => unawaited(_confirmUnbind(context, platform)),
-            ),
+      trailing: TextButton.icon(
+        icon: const Icon(Icons.link_off, size: 18),
+        label: const Text('Unbind'),
+        onPressed: () => unawaited(_confirmUnbind(context, platform)),
+      ),
     );
   }
 
@@ -193,29 +167,23 @@ class _ThirdPartyTile extends StatelessWidget {
     ThirdPartyPlatform platform,
   ) async {
     final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
-    final ok = await showAdaptiveAlertDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
-      title: '解绑 ${platform.label}?',
-      message: '将清除本地保存的 token 与账号信息,不会注销远端账号。',
-      actions: const [
-        AdaptiveAlertAction<bool>(label: '取消', value: false),
-        AdaptiveAlertAction<bool>(
-          label: '解绑',
-          value: true,
-          isDestructive: true,
-        ),
-      ],
+      builder: (context) => AlertDialog(
+        title: Text('解绑 ${platform.label}?'),
+        content: const Text('将清除本地保存的 token 与账号信息,不会注销远端账号。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('解绑'),
+          ),
+        ],
+      ),
     );
-    if (ok == true) {
-      await tpAuth.unbind(platform);
-    }
-  }
-
-  Future<void> _unbind(
-    BuildContext context,
-    ThirdPartyPlatform platform,
-  ) async {
-    final tpAuth = ServiceProvider.of(context).thirdPartyAuthService;
-    await tpAuth.unbind(platform);
+    if (ok == true) await tpAuth.unbind(platform);
   }
 }

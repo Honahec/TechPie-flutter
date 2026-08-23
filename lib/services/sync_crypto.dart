@@ -155,7 +155,7 @@ class SyncCrypto {
 
   static List<int> _randomBytes(int length) {
     // crypto-secure RNG. dart:math.Random.secure() reads from the platform's
-    // CSPRNG on every supported target (Android/iOS/Linux/macOS/OHOS).
+    // CSPRNG on every supported target (Android/Linux/macOS/OHOS).
     final rnd = Random.secure();
     return List<int>.generate(length, (_) => rnd.nextInt(256));
   }
