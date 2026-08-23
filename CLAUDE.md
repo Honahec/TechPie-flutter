@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TechPie is a Flutter app providing third-party campus services for ShanghaiTech University. It supports Android, Linux, macOS, Windows, web, and HarmonyOS NEXT (OHOS). The backend API lives at `techpie.geekpie.club/api` (prod) / `localhost:3000` (dev toggle in settings).
+TechPie is a Flutter app providing third-party campus services for ShanghaiTech University. It supports Android, Linux, macOS, Windows, and HarmonyOS NEXT (OHOS). A Web host scaffold remains in the repository, but Web is not currently supported or validated. The backend API lives at `techpie.geekpie.club/api` (prod) / `localhost:3000` (dev toggle in settings).
 
 ## Two Flutter SDKs
 
 The project requires **two separate Flutter SDK checkpoints** depending on the build target:
 
-- **Upstream Flutter** (`~/dev/flutter`) — for Linux, Android, macOS, Windows, and web builds. The OHOS fork's gen_snapshot crashes on Linux x64 AOT.
+- **Upstream Flutter** (`~/dev/flutter`) — for Linux, Android, macOS, and Windows builds. It also manages the retained, currently unsupported Web scaffold. The OHOS fork's gen_snapshot crashes on Linux x64 AOT.
 - **OHOS Flutter fork** (`~/dev/flutter_flutter`, channel `ohos`) — required for `flutter build hap`. Stock Flutter has no OHOS engine.
 
 The `.envrc` (managed by direnv) points `PATH` at the OHOS fork by default. Build scripts in `scripts/` enforce the correct SDK.

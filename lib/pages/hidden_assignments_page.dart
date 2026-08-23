@@ -76,54 +76,69 @@ class _HiddenAssignmentsPageState extends State<HiddenAssignmentsPage> {
         final selectedAll =
             hiddenKeys.isNotEmpty && _selected.length == hiddenKeys.length;
 
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: BlurredAppBar(
-            centerTitle: false,
-            title: Text(
-              _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
+        return PopScope(
+          canPop: !_selectionMode,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _selectionMode) _exitSelectionMode();
+          },
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: BlurredAppBar(
+              centerTitle: false,
+              automaticallyImplyLeading: !_selectionMode,
+              leading: _selectionMode
+                  ? IconButton(
+                      tooltip: '退出选择',
+                      icon: const Icon(Icons.close),
+                      onPressed: _exitSelectionMode,
+                    )
+                  : null,
+              title: Text(
+                _selectionMode ? '已选择 ${_selected.length} 个' : '已忽略的事项',
+              ),
+              actions: [
+                if (_selectionMode)
+                  IconButton(
+                    tooltip: selectedAll ? '全不选' : '全选',
+                    icon: Icon(
+                      selectedAll ? Icons.deselect : Icons.select_all,
+                    ),
+                    onPressed: hiddenKeys.isEmpty
+                        ? null
+                        : () => _toggleSelectAll(hiddenKeys),
+                  ),
+                if (_selectionMode)
+                  IconButton(
+                    tooltip: '恢复',
+                    onPressed: _selected.isNotEmpty ? _restoreSelected : null,
+                    icon: const Icon(Icons.restore),
+                  ),
+                if (hiddenKeys.isNotEmpty)
+                  IconButton(
+                    tooltip: _selectionMode ? '完成' : '选择',
+                    icon: Icon(
+                      _selectionMode ? Icons.check : Icons.checklist_outlined,
+                    ),
+                    onPressed: _selectionMode
+                        ? _exitSelectionMode
+                        : _enterSelectionMode,
+                  ),
+              ],
             ),
-            actions: [
-              if (_selectionMode)
-                IconButton(
-                  tooltip: selectedAll ? '全不选' : '全选',
-                  icon: Icon(
-                    selectedAll ? Icons.deselect : Icons.select_all,
-                  ),
-                  onPressed: hiddenKeys.isEmpty
-                      ? null
-                      : () => _toggleSelectAll(hiddenKeys),
-                ),
-              if (_selectionMode)
-                IconButton(
-                  tooltip: '恢复',
-                  onPressed: _selected.isNotEmpty ? _restoreSelected : null,
-                  icon: const Icon(Icons.restore),
-                ),
-              if (hiddenKeys.isNotEmpty)
-                IconButton(
-                  tooltip: _selectionMode ? '完成' : '选择',
-                  icon: Icon(
-                    _selectionMode ? Icons.check : Icons.checklist_outlined,
-                  ),
-                  onPressed:
-                      _selectionMode ? _exitSelectionMode : _enterSelectionMode,
-                ),
-            ],
-          ),
-          body: hiddenKeys.isEmpty
-              ? Padding(
-                  padding: EdgeInsets.only(top: topPad),
-                  child: Center(
-                    child: Text(
-                      '没有被忽略的事项',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+            body: hiddenKeys.isEmpty
+                ? Padding(
+                    padding: EdgeInsets.only(top: topPad),
+                    child: Center(
+                      child: Text(
+                        '没有被忽略的事项',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              : _buildList(context, service, hiddenKeys, theme, topPad),
+                  )
+                : _buildList(context, service, hiddenKeys, theme, topPad),
+          ),
         );
       },
     );
