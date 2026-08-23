@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TechPie is a Flutter app providing third-party campus services for ShanghaiTech University. It supports Android, iOS, Linux, macOS, and HarmonyOS NEXT (OHOS). The backend API lives at `techpie.geekpie.club/api` (prod) / `localhost:3000` (dev toggle in settings).
+TechPie is a Flutter app providing third-party campus services for ShanghaiTech University. It supports Android, Linux, macOS, Windows, web, and HarmonyOS NEXT (OHOS). The backend API lives at `techpie.geekpie.club/api` (prod) / `localhost:3000` (dev toggle in settings).
 
 ## Two Flutter SDKs
 
 The project requires **two separate Flutter SDK checkpoints** depending on the build target:
 
-- **Upstream Flutter** (`~/dev/flutter`) — for Linux, Android, iOS, macOS, Windows, web builds. The OHOS fork's gen_snapshot crashes on Linux x64 AOT.
+- **Upstream Flutter** (`~/dev/flutter`) — for Linux, Android, macOS, Windows, and web builds. The OHOS fork's gen_snapshot crashes on Linux x64 AOT.
 - **OHOS Flutter fork** (`~/dev/flutter_flutter`, channel `ohos`) — required for `flutter build hap`. Stock Flutter has no OHOS engine.
 
 The `.envrc` (managed by direnv) points `PATH` at the OHOS fork by default. Build scripts in `scripts/` enforce the correct SDK.
@@ -72,10 +72,6 @@ CASTGC must never be read off `AuthService.session`. Always go through `ThirdPar
 ### Navigation (`lib/widgets/app_shell/`)
 
 Responsive shell: `DesktopShell` (sidebar, >=600px; collapsible >=960px) or `MobileShell` (bottom nav). Page transitions use `FadeThroughTransition`.
-
-### Platform adaptation (`lib/utils/platform.dart`)
-
-iOS Liquid Glass (iOS 26+) vs legacy iOS chrome is detected at boot via a MethodChannel (`techpie/platform`). Helper functions `isIos()`, `usesIosLiquidGlass()`, `usesLegacyIosChrome()` gate UI branches throughout the app.
 
 ### Features / WebView (`lib/models/feature.dart`)
 

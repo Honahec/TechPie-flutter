@@ -16,13 +16,13 @@
 
 ## Support Platform
 
-理论支持多平台，实际测试如下平台：
+仓库保留以下平台宿主；其中 Web 目前仅保留 Flutter 脚手架，尚未纳入正式支持与验证范围：
 
 - [x] Linux
 - [x] Windows
-- [x] MacOS
+- [x] macOS
 - [x] Android
-- [x] iOS
+- [ ] Web（脚手架）
 - [x] HarmonyOS NEXT
 
 ## Roadmap
@@ -32,9 +32,6 @@
   - [x] Login
   - [ ] Assignment
   - [ ] Homepage
-  - [ ] iOS
-    - [x] Liquid Glass
-    - [ ] Dynamic Island
   - [ ] HarmonyOS NEXT
     - [ ] Native Card
     - [ ] Realtime Window
@@ -58,7 +55,7 @@
 
 ## Development
 
-参考 HarmonyOS / 仓库配置
+Android、Linux、macOS、Windows 和 Web 使用上游 Flutter SDK；HarmonyOS NEXT 使用 OHOS Flutter fork。以下环境变量用于国内镜像与 HarmonyOS 工具链：
 
 ```bash
 export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
@@ -73,13 +70,6 @@ export HOS_SDK_HOME="$HOME/dev/command-line-tools/sdk"
 - JDK 17
 - Android NDK 28
 - Android SDK 35
-
-### iOS
-
-- macOS
-- Xcode
-- CocoaPods
-- iOS Deployment Target 13.0
 
 ### HarmonyOS
 
