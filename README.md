@@ -1,4 +1,3 @@
-
 <div align="center">
 <a href="https://techpie.geekpie.club">
 <img src="./assets/logo/Logo-1.png" alt="TechPie logo" style="border-radius:50%"/>
@@ -16,13 +15,12 @@
 
 ## Support Platform
 
-仓库保留以下平台宿主；其中 Web 目前仅保留 Flutter 脚手架，尚未纳入正式支持与验证范围：
+理论支持多平台，实际测试如下平台：
 
 - [x] Linux
 - [x] Windows
-- [x] macOS
+- [x] MacOS
 - [x] Android
-- [ ] Web（脚手架）
 - [x] HarmonyOS NEXT
 
 ## Roadmap
@@ -55,7 +53,7 @@
 
 ## Development
 
-Android、Linux、macOS、Windows 和 Web 使用上游 Flutter SDK；HarmonyOS NEXT 使用 OHOS Flutter fork。以下环境变量用于国内镜像与 HarmonyOS 工具链：
+参考 HarmonyOS / 仓库配置
 
 ```bash
 export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
@@ -74,7 +72,7 @@ export HOS_SDK_HOME="$HOME/dev/command-line-tools/sdk"
 ### HarmonyOS
 
 - Flutter (OHOS patch) 3.27.5-ohos-1.0.5
-- [Huawei Command Tools  6.1.1 Beta1](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos)
+- [Huawei Command Tools 6.1.1 Beta1](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos)
 
 ## License
 
